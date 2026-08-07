@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.domus.corp/v1/effective-policy.schema.json",
+  "title": "EffectivePolicy",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/envelope" },
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "request_id", "tenant_id", "workspace_id", "policy_version", "classification", "provenance", "subject_id", "allowed_sources", "capabilities", "expires_at"],
+      "properties": {
+        "schema_version": {}, "request_id": {}, "tenant_id": {}, "workspace_id": {}, "policy_version": {}, "classification": {}, "provenance": {},
+        "subject_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "allowed_sources": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" }, "uniqueItems": true },
+        "capabilities": { "type": "array", "items": { "type": "string", "enum": ["knowledge.read", "knowledge.ingest", "model.invoke", "insight.create", "action.propose"] }, "uniqueItems": true },
+        "expires_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+        "budget_scope": { "$ref": "common.schema.json#/$defs/budget_scope" }
+      }
+    }
+  ]
+}

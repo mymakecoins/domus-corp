@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""Dependency-free basic contract checks for the V1-003 catalog."""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+from urllib.parse import urldefrag
+from uuid import UUID
+
+ROOT = Path(__file__).resolve().parents[2]
+SCHEMAS = ROOT / "contracts/json-schema/v1"
+VALID = ROOT / "contracts/examples/v1/valid/catalog.json"
+INVALID = ROOT / "contracts/examples/v1/invalid/catalog.json"
+EXPECTED = {
+    "effective-policy.schema.json", "knowledge-asset.schema.json",
+    "evidence.schema.json", "claim.schema.json", "insight.schema.json",
+    "action-request.schema.json", "usage-ledger.schema.json",
+    "contract-error.schema.json", "domain-event.schema.json",
+}
+
+
+class ContractViolation(ValueError):
+    pass
+
+
+def load(path: Path):
+    with path.open(encoding="utf-8") as stream:
+        return json.load(stream)
+
+
+def pointer(document, fragment: str):
+    value = document
+    if fragment:
+        if not fragment.startswith("/"):
+            raise ContractViolation(f"unsupported fragment #{fragment}")
+        for part in fragment[1:].split("/"):
+            value = value[part.replace("~1", "/").replace("~0", "~")]
+    return value
+
+
+def resolve(ref: str, base: Path):
+    location, fragment = urldefrag(ref)
+    target = (base.parent / location).resolve() if location else base
+    if not target.is_relative_to(ROOT):
+        raise ContractViolation(f"reference leaves repository: {ref}")
+    return pointer(load(target), fragment), target
+
+
+def validate(instance, schema, base: Path, at: str = "$"):
+    if "$ref" in schema:
+        resolved, target = resolve(schema["$ref"], base)
+        validate(instance, resolved, target, at)
+    for branch in schema.get("allOf", []):
+        validate(instance, branch, base, at)
+    if "const" in schema and instance != schema["const"]:
+        raise ContractViolation(f"{at}: expected constant {schema['const']!r}")
+    if "enum" in schema and instance not in schema["enum"]:
+        raise ContractViolation(f"{at}: value is outside enum")
+
+    kind = schema.get("type")
+    checks = {
+        "object": lambda x: isinstance(x, dict),
+        "array": lambda x: isinstance(x, list),
+        "string": lambda x: isinstance(x, str),
+        "integer": lambda x: isinstance(x, int) and not isinstance(x, bool),
+        "number": lambda x: isinstance(x, (int, float)) and not isinstance(x, bool),
+        "boolean": lambda x: isinstance(x, bool),
+    }
+    if kind in checks and not checks[kind](instance):
+        raise ContractViolation(f"{at}: expected {kind}")
+    if kind == "object":
+        properties = schema.get("properties", {})
+        missing = set(schema.get("required", [])) - set(instance)
+        if missing:
+            raise ContractViolation(f"{at}: missing {sorted(missing)}")
+        if schema.get("additionalProperties") is False:
+            unknown = set(instance) - set(properties)
+            if unknown:
+                raise ContractViolation(f"{at}: unknown {sorted(unknown)}")
+        for name, child in properties.items():
+            if name in instance:
+                validate(instance[name], child, base, f"{at}.{name}")
+    elif kind == "array":
+        if len(instance) < schema.get("minItems", 0):
+            raise ContractViolation(f"{at}: too few items")
+        if schema.get("uniqueItems") and len({json.dumps(x, sort_keys=True) for x in instance}) != len(instance):
+            raise ContractViolation(f"{at}: duplicate items")
+        for index, item in enumerate(instance):
+            validate(item, schema.get("items", {}), base, f"{at}[{index}]")
+    elif kind == "string":
+        if len(instance) < schema.get("minLength", 0):
+            raise ContractViolation(f"{at}: string is too short")
+        if "pattern" in schema and not re.search(schema["pattern"], instance):
+            raise ContractViolation(f"{at}: pattern mismatch")
+        if schema.get("format") == "uuid":
+            try:
+                UUID(instance)
+            except ValueError as exc:
+                raise ContractViolation(f"{at}: invalid UUID") from exc
+        if schema.get("format") == "date-time":
+            try:
+                datetime.fromisoformat(instance.replace("Z", "+00:00"))
+            except ValueError as exc:
+                raise ContractViolation(f"{at}: invalid date-time") from exc
+    elif kind in ("integer", "number"):
+        if "minimum" in schema and instance < schema["minimum"]:
+            raise ContractViolation(f"{at}: below minimum")
+        if "maximum" in schema and instance > schema["maximum"]:
+            raise ContractViolation(f"{at}: above maximum")
+
+
+def walk_refs(value, base: Path):
+    if isinstance(value, dict):
+        if "$ref" in value:
+            _, target = resolve(value["$ref"], base)
+            if not target.exists():
+                raise ContractViolation(f"missing reference {value['$ref']}")
+        for child in value.values():
+            walk_refs(child, base)
+    elif isinstance(value, list):
+        for child in value:
+            walk_refs(child, base)
+
+
+def main() -> int:
+    available = {path.name for path in SCHEMAS.glob("*.schema.json")} - {"common.schema.json"}
+    if available != EXPECTED:
+        raise ContractViolation(f"schema catalog mismatch: {sorted(available ^ EXPECTED)}")
+
+    valid = load(VALID)
+    invalid = load(INVALID)
+    if set(valid) != EXPECTED or set(invalid) != EXPECTED:
+        raise ContractViolation("fixtures do not cover the complete schema catalog")
+    for name in sorted(EXPECTED):
+        schema_path = SCHEMAS / name
+        schema = load(schema_path)
+        if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+            raise ContractViolation(f"{name}: unsupported JSON Schema dialect")
+        validate(valid[name], schema, schema_path)
+        try:
+            validate(invalid[name]["payload"], schema, schema_path)
+        except ContractViolation:
+            pass
+        else:
+            raise ContractViolation(f"{name}: invalid fixture was accepted")
+
+    openapi_path = ROOT / "contracts/openapi/v1/openapi.json"
+    asyncapi_path = ROOT / "contracts/asyncapi/v1/asyncapi.json"
+    openapi = load(openapi_path)
+    asyncapi = load(asyncapi_path)
+    if openapi.get("openapi") != "3.1.0" or openapi.get("info", {}).get("version") != "1.0.0":
+        raise ContractViolation("OpenAPI metadata mismatch")
+    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.0.0":
+        raise ContractViolation("AsyncAPI metadata mismatch")
+    walk_refs(openapi, openapi_path)
+    walk_refs(asyncapi, asyncapi_path)
+    print(f"OK: {len(EXPECTED)} schemas, 18 fixtures, OpenAPI 3.1 and AsyncAPI 3.0")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (ContractViolation, KeyError, json.JSONDecodeError) as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        raise SystemExit(1)

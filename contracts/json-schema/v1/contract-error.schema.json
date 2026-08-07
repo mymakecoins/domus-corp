@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.domus.corp/v1/contract-error.schema.json","title":"ContractError",
+  "allOf":[{"$ref":"common.schema.json#/$defs/envelope"},{"type":"object","additionalProperties":false,
+    "required":["schema_version","request_id","tenant_id","workspace_id","policy_version","classification","provenance","error_id","code","message","retryable"],
+    "properties":{"schema_version":{},"request_id":{},"tenant_id":{},"workspace_id":{},"policy_version":{},"classification":{},"provenance":{},"error_id":{"$ref":"common.schema.json#/$defs/uuid"},"code":{"type":"string","enum":["AUTHORITY_UNAVAILABLE","POLICY_DENIED","BUDGET_DENIED","CONTRACT_INVALID","VERSION_UNSUPPORTED","DEPENDENCY_UNAVAILABLE","ACTION_NOT_CONFIRMED"]},"message":{"type":"string","minLength":1},"retryable":{"type":"boolean"},"details":{"type":"object"}}
+  }]
+}

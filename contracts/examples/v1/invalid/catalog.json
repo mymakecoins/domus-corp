@@ -1,0 +1,11 @@
+{
+  "effective-policy.schema.json": { "reason":"missing policy_version must fail closed", "payload":{"schema_version":"1.0.0","request_id":"11111111-1111-4111-8111-111111111111"} },
+  "knowledge-asset.schema.json": { "reason":"unknown classification", "payload":{"classification":"secret"} },
+  "evidence.schema.json": { "reason":"missing provenance", "payload":{"schema_version":"1.0.0"} },
+  "claim.schema.json": { "reason":"confidence out of range", "payload":{"confidence":2} },
+  "insight.schema.json": { "reason":"empty claim set", "payload":{"claim_ids":[]} },
+  "action-request.schema.json": { "reason":"budget scope is mandatory", "payload":{"confirmation_state":"approved"} },
+  "usage-ledger.schema.json": { "reason":"negative amount", "payload":{"amount_minor":-1} },
+  "contract-error.schema.json": { "reason":"untyped error code", "payload":{"code":"UNKNOWN"} },
+  "domain-event.schema.json": { "reason":"unversioned event type", "payload":{"event_type":"usage.recorded"} }
+}

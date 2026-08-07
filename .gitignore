@@ -1,1 +1,27 @@
-.docs
+# Dependencies and virtual environments
+node_modules/
+.pnpm-store/
+.venv/
+
+# Build and test output
+dist/
+.turbo/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+
+# Local runtime state and secrets
+.env
+.env.*
+!.env.example
+.local/
+*.log
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/

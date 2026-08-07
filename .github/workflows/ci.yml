@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+      - run: corepack enable && corepack prepare pnpm@11.9.0 --activate
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.8.15
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.11"
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --frozen
+      - run: ./scripts/verify.sh
+
+  dependency-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.9-alpine3.22
+        env:
+          POSTGRES_DB: domus
+          POSTGRES_USER: domus
+          POSTGRES_PASSWORD: ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U domus -d domus"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      PGPASSWORD: ci-only
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check-migrations.py
+      - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f migrations/000001_v1_004_baseline.up.sql
+      - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f migrations/000001_v1_004_baseline.down.sql
+
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: control-plane
+            file: apps/control-plane/Dockerfile
+          - name: knowledge-api
+            file: apps/knowledge-api/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          push: false
+          tags: domus/${{ matrix.name }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

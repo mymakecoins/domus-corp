@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.domus.corp/v1/usage-ledger.schema.json","title":"UsageLedger",
+  "allOf":[{"$ref":"common.schema.json#/$defs/envelope"},{"type":"object","additionalProperties":false,
+    "required":["schema_version","request_id","tenant_id","workspace_id","policy_version","classification","provenance","budget_scope","entry_id","kind","amount_minor","currency","state","recorded_at"],
+    "properties":{"schema_version":{},"request_id":{},"tenant_id":{},"workspace_id":{},"policy_version":{},"classification":{},"provenance":{},"budget_scope":{"$ref":"common.schema.json#/$defs/budget_scope"},"entry_id":{"$ref":"common.schema.json#/$defs/uuid"},"kind":{"type":"string","enum":["reservation","consumption","release","adjustment"]},"amount_minor":{"type":"integer","minimum":0},"currency":{"type":"string","pattern":"^[A-Z]{3}$"},"state":{"type":"string","enum":["pending","committed","released","rejected"]},"recorded_at":{"$ref":"common.schema.json#/$defs/timestamp"}}
+  }]
+}

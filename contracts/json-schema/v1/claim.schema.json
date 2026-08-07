@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.domus.corp/v1/claim.schema.json","title":"Claim",
+  "allOf":[{"$ref":"common.schema.json#/$defs/envelope"},{"type":"object","additionalProperties":false,
+    "required":["schema_version","request_id","tenant_id","workspace_id","policy_version","classification","provenance","claim_id","statement","kind","evidence_ids","confidence"],
+    "properties":{"schema_version":{},"request_id":{},"tenant_id":{},"workspace_id":{},"policy_version":{},"classification":{},"provenance":{},"claim_id":{"$ref":"common.schema.json#/$defs/uuid"},"statement":{"type":"string","minLength":1},"kind":{"type":"string","enum":["fact","inference","unsupported"]},"evidence_ids":{"type":"array","items":{"$ref":"common.schema.json#/$defs/uuid"},"uniqueItems":true},"confidence":{"type":"number","minimum":0,"maximum":1}}
+  }]
+}

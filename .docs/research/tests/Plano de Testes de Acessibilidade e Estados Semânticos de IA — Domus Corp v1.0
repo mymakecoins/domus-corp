@@ -1,0 +1,356 @@
+# Plano de Testes de Acessibilidade e Estados Semânticos de IA — Domus Corp v1.0
+
+**Produto:** Domus Corp — Plataforma de Inteligência Corporativa com IA  
+**Escopo:** front-end Electron/React, painel administrativo e workbenches  
+**Baseline obrigatório:** WCAG 2.1 nível AA  
+**Design system:** shadcn/ui + Tailwind CSS + Radix UI + Lucide Icons  
+**Status:** plano para implementação e execução pelo time de QA, UX/UI e Engenharia  
+**Data:** 07/08/2026
+
+## 1. Objetivo
+
+Este documento define como o time comprovará que as interfaces críticas do Domus Corp são acessíveis segundo **WCAG 2.1 AA** e que os estados semânticos da IA são apresentados de modo correto, consistente, compreensível e não enganoso. A referência normativa principal é a especificação WCAG 2.1 do W3C e sua Quick Reference; as ferramentas automatizadas apoiam a avaliação, mas não substituem a inspeção humana, o teste por teclado, o uso de tecnologias assistivas e os testes com usuários.[1] [2]
+
+O plano cobre componentes base do shadcn/ui, componentes compostos Domus e as jornadas de Chat, Evidence, Knowledge Workbench, Intelligence Workbench, Administração e Action Review. Também cobre temas `light`/`dark`, densidades `default`/`compact`, zoom, reflow, streaming, mensagens de status, bloqueios de policy e estados de evidência. As decisões visuais e os oito estados semânticos são derivados do design system aprovado e dos tokens tipados do produto.[6] [7]
+
+> **Princípio de segurança:** uma resposta com estado visual incorreto pode induzir uma decisão empresarial errada. Por isso, a validação semântica da IA é um gate funcional e de segurança, não apenas um teste visual.
+
+## 2. Escopo e critérios de saída
+
+A conformidade mínima da v1.0 exige que todos os critérios WCAG 2.1 A e AA aplicáveis às jornadas críticas sejam avaliados, que não existam falhas críticas ou altas abertas e que os oito estados semânticos e cinco estados de processamento sejam validados em seus contratos, componentes e transições.
+
+O design system possui uma meta mais recente de WCAG 2.2 AA. Neste plano, **WCAG 2.1 AA é o baseline contratual solicitado**; os controles adicionais já definidos pelo design system — zoom de 200%, `prefers-reduced-motion`, snapshots de temas/densidades, Select seguro, color guard e compreensão de risco — permanecem obrigatórios. Critérios exclusivos da WCAG 2.2 não serão usados para reprovar a v1.0, salvo se forem adotados expressamente em uma decisão posterior.
+
+| Critério de saída | Meta da v1.0 |
+|---|---:|
+| Componentes base críticos avaliados por axe-core ou equivalente | 100% |
+| Jornadas críticas avaliadas por automação e inspeção manual | 100% |
+| Critérios WCAG 2.1 A/AA aplicáveis avaliados | 100% |
+| Falhas WCAG nível A abertas | 0 |
+| Falhas WCAG nível AA abertas em jornada crítica | 0 |
+| Estados semânticos validados | 8 de 8 |
+| Estados de processamento validados | 5 de 5 |
+| Combinações de estado para snapshots | 8 estados × 2 temas × 2 densidades = 32 |
+| Componentes com significado semântico dependente exclusivamente de cor | 0 |
+| Buttons com Indigo/Violeta em estado interativo | 0 |
+| Evidências sem owner, testador, ambiente e versão | 0 |
+
+## 3. Superfícies e componentes-alvo
+
+A execução deve começar pelos primitivos, avançar para componentes compostos e terminar nas jornadas integradas. Nenhuma jornada deve criar um estado visual próprio que não exista no contrato de API ou no catálogo do design system.
+
+| Camada | Componentes/superfícies | Risco principal |
+|---|---|---|
+| Primitivos | `Button`, `Badge`, `Alert`, `Card`, `Input`, `Select`, `Table`, `Dialog`, `Sheet`, `Tabs`, `Command`, `Tooltip`, `Popover`, `DropdownMenu`, `Skeleton`, `Toast`, `Progress` | Nome acessível, foco, teclado, contraste, estados disabled/loading e composição correta de ARIA |
+| Confiança da IA | `AiSemanticBadge`, `AiResponseCard`, `CitationPill`, `EvidenceSheet`, `SourceFreshnessBadge`, `StreamingIndicator`, `EmptyStateWithNextAction` | Estado incorreto, cor como único sinal, evidência não autorizada e anúncio excessivo de streaming |
+| Governança | `PolicyDecisionBanner`, `BudgetMeter`, `KnowledgeAssetRow`, tabelas e filtros | Bloqueio não compreensível, dados omitidos revelados, Select inválido e densidade ilegível |
+| Ação | `ActionReviewDialog`, confirmação, recibo, status e kill switch | Ação sem alçada, confirmação ambígua, parâmetros sensíveis expostos e foco perdido |
+| Jornadas | Chat, Evidence, Knowledge Workbench, Intelligence Workbench, painel administrativo e Action Review | Regressão entre componentes, contexto perdido, fluxo não concluível por teclado ou leitor de tela |
+
+## 4. Ambientes e matriz de execução
+
+A automação deve rodar em Chromium headless e headed, enquanto a validação manual deve cobrir o ambiente Electron real e, quando o painel for disponibilizado como web, um navegador adicional. As versões exatas usadas no release devem ser registradas no relatório.
+
+| Dimensão | Cobertura mínima | Cobertura complementar |
+|---|---|---|
+| Navegador/runtime | Electron baseado em Chromium; Chrome/Chromium estável | Firefox estável para painel web |
+| Sistema operacional | Windows 11 + NVDA; macOS + VoiceOver | Linux + Orca, quando houver suporte operacional |
+| Teclado | Navegação sem mouse, Tab, Shift+Tab, Enter, Space, Escape, setas, Home/End | Teclado internacional e atalho de leitor de tela |
+| Zoom/reflow | 100%, 200%, 400% e viewport equivalente a 320 CSS px | Escala de fonte do sistema e alto contraste/forced colors |
+| Temas | `light` e `dark` | `prefers-color-scheme` e troca de tema em runtime |
+| Densidade | `default` e `compact` | Redução de motion e aumento de fonte |
+| Preferências | `prefers-reduced-motion: reduce` | Contraste aumentado e modo monocromático |
+| Dados | Fixtures sintéticos autorizados, conflitantes, obsoletos, bloqueados e incompletos | Dados anonimizados representativos do piloto |
+
+A combinação mínima para aceite de jornada é Chromium/Electron + teclado + leitor de tela em pelo menos Windows/NVDA ou macOS/VoiceOver, 200% de zoom, `light`/`dark` e `default`/`compact`. O teste automatizado não deve ser usado como substituto de nenhuma dessas combinações.
+
+## 5. Estratégia em camadas
+
+A estratégia possui seis camadas. A primeira captura erros baratos, como tokens proibidos e nomes ausentes. A segunda valida componentes isolados. A terceira valida contratos de estado e payloads. A quarta verifica jornadas com automação. A quinta usa inspeção manual e tecnologia assistiva. A sexta executa testes com usuários e o gate final.
+
+| Camada | Quando executar | Ferramentas/método | Gate |
+|---|---|---|---|
+| Estático | Todo pull request | TypeScript, ESLint, regras de tokens, guardrail de Button, validação de `Select.Item`, semântica JSX | Bloqueia merge |
+| Unitário | Alteração de componente/estado | Vitest/Jest, React Testing Library, `jest-axe` ou equivalente | Zero falha crítica/alta |
+| Contrato | Alteração de API ou estado | JSON Schema/OpenAPI, fixtures versionadas, testes de enum e payload | Bloqueia quebra ou estado desconhecido |
+| Integração | Alteração de jornada | Playwright, axe-core, snapshots, mock server e eventos SSE | Bloqueia jornada crítica |
+| Manual assistivo | Cada marco D2, D3, D4, D5 e release | Teclado, NVDA, VoiceOver, zoom, temas, reduced motion | Zero falha A/AA aplicável |
+| Usuário e release | RC e piloto | Roteiros de tarefa, compreensão de estados e risco, evidências Go/No-Go | Aprovação QA/UX/Produto |
+
+Nenhuma ferramenta automatizada deve ser tratada como prova suficiente de conformidade. O relatório deve registrar tanto o resultado da automação quanto as limitações de cobertura e a avaliação humana.[1] [2]
+
+## 6. Matriz de cobertura WCAG 2.1 A/AA
+
+A tabela abaixo organiza os critérios aplicáveis ao front-end do Domus. Critérios de mídia são condicionais, mas tornam-se aplicáveis às funcionalidades de reuniões, transcrição, áudio ou vídeo do produto. Os critérios devem ser marcados como **Aprovado**, **Reprovado**, **Não aplicável com justificativa** ou **Não testado — bloqueio**.
+
+| Princípio/critério | Nível | Aplicação no Domus | Evidência mínima |
+|---|---:|---|---|
+| 1.1.1 Conteúdo não textual | A | Ícones, gráficos, status, controles icon-only e imagens de fontes | Nome acessível, texto alternativo ou decoração ignorável; teste por leitor de tela |
+| 1.2.1 Áudio/vídeo pré-gravado | A | Reuniões, gravações e mídia anexada, se expostas | Alternativa textual ou equivalente |
+| 1.2.2 Legendas pré-gravadas | A | Vídeos/áudios com diálogo, se expostos | Legendas sincronizadas |
+| 1.2.3 Audiodescrição ou alternativa | A | Mídia pré-gravada relevante, se exposta | Alternativa equivalente |
+| 1.2.4 Legendas ao vivo | AA | Reuniões ou eventos ao vivo com áudio | Legendas ao vivo ou declaração formal de não aplicabilidade |
+| 1.2.5 Audiodescrição pré-gravada | AA | Mídia pré-gravada relevante, se exposta | Faixa/alternativa de audiodescrição |
+| 1.3.1 Informação e relações | A | Headings, labels, tabelas, badges, estados e formulários | DOM semântico, ARIA justificada e inspeção de árvore acessível |
+| 1.3.2 Sequência significativa | A | Chat, Evidence Sheet, Dialog, tabelas e workbenches | Ordem DOM/foco coerente com a leitura |
+| 1.3.3 Características sensoriais | A | Instruções de navegação e próximos passos | Instruções não dependem somente de posição, forma ou cor |
+| 1.3.4 Orientação | AA | Electron e painel em orientação/resize suportados | Conteúdo funciona sem impor orientação indevida |
+| 1.3.5 Identificação do propósito de entrada | AA | Login, onboarding, perfil e filtros com dados pessoais | `autocomplete`/propósito identificável quando aplicável |
+| 1.4.1 Uso da cor | A | Estados da IA, conflito, bloqueio, frescor e risco | Texto/ícone/estrutura além da cor |
+| 1.4.2 Controle de áudio | A | Áudio de reuniões ou notificações sonoras, se houver | Pausa/volume independente e sem reprodução inesperada |
+| 1.4.3 Contraste mínimo | AA | Texto, labels, badges, links, estados, temas e botões | Medição de 4,5:1 para texto normal e 3:1 para texto grande |
+| 1.4.4 Redimensionamento de texto | AA | UI, resposta, evidência, tabelas e dialogs | 200% sem perda de conteúdo ou função |
+| 1.4.5 Imagens de texto | AA | Logos/artefatos visuais, se usados | Texto real ou exceção justificada |
+| 1.4.10 Reflow | AA | Layout, workbenches e Action Review | 320 CSS px/400% sem rolagem bidimensional indevida; exceções documentadas para tabelas |
+| 1.4.11 Contraste não textual | AA | Bordas, foco, ícones, componentes, gráficos e estados | 3:1 para componentes/objetos gráficos relevantes |
+| 1.4.12 Espaçamento de texto | AA | Resposta, tabelas, badges, dialogs e mensagens | Aumento de espaçamento sem corte/sobreposição |
+| 1.4.13 Conteúdo em hover/focus | AA | Tooltip, Popover, Evidence Sheet e menus | Conteúdo acessível por teclado, dispensável e persistente quando necessário |
+| 2.1.1 Teclado | A | Toda função do produto | Completar fluxo sem mouse |
+| 2.1.2 Sem armadilha de teclado | A | Dialog, Sheet, Popover, Select, Command e menus | Entrar/sair sem ficar preso |
+| 2.1.4 Atalhos de tecla de caractere | A | Command, atalhos do desktop e hotkeys | Desativar/remapear/ativar somente com foco quando aplicável |
+| 2.2.1 Tempo ajustável | A | Sessão, expiração, streaming, jobs e notificações | Aviso, extensão ou controle quando houver limite |
+| 2.2.2 Pausar, parar, ocultar | A | Streaming, animações, alertas e atualização automática | Controle de movimento/atualização e reduced motion |
+| 2.3.1 Três flashes ou abaixo do limiar | A | Streaming, erro e notificações | Análise de flash e inspeção visual |
+| 2.4.1 Ignorar blocos | A | Admin, workbenches e chat | Skip link, landmarks ou navegação equivalente |
+| 2.4.2 Página/tela titulada | A | Janelas Electron, painel, dialogs e sheets | Título da tela/janela e heading principal |
+| 2.4.3 Ordem de foco | A | Chat, Evidence, workbenches e Action Review | Ordem previsível e sem saltos indevidos |
+| 2.4.4 Propósito do link | A | Citações, ajuda, links de fonte e navegação | Nome identifica destino ou finalidade |
+| 2.4.5 Várias formas | AA | Painel e workbenches | Busca, navegação, Command e links consistentes |
+| 2.4.6 Headings e labels | AA | Formulários, tabelas, filtros e estados | Rótulos descritivos e hierarquia semântica |
+| 2.4.7 Foco visível | AA | Todos os controles e componentes compostos | Foco visível em light/dark e compact/default |
+| 2.5.1 Gestos de ponteiro | A | Arraste, seleção, zoom e interações do workbench | Alternativa simples sem gesto complexo |
+| 2.5.2 Cancelamento de ponteiro | A | Botões, drag/drop e ações externas | Down-event não executa de modo irreversível ou permite cancelamento |
+| 2.5.3 Label no nome | A | Buttons, icon-only controls e ações de Action Review | Nome acessível contém o label visível |
+| 2.5.4 Atuação por movimento | A | Recursos de desktop/móvel baseados em movimento, se houver | Alternativa por controle e possibilidade de desligar |
+| 3.1.1 Idioma da página/tela | A | `pt-BR` do painel e Electron | `lang`/idioma da janela correto |
+| 3.1.2 Idioma das partes | AA | Trechos em inglês, termos técnicos e fontes | Idioma de partes identificado quando necessário |
+| 3.2.1 Em foco | A | Select, Dialog, Tooltip, inputs e links | Foco não inicia mudança inesperada |
+| 3.2.2 Em entrada | A | Filtros, Select, Command e formulários | Mudança previsível ou aviso prévio |
+| 3.2.3 Navegação consistente | AA | Navegação do painel/workbenches | Ordem e localização consistentes |
+| 3.2.4 Identificação consistente | AA | Ícones, labels, badges e ações equivalentes | Mesmo componente mantém nome/uso |
+| 3.3.1 Identificação de erro | A | Login, filtros, upload, Action Review e formulários | Erro identificado em texto e associado ao campo |
+| 3.3.2 Labels/instruções | A | Inputs, filtros, confirmação e risco | Label, formato, unidade e instrução disponíveis |
+| 3.3.3 Sugestão de erro | AA | Validação de formulário e parâmetros de ação | Mensagem sugere correção sem expor segredo |
+| 3.3.4 Prevenção de erro legal/financeiro/dados | AA | Deleção, publicação, política, budget e ação externa | Revisão, confirmação ou reversibilidade |
+| 4.1.1 Parsing | A | HTML/DOM do painel e componentes web | Markup válido e sem IDs duplicados críticos |
+| 4.1.2 Nome, função, valor | A | Componentes Radix/shadcn e customizados | Árvore acessível, estados e valores expostos |
+| 4.1.3 Mensagens de status | AA | Streaming, sucesso, bloqueio, erro, recibo e processamento | `aria-live`/status sem foco forçado indevido |
+
+## 7. Casos de teste de acessibilidade por componente
+
+### 7.1. Controles, foco e navegação
+
+**A11Y-COMP-001 — Button.** Cada variante deve possuir nome acessível, estado `disabled`/loading anunciado, foco visível, operação por Enter/Space e contraste suficiente. O teste deve inspecionar que nenhum estilo executável use `#271BAE`, `#310AE3`, `bg-indigo-*`, `bg-violet-*`, `brand-depth` ou `brand-secondary` em background, hover, active ou borda ativa. Icon-only buttons precisam de `aria-label` e o nome acessível deve conter o label visível.
+
+**A11Y-COMP-002 — Input, Select e filtros.** Cada campo deve ter label associado, descrição de formato, estado de erro e mensagem associada por `aria-describedby`. `Select.Item` nunca pode receber `value=""`; placeholder pertence ao valor selecionado. Owners, workspaces, fontes, providers e modelos devem ser alfabéticos, salvo ordenação de prioridade, risco ou recência explicitamente indicada.
+
+**A11Y-COMP-003 — Dialog, Sheet, Popover e Tooltip.** Ao abrir, o foco vai para o primeiro controle útil ou título; ao fechar, retorna ao disparador. Escape fecha quando a operação for cancelável. O conteúdo não pode ficar preso, ser cortado em 200% ou depender exclusivamente de hover. Ações irreversíveis permanecem em Dialog/Action Review, não somente em DropdownMenu.
+
+**A11Y-COMP-004 — Table, Tabs, Command e menus.** Cabeçalhos são associados às células; seleção e ordenação são anunciadas; tabs expõem seleção e relação com painel; menus e Command funcionam por teclado e não duplicam atalhos de caractere sem controle. A densidade `compact` não pode reduzir legibilidade ou alvo operacional abaixo do que o fluxo exige.
+
+### 7.2. Estados, mensagens e movimento
+
+**A11Y-COMP-005 — Status e streaming.** Mensagens de processo, conclusão, cancelamento e falha usam região de status apropriada, normalmente `aria-live="polite"` para streaming. O conteúdo não deve ser anunciado a cada token; recomenda-se anunciar início, marcos relevantes e conclusão. A alteração de estado não deve roubar foco nem piscar.
+
+**A11Y-COMP-006 — Tema, contraste e movimento.** Cada componente deve ser testado em `light`/`dark`, `default`/`compact`, contraste normal e `prefers-reduced-motion`. Focus rings, links, borders, icons, badges e estados semânticos devem manter contraste; a cor nunca é o único meio de comunicação.
+
+**A11Y-COMP-007 — Evidência e RLS.** A UI deve exibir “Informação restrita pela política” quando o backend omitir conteúdo, sem revelar título, existência, tamanho, trecho ou metadado em tooltip, `aria-label`, DOM oculto, analytics ou logs de navegador.
+
+**A11Y-COMP-008 — Action Review.** O fluxo deve expor intenção, destino, parâmetros redigidos, impacto, risco, alçada, confirmação, estado de execução, recibo e próxima ação. O usuário precisa poder revisar antes de executar e distinguir conteúdo sugerido pelo modelo de conteúdo que será enviado ao sistema externo.
+
+## 8. Contrato dos estados semânticos da IA
+
+A UI deve consumir o enum e os metadados do contrato tipado, sem classificar o texto por heurística. Cada estado precisa renderizar **label, descrição, ícone, tom, próxima ação e evidência compatível**. O valor de `tone` orienta a apresentação, mas não substitui o texto e a estrutura.
+
+| Código | Label | Ícone | Tom | Ação contratual atual | Expectativa funcional |
+|---|---|---|---|---|---|
+| `fundamentada` | Fundamentada | `ShieldCheck` | success | `none` | Evidência vigente e autorizada; citações continuam disponíveis. |
+| `parcial` | Parcial | `CircleAlert` | warning | `review-source` | Explicita lacunas e oferece revisão da fonte. |
+| `conflitante` | Conflitante | `GitCompareArrows` | warning | `review-owner` | Exibe divergência, versões e owners; não escolhe regra silenciosamente. |
+| `inferida` | Inferida | `Sparkles` | info | `review-source` | Separa interpretação de regra oficial e expõe premissas. |
+| `sem-evidencia` | Sem evidência | `FileQuestion` | muted | `review-source` | Não inventa resposta; oferece refinamento ou abertura de gap. |
+| `obsoleta` | Obsoleta | `ClockAlert` | warning | `review-owner` | Indica fonte fora de vigência/SLA e evita apresentá-la como regra atual. |
+| `bloqueada` | Bloqueada | `ShieldX` | error | `contact-admin` | Explica bloqueio sem revelar policy sensível e não oferece bypass. |
+| `inconclusiva` | Inconclusiva | `CircleDashed` | muted | `retry` | Não afirma sucesso; oferece retry ou investigação. |
+
+Existe uma decisão que deve ser resolvida antes do gate final: a tabela conceitual do design system sugere “Inspecionar fonte” para `fundamentada`, enquanto o contrato tipado atual define `action: 'none'`. Este plano considera o contrato tipado a fonte operacional: o badge pode ter ação `none` e a resposta ainda deve oferecer `CitationPill`. Se o produto quiser um CTA direto no badge, o enum e seus testes precisam ser alterados juntos antes do merge.
+
+### 8.1. Estados de processamento
+
+Os estados epistemológicos não substituem estados técnicos de processamento. A UI deve validar separadamente:
+
+| Código | Label | Teste principal |
+|---|---|---|
+| `processando` | Processando | Loading acessível, sem falsa conclusão e sem foco roubado |
+| `streaming` | Gerando resposta | Anúncio de início/marcos/fim, movimento reduzível e cancelamento |
+| `concluida` | Concluída | Mensagem de status, estado semântico e ações disponíveis |
+| `cancelada` | Cancelada | Estado explícito, sem tratar como falha ou sucesso |
+| `falha` | Falha | Erro técnico separado de Sem evidência/Bloqueada, com retry seguro |
+
+## 9. Matriz de validação dos oito estados
+
+A matriz mínima deve ser executada nos componentes `AiSemanticBadge`, `AiResponseCard`, `CitationPill`/`EvidenceSheet`, `InsightCard` e nas jornadas Chat, Knowledge Workbench e Intelligence Workbench. Cada caso deve ser repetido em `light`/`dark` e `default`/`compact` quando a superfície suportar os modos.
+
+| ID | Estado | Pré-condição/fixture | Ações | Resultado esperado | Falha bloqueadora |
+|---|---|---|---|---|---|
+| SEM-001 | Fundamentada | Evidência vigente, autorizada, trecho e versão válidos | Abrir resposta e citação | Label/ícone/descrição corretos; citação abre fonte autorizada; nenhum texto afirma mais do que a evidência | Estado apresentado como autoridade sem evidência ou citação vazando |
+| SEM-002 | Parcial | Parte da resposta tem fonte; lacuna conhecida | Expandir detalhes e revisar fonte | Label Parcial, lacuna explícita, CTA de revisão, sem completar a lacuna por invenção | Parcial apresentado como Fundamentada |
+| SEM-003 | Conflitante | Duas fontes autorizadas com claims divergentes | Abrir EvidenceSheet | Divergência, versões e owners visíveis; fontes lado a lado; nenhuma escolha silenciosa | UI escolhe uma regra ou oculta a fonte conflitante |
+| SEM-004 | Inferida | Resposta derivada sem regra normativa equivalente | Ler resposta e premissas | Inferida, premissas e CTA de revisão; separação estrutural de fato | Inferência apresentada como fato |
+| SEM-005 | Sem evidência | Retrieval sem fonte elegível | Tentar refinar/perguntar novamente | Mensagem honesta, estado Sem evidência, CTA de gap/retry; nenhum conteúdo inventado | UI exibe resposta plausível como oficial |
+| SEM-006 | Obsoleta | Fonte fora da vigência ou SLA | Abrir fonte e resposta | Obsoleta, vigência/frescor visíveis, CTA ao owner e aviso antes da interpretação | Fonte obsoleta exibida como regra atual |
+| SEM-007 | Bloqueada | Policy, budget, classificação ou escopo impede operação | Solicitar consulta/ação | Bloqueada, motivo seguro e contato admin; nenhum conteúdo restrito, segredo ou bypass | Bloqueio sem explicação, bypass ou vazamento de policy |
+| SEM-008 | Inconclusiva | Provider/connector/reconciliation sem confirmação segura | Observar término e tentar retry | Inconclusiva, causa compreensível, retry seguro; não afirma sucesso | Estado tratado como sucesso ou ação duplicada |
+
+## 10. Casos de contrato e robustez semântica
+
+| ID | Situação | Resultado obrigatório |
+|---|---|---|
+| SEM-CON-001 | Payload com estado desconhecido | Falhar validação; nunca mapear para Fundamentada. Mostrar fallback seguro, preferencialmente Inconclusiva/erro de contrato, e registrar telemetria sem conteúdo sensível. |
+| SEM-CON-002 | Estado sem label, descrição, ícone ou ação | Falhar schema ou usar fallback seguro; nunca renderizar badge vazio ou somente colorido. |
+| SEM-CON-003 | Estado semanticamente válido com tom errado | Teste de contrato/componente falha; o estado deve ser determinado pelo catálogo, não por cor arbitrária da tela. |
+| SEM-CON-004 | Estado muda durante streaming | Transição deve ser monotônica e explicável; não pode piscar entre estados nem anunciar repetidamente o mesmo conteúdo. |
+| SEM-CON-005 | Erro técnico do provider | Usar `AiProcessingState.falha`; não converter automaticamente em `sem-evidencia`, `bloqueada` ou `inconclusiva` sem causa correspondente. |
+| SEM-CON-006 | Conteúdo omitido por RLS | Não renderizar título, tamanho, snippet, tooltip, `aria-label`, DOM oculto ou evento de analytics que revele existência do item. |
+| SEM-CON-007 | Estado em tema escuro/compacto | Label, ícone, descrição, foco e CTA permanecem legíveis e semanticamente idênticos. |
+| SEM-CON-008 | Estado acompanhado de ação | A ação exibida deve ser a permitida pelo contrato; ação externa continua sujeita ao Action Review e à autorização server-side. |
+
+## 11. Automação proposta
+
+### 11.1. Pull request
+
+Cada pull request de frontend deve executar type-check, lint, testes unitários, testes de contrato, `axe-core` nos componentes alterados, teste de estados, validação de tokens e teste de ausência de cores proibidas em Buttons. A suíte deve falhar quando houver estado semântico não coberto, `Select.Item` com valor vazio, nome acessível ausente, `aria-live` incorreto ou snapshot crítico alterado sem aprovação.
+
+O conjunto mínimo de arquivos de teste recomendado é:
+
+```text
+src/tests/design-system-a11y.spec.ts
+src/tests/design-system-color-guard.spec.ts
+src/tests/semantic-states.spec.ts
+src/tests/semantic-state-contract.spec.ts
+src/tests/chat-accessibility.spec.ts
+src/tests/evidence-accessibility.spec.ts
+src/tests/action-review-accessibility.spec.ts
+src/tests/workbench-accessibility.spec.ts
+```
+
+### 11.2. Playwright e axe-core
+
+A suíte deve montar cada jornada com fixtures controladas, esperar a estabilização de streaming e executar `axe-core` no estado relevante. O resultado deve ser associado a commit, navegador, tema, densidade, fixture, versão do design system e issue. Playwright deve validar locators por role/name, não seletores frágeis baseados em classe visual; o teste deve confirmar teclado, foco, mensagens de status, abertura/fechamento de Dialog/Sheet e ausência de conteúdo RLS.
+
+A automação não deve marcar uma jornada como aprovada somente porque axe não encontrou violações. Um resultado verde precisa ser combinado com casos manuais e evidências de compreensão.
+
+### 11.3. Testes manuais assistivos
+
+O roteiro manual deve iniciar com o navegador/cliente em estado limpo e seguir a jornada sem mouse. O avaliador deve registrar a sequência de teclas, o anúncio do leitor de tela, o foco antes/depois de cada modal, o conteúdo de `aria-live`, a distinção entre fato/inferência/conflito/bloqueio, a capacidade de revisar uma ação e a possibilidade de sair de qualquer componente.
+
+Os roteiros mínimos são: iniciar sessão e onboarding; realizar pergunta fundamentada; abrir uma citação; revisar fonte conflitante; acessar um Knowledge Workbench; ler um insight; abrir Action Review; cancelar uma ação; receber erro de provider; usar retry; alterar tema; alterar densidade; ampliar para 200%; e concluir uma exclusão com confirmação explícita.
+
+### 11.4. Testes visuais e de contraste
+
+Cada snapshot deve ser gerado para os oito estados semânticos em `light`/`dark` e `default`/`compact`, além de estados de loading, bloqueio, erro, empty state e foco. A validação deve medir o estilo computado, não somente o token nominal, para capturar overrides e classes Tailwind acidentais. O color guard deve verificar background, hover, active e borda ativa de qualquer Button.
+
+Os limiares de WCAG 2.1 devem ser aplicados aos pares efetivamente renderizados: texto normal com contraste mínimo de 4,5:1; texto grande com 3:1; componentes de interface e objetos gráficos relevantes com 3:1. O resultado deve identificar foreground, background, tema, estado, componente e tamanho do texto.[1] [2]
+
+## 12. Dados e fixtures de teste
+
+Os fixtures devem ser sintéticos ou anonimizados e conter apenas o menor contexto necessário. Cada fixture precisa de `tenant_id`, `workspace_id`, classificação, versão de policy, estado do ativo, owner, vigência e evidências coerentes.
+
+| Fixture | Uso |
+|---|---|
+| `grounded-current.json` | Fundamentada com fonte atual e autorizada |
+| `partial-gap.json` | Parcial com lacuna explícita |
+| `conflict-two-sources.json` | Conflitante com duas fontes autorizadas |
+| `inferred-no-normative-source.json` | Inferida com premissas |
+| `no-evidence.json` | Sem evidência após retrieval vazio |
+| `expired-source.json` | Obsoleta por vigência/SLA |
+| `blocked-by-policy.json` | Bloqueada sem expor policy sensível |
+| `inconclusive-timeout.json` | Inconclusiva após timeout/reconciliação |
+| `unknown-semantic-state.json` | Estado não reconhecido para testar fail-safe |
+| `missing-state-metadata.json` | Label/description/icon/action ausentes |
+| `unauthorized-evidence.json` | Fonte fora do escopo/RLS |
+| `processing-transitions.json` | Processando → streaming → concluída/cancelada/falha |
+| `high-risk-action.json` | Action Review com deleção/alteração externa |
+| `long-content-reflow.json` | Texto longo, tabela, labels e mensagens em zoom/reflow |
+
+## 13. Definição de severidade e triagem
+
+| Severidade | Exemplos | Política |
+|---|---|---|
+| Bloqueadora | Falha de teclado, armadilha de foco, estado Fundamentada falso, vazamento RLS, ação executada sem confirmação, ausência de nome em controle crítico | Bloqueia merge/release imediatamente |
+| Alta | Contraste AA em jornada crítica, foco invisível, estado conflitante oculto, streaming não anunciado, erro não associado, Button com Indigo/Violeta | Bloqueia release; merge somente com correção ou exceção formal |
+| Média | Inconsistência de label, ordem secundária de leitura, snapshot não coberto, tooltip pouco claro sem perda de função | Corrigir antes do piloto ou registrar prazo/owner |
+| Baixa | Ajuste cosmético sem perda de significado ou operação | Backlog priorizado; não pode ocultar falha A/AA |
+
+Defeitos relacionados a semântica da IA devem ser classificados também pelo risco de decisão: um erro de tom é relevante quando muda a interpretação de uma inferência, conflito, obsolescência ou bloqueio. A severidade não deve ser reduzida por o layout “parecer correto”.
+
+## 14. Gates de CI/CD e release
+
+### Gate de pull request
+
+O PR deve falhar por TypeScript inválido, enum sem teste, componente sem nome acessível, violação axe crítica/alta, contraste reprovado, Button com Indigo/Violeta, `Select.Item` vazio, snapshot crítico não aprovado, estado desconhecido não tratado ou exposição de conteúdo protegido no DOM/telemetria.
+
+### Gate de marco D2–D5
+
+Antes de avançar de D2, todos os primitivos precisam de testes de teclado, foco, contraste, tema, densidade e reduced motion. Antes de avançar de D3/D4, os oito estados precisam de fixtures, componentes e snapshots. Antes de D5, Action Review precisa de revisão manual com teclado/leitor de tela e confirmação de risco. Antes de D6, documentação, Storybook, evidências e owners devem estar publicados.
+
+### Gate de release candidate
+
+O release report deve conter matriz WCAG aplicável, relatório axe, resultados Playwright, evidências NVDA/VoiceOver, snapshots, contraste, color guard, cobertura dos 8 estados × 2 temas × 2 densidades, casos de contrato inválido, incidentes conhecidos, exceções aprovadas e plano de correção. Nenhuma exceção pode liberar um bypass de segurança, um vazamento de dados ou uma falsa indicação de resposta Fundamentada.
+
+## 15. Evidências e modelo de relatório
+
+Cada execução deve registrar:
+
+| Campo | Conteúdo |
+|---|---|
+| Identificação | ID do teste, issue, componente/jornada, commit e versão do design system |
+| Ambiente | OS, Electron/browser, versão, viewport, zoom, tema, densidade, leitor de tela |
+| Fixture | Nome, tenant/workspace sintético, estado, policy e versão da API |
+| Procedimento | Passos, teclas, ações, eventos e expectativa |
+| Resultado | Aprovado/reprovado/não aplicável com justificativa |
+| Evidência | Screenshot/snapshot, vídeo curto quando necessário, log axe, árvore acessível, trace e relatório de contraste |
+| Defeito | Severidade, descrição, reprodução, impacto, owner, issue e reteste |
+| Aprovação | QA, UX/UI, Engenharia, Segurança quando houver dados/ações e Product quando houver decisão semântica |
+
+Screenshots não devem conter dados reais. Logs, traces, analytics e artefatos devem ser redigidos. Evidências de RLS devem provar ausência sem revelar o conteúdo protegido.
+
+## 16. Responsabilidades
+
+| Papel | Responsabilidade |
+|---|---|
+| QA | Planejar suíte, manter fixtures, executar automação, classificar falhas e emitir relatório |
+| UX/UI | Definir compreensão esperada, hierarquia, linguagem, focus order e validar com usuários |
+| Frontend | Corrigir componentes, semântica, tokens, estados, eventos de status e testes unitários |
+| Backend/IA | Garantir contrato de estado, evidência, policy, classificação e payloads estáveis |
+| Segurança/Privacidade | Validar RLS, redaction, bloqueios, ações, dados sensíveis e exceções |
+| Product Owner | Aprovar critérios de aceitação, risco de interpretação e Go/No-Go |
+| Usuários-piloto | Validar entendimento de fatos, inferências, conflitos, bloqueios, evidências e ações |
+
+## 17. Definition of Done de acessibilidade e estados
+
+Uma entrega de front-end só está pronta quando:
+
+1. todos os critérios WCAG 2.1 A/AA aplicáveis ao fluxo foram avaliados;
+2. o componente possui nome, função, valor, foco, teclado, contraste e mensagem de erro/status adequados;
+3. o fluxo funciona em `light`/`dark`, `default`/`compact`, zoom de 200% e reduced motion;
+4. nenhum significado depende exclusivamente de cor, hover, movimento ou posição;
+5. os oito estados semânticos e cinco estados de processamento têm fixtures e testes;
+6. estados desconhecidos, metadados ausentes, evidência não autorizada e falhas de provider têm comportamento fail-safe;
+7. as transições de streaming não roubam foco nem anunciam ruído excessivo;
+8. Action Review, deleção, confirmação e recibo foram testados com teclado e leitor de tela;
+9. axe/Playwright, testes unitários, contratos, snapshots, contraste e color guard foram executados;
+10. evidências estão anexadas à issue, com revisão humana e sem dados reais;
+11. não existe falha bloqueadora ou alta sem correção ou exceção formal autorizada.
+
+## Referências
+
+[1]: https://www.w3.org/TR/WCAG21/ "Web Content Accessibility Guidelines (WCAG) 2.1 — W3C Recommendation"  
+[2]: https://www.w3.org/WAI/WCAG21/quickref/ "How to Meet WCAG 2 — Quick Reference — W3C"  
+[3]: https://github.com/dequelabs/axe-core "axe-core — engine de testes de acessibilidade"  
+[4]: https://playwright.dev/docs/accessibility-testing "Playwright — Accessibility testing"  
+[5]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions "MDN — ARIA live regions"  
+[6]: ./DESIGN_SYSTEM_DOMUS_CORP.md "Design System — Domus Corp v1.0"  
+[7]: ./domus-design-tokens.ts "Tokens tipados e contrato de estados semânticos"  
+[8]: ./PRD_DomusCorp.md "PRD — Domus Corp v1.0"  
+[9]: ./Backlog_V1_DomusCorp.md "Backlog Mestre de Issues — Domus Corp v1.0"

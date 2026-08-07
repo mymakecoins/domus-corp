@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.domus.corp/v1/common.schema.json",
+  "title": "CrossRuntimeCommon",
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "classification": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "restricted"]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_version", "observed_at", "producer"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/uuid" },
+        "source_version": { "type": "string", "minLength": 1 },
+        "observed_at": { "$ref": "#/$defs/timestamp" },
+        "producer": { "type": "string", "minLength": 1 },
+        "parent_ids": { "type": "array", "items": { "$ref": "#/$defs/uuid" }, "uniqueItems": true }
+      }
+    },
+    "budget_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope_id", "currency", "limit_minor", "remaining_minor"],
+      "properties": {
+        "scope_id": { "$ref": "#/$defs/uuid" },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "limit_minor": { "type": "integer", "minimum": 0 },
+        "remaining_minor": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "required": ["schema_version", "request_id", "tenant_id", "workspace_id", "policy_version", "classification", "provenance"],
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "request_id": { "$ref": "#/$defs/uuid" },
+        "tenant_id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "policy_version": { "type": "string", "minLength": 1 },
+        "classification": { "$ref": "#/$defs/classification" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    }
+  }
+}

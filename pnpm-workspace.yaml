@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+storeDir: .pnpm-store
+injectWorkspacePackages: true
+
+allowBuilds:
+  # Transitive tooling dependency; Domus does not execute its install script.
+  esbuild: false

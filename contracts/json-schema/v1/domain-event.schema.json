@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.domus.corp/v1/domain-event.schema.json","title":"DomainEvent",
+  "allOf":[{"$ref":"common.schema.json#/$defs/envelope"},{"type":"object","additionalProperties":false,
+    "required":["schema_version","request_id","tenant_id","workspace_id","policy_version","classification","provenance","event_id","event_type","occurred_at","subject_id","payload"],
+    "properties":{"schema_version":{},"request_id":{},"tenant_id":{},"workspace_id":{},"policy_version":{},"classification":{},"provenance":{},"event_id":{"$ref":"common.schema.json#/$defs/uuid"},"event_type":{"type":"string","enum":["knowledge.asset.accepted.v1","knowledge.asset.quarantined.v1","intelligence.insight.created.v1","action.requested.v1","usage.recorded.v1"]},"occurred_at":{"$ref":"common.schema.json#/$defs/timestamp"},"subject_id":{"$ref":"common.schema.json#/$defs/uuid"},"payload":{"type":"object"}}
+  }]
+}

@@ -1,0 +1,206 @@
+/*
+ * Domus Corp — Design Tokens v1.0
+ * Fundação: shadcn/ui + Tailwind CSS
+ * Paleta-base: BetaUp Soluções
+ * Regra: Core Indigo e Beta Violet não podem ser usados em Buttons.
+ */
+
+@layer base {
+  :root {
+    /* shadcn/ui semantic tokens — light mode */
+    --background: 220 50% 98%; /* Cloud #F6F8FC */
+    --foreground: 221 39% 11%; /* Ink #111827 */
+
+    --card: 0 0% 100%; /* White #FFFFFF */
+    --card-foreground: 221 39% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 11%;
+
+    /* Buttons use Beta Blue or neutrals only. */
+    --primary: 215 97% 49%; /* Beta Blue #0468F7 */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 224 76% 48%; /* Blue 700 / #1D4ED8 */
+
+    --secondary: 210 40% 96%; /* Neutral 100 / #F1F5F9 */
+    --secondary-foreground: 222 47% 11%; /* Neutral 800 / #1E293B */
+    --secondary-hover: 214 32% 91%; /* Neutral 200 / #E2E8F0 */
+
+    --muted: 220 50% 98%;
+    --muted-foreground: 217 11% 40%; /* Slate #5B6472 */
+
+    /* Neutral accent: prevents ghost buttons from inheriting Indigo/Violet. */
+    --accent: 214 32% 91%;
+    --accent-foreground: 221 39% 11%;
+
+    --destructive: 0 74% 42%; /* Error Strong #B91C1C */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%; /* Border Default #E2E8F0 */
+    --input: 214 32% 83%; /* Border Strong #CBD5E1 */
+    --ring: 215 97% 49%; /* Beta Blue */
+
+    /* Brand tokens — never bind these to Button variants. */
+    --brand-primary: 215 97% 49%; /* #0468F7 */
+    --brand-accent: 201 98% 50%; /* Beta Cyan #02A4FC */
+    --brand-depth: 245 73% 39%; /* Core Indigo #271BAE */
+    --brand-secondary: 251 92% 46%; /* Beta Violet #310AE3 */
+
+    /* Surfaces */
+    --surface-cloud: 220 50% 98%;
+    --surface-white: 0 0% 100%;
+    --surface-dark: 224 18% 12%; /* Deep Night #191C24 */
+    --surface-deep: 226 49% 8%; /* Midnight #0B1020 */
+    --surface-graphite: 224 13% 17%; /* Graphite #272A31 */
+
+    /* Text and borders */
+    --text-ink: 221 39% 11%;
+    --text-graphite: 224 13% 17%;
+    --text-slate: 217 11% 40%;
+    --text-inverse: 0 0% 100%;
+    --border-default: 214 32% 91%;
+    --border-strong: 214 32% 83%;
+
+    /* Functional states */
+    --state-success: 155 77% 43%; /* Success #19C37D */
+    --state-success-soft: 142 76% 94%; /* Success Soft #DCFCE7 */
+    --state-success-strong: 158 64% 30%;
+    --state-warning: 37 91% 55%; /* Warning #F5A524 */
+    --state-warning-soft: 48 96% 90%; /* Warning Soft #FEF3C7 */
+    --state-warning-strong: 26 90% 37%; /* #B45309 */
+    --state-error: 0 84% 60%; /* Error #EF4444 */
+    --state-error-soft: 0 93% 94%; /* Error Soft #FEE2E2 */
+    --state-error-strong: 0 74% 42%; /* #B91C1C */
+    --state-info: 217 91% 60%; /* Info #3B82F6 */
+    --state-info-soft: 214 95% 93%; /* Info Soft #DBEAFE */
+    --state-info-strong: 224 76% 48%; /* #1D4ED8 */
+
+    /* AI-specific states */
+    --ai-processing: 199 89% 60%; /* Sky Tech #38BDF8 */
+    --ai-processing-soft: 198 93% 94%;
+    --ai-review: 37 91% 55%;
+    --ai-grounded: 155 77% 43%;
+    --ai-inferred: 217 91% 60%;
+    --ai-uncertain: 217 11% 40%;
+
+    /* Brand-only surfaces and gradients. Never use these in buttons. */
+    --brand-gradient-start: 201 98% 50%;
+    --brand-gradient-mid: 215 97% 49%;
+    --brand-gradient-depth: 245 73% 39%;
+    --brand-gradient-end: 251 92% 46%;
+
+    --radius: 0.65rem;
+
+    /* Domus density tokens */
+    --density-default-row: 3rem;
+    --density-compact-row: 2.25rem;
+    --density-default-cell-x: 0.75rem;
+    --density-compact-cell-x: 0.75rem;
+    --density-default-cell-y: 0.75rem;
+    --density-compact-cell-y: 0.5rem;
+  }
+
+  .dark {
+    --background: 226 49% 8%; /* Midnight #0B1020 */
+    --foreground: 210 40% 98%; /* Neutral 50 #F8FAFC */
+
+    --card: 224 18% 12%; /* Deep Night #191C24 */
+    --card-foreground: 210 40% 98%;
+    --popover: 224 18% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 215 97% 49%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 201 98% 50%; /* Beta Cyan for dark hover */
+
+    --secondary: 224 13% 17%; /* Graphite #272A31 */
+    --secondary-foreground: 210 40% 98%;
+    --secondary-hover: 215 28% 24%;
+
+    --muted: 224 13% 17%;
+    --muted-foreground: 214 32% 83%; /* Neutral 300 #CBD5E1 */
+
+    /* Neutral dark accent; never Indigo/Violet for Button hover. */
+    --accent: 215 28% 24%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 28% 24%;
+    --input: 217 19% 34%;
+    --ring: 201 98% 50%;
+
+    --surface-cloud: 224 13% 17%;
+    --surface-white: 224 18% 12%;
+    --surface-dark: 224 18% 12%;
+    --surface-deep: 226 49% 8%;
+    --surface-graphite: 224 13% 17%;
+
+    --text-ink: 210 40% 98%;
+    --text-graphite: 214 32% 83%;
+    --text-slate: 214 32% 83%;
+    --text-inverse: 221 39% 11%;
+    --border-default: 215 28% 24%;
+    --border-strong: 217 19% 34%;
+
+    --state-success: 155 77% 43%;
+    --state-success-soft: 158 64% 16%;
+    --state-success-strong: 155 77% 65%;
+    --state-warning: 37 91% 55%;
+    --state-warning-soft: 37 56% 18%;
+    --state-warning-strong: 37 91% 70%;
+    --state-error: 0 84% 60%;
+    --state-error-soft: 0 52% 19%;
+    --state-error-strong: 0 84% 75%;
+    --state-info: 217 91% 60%;
+    --state-info-soft: 217 50% 18%;
+    --state-info-strong: 217 91% 75%;
+
+    --ai-processing: 199 89% 60%;
+    --ai-processing-soft: 198 50% 18%;
+    --ai-review: 37 91% 55%;
+    --ai-grounded: 155 77% 43%;
+    --ai-inferred: 217 91% 60%;
+    --ai-uncertain: 214 32% 83%;
+  }
+}
+
+@layer utilities {
+  .bg-brand-gradient {
+    background-image: linear-gradient(
+      120deg,
+      hsl(var(--brand-gradient-start)) 0%,
+      hsl(var(--brand-gradient-mid)) 38%,
+      hsl(var(--brand-gradient-depth)) 72%,
+      hsl(var(--brand-gradient-end)) 100%
+    );
+  }
+
+  .bg-brand-gradient-soft {
+    background-image: linear-gradient(
+      120deg,
+      hsl(var(--brand-primary)) 0%,
+      hsl(var(--brand-secondary)) 100%
+    );
+  }
+
+  .bg-brand-gradient-dark {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--surface-deep)) 0%,
+      hsl(var(--text-ink)) 100%
+    );
+  }
+
+  .domus-density-default {
+    --table-row-height: var(--density-default-row);
+    --table-cell-padding-x: var(--density-default-cell-x);
+    --table-cell-padding-y: var(--density-default-cell-y);
+  }
+
+  .domus-density-compact {
+    --table-row-height: var(--density-compact-row);
+    --table-cell-padding-x: var(--density-compact-cell-x);
+    --table-cell-padding-y: var(--density-compact-cell-y);
+  }
+}
