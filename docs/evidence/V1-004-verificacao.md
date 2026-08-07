@@ -2,7 +2,7 @@
 
 Data: 07/08/2026  
 Responsável pela execução automatizada: Codex  
-Autoridade de aceite: Engenharia/DevOps (revisão humana pendente)
+Autoridade de aceite: Marcos Wasem — aceite registrado em 07/08/2026
 
 ## Resultado
 
@@ -18,6 +18,7 @@ Autoridade de aceite: Engenharia/DevOps (revisão humana pendente)
 | Usuário de runtime | ambas as imagens confirmadas com UID diferente de zero |
 | Compose | configuração válida e portas locais configuráveis |
 | Whitespace Git | `git diff --check` sem erros |
+| Aceite humano | Marcos Wasem aprovou a entrega em 07/08/2026 |
 
 ## Observações
 
@@ -28,4 +29,4 @@ Autoridade de aceite: Engenharia/DevOps (revisão humana pendente)
 
 ## Decisão
 
-Os critérios automatizáveis da V1-004 estão materializados. O encerramento formal depende da revisão humana de Engenharia/DevOps e da primeira execução do pipeline hospedado após push/PR; o modelo não substitui essas aprovações.
+Marcos Wasem revisou e aceitou a entrega em 07/08/2026. Com esse aceite, a V1-004 será considerada formalmente encerrada assim que o pipeline hospedado do commit que contém este registro concluir sem falhas; o modelo não substitui nem amplia essa aprovação.
