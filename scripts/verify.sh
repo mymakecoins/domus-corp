@@ -7,6 +7,7 @@ export UV_CACHE_DIR="$repository_root/.local/uv-cache"
 
 python3 -m unittest tests.scaffold.test_repository -v
 python3 -m unittest tests.governance.test_ai_governance -v
+python3 -m unittest tests.environments.test_v1_006 -v
 python3 tests/contracts/validate_contracts.py
 python3 scripts/check-migrations.py
 pnpm check

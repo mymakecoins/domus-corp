@@ -60,6 +60,10 @@ Pull requests executam qualidade dos dois runtimes, contratos, scan de secrets/v
 
 O rollback está documentado em [`docs/runbooks/V1-004-rollback.md`](docs/runbooks/V1-004-rollback.md).
 
+## Ambientes e segredos
+
+Dev, test, staging e prod são ambientes lógicos isolados em projetos Vercel. Como variáveis são project-scoped, cada ambiente usa um projeto para o Control Plane e outro para a Knowledge API; o modelo está em `deploy/vercel/projects.json`. Segredos usam Sensitive Environment Variables e identidade externa usa OIDC de curta duração. Os adapters `*_FILE` permanecem como contrato portável para uma futura VPS/Azure/AWS. Consulte a [`matriz de acesso`](docs/security/V1-006-access-matrix.md) e o [`runbook de rotação`](docs/runbooks/V1-006-secrets-rotation-rollback.md).
+
 ## Desenvolvimento assistido por IA
 
 Contribuições com Claude, Gemini, Codex, Kimi ou outro modelo seguem a [política de desenvolvimento assistido por IA](docs/governance/ai-assisted-development-policy.md). Use o [context pack](docs/templates/ai-context-pack.md), o [registro de proveniência](docs/templates/ai-provenance-record.md) e o [checklist de revisão humana](docs/templates/ai-review-checklist.md). Modelos podem propor mudanças, mas não podem aprovar, fazer merge, operar produção nem executar escrita externa de forma autônoma.

@@ -1,0 +1,42 @@
+{
+  "$schema": "./projects.schema.json",
+  "provider": "vercel",
+  "projectStrategy": "one-project-per-runtime-per-environment",
+  "environments": {
+    "dev": {"target": "development", "externalIntegrations": "disabled"},
+    "test": {"target": "preview", "externalIntegrations": "double"},
+    "staging": {"target": "preview", "externalIntegrations": "enabled"},
+    "prod": {"target": "production", "externalIntegrations": "enabled"}
+  },
+  "runtimes": {
+    "control-plane": {
+      "rootDirectory": "apps/control-plane",
+      "projects": {
+        "dev": "domus-control-plane-dev",
+        "test": "domus-control-plane-test",
+        "staging": "domus-control-plane-staging",
+        "prod": "domus-control-plane-prod"
+      },
+      "publicVariables": ["DOMUS_ENV", "APP_VERSION", "LOG_LEVEL", "KNOWLEDGE_API_URL"],
+      "sensitiveVariables": ["PROVIDER_API_KEY", "DATABASE_URL", "REDIS_URL"]
+    },
+    "knowledge-api": {
+      "rootDirectory": "apps/knowledge-api",
+      "projects": {
+        "dev": "domus-knowledge-api-dev",
+        "test": "domus-knowledge-api-test",
+        "staging": "domus-knowledge-api-staging",
+        "prod": "domus-knowledge-api-prod"
+      },
+      "publicVariables": ["DOMUS_ENV", "APP_VERSION", "LOG_LEVEL", "CONTROL_PLANE_URL"],
+      "sensitiveVariables": ["SOURCE_TOKEN", "DATABASE_URL", "REDIS_URL", "MINIO_URL", "QDRANT_URL"],
+      "forbiddenVariables": ["PROVIDER_API_KEY", "MCP_TOKEN"]
+    }
+  },
+  "workloadIdentity": {
+    "mechanism": "vercel-oidc",
+    "issuerMode": "team",
+    "trustClaims": ["owner", "project", "environment", "aud", "exp"],
+    "longLivedCloudCredentials": false
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["provider", "environments", "runtimes", "workloadIdentity"],
+  "properties": {
+    "provider": {"const": "vercel"},
+    "projectStrategy": {"const": "one-project-per-runtime-per-environment"},
+    "environments": {"type": "object", "required": ["dev", "test", "staging", "prod"]},
+    "runtimes": {"type": "object", "required": ["control-plane", "knowledge-api"]},
+    "workloadIdentity": {"type": "object"}
+  },
+  "additionalProperties": false
+}
