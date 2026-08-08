@@ -60,6 +60,10 @@ Pull requests executam qualidade dos dois runtimes, contratos, scan de secrets/v
 
 O rollback está documentado em [`docs/runbooks/V1-004-rollback.md`](docs/runbooks/V1-004-rollback.md).
 
+## Desenvolvimento assistido por IA
+
+Contribuições com Claude, Gemini, Codex, Kimi ou outro modelo seguem a [política de desenvolvimento assistido por IA](docs/governance/ai-assisted-development-policy.md). Use o [context pack](docs/templates/ai-context-pack.md), o [registro de proveniência](docs/templates/ai-provenance-record.md) e o [checklist de revisão humana](docs/templates/ai-review-checklist.md). Modelos podem propor mudanças, mas não podem aprovar, fazer merge, operar produção nem executar escrita externa de forma autônoma.
+
 ## Troubleshooting
 
 - Erro de engine Node: use Node 22; Node 24 local não é o runtime aprovado pelo ADR.
