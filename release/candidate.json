@@ -1,0 +1,18 @@
+{
+  "$schema": "./manifest.schema.json",
+  "issue": "V1-007",
+  "version": "0.1.0",
+  "classification": "high-p0",
+  "summary": "Governança versionada de mudanças e gates de release da fundação.",
+  "impact": "Introduz bloqueio automatizado e aprovação proporcional ao risco sem publicar produto.",
+  "risks": ["Configuração incorreta do gate pode bloquear ou liberar um candidato indevido."],
+  "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
+  "evidence": ["docs/evidence/V1-007-verificacao.md"],
+  "rollback": {
+    "runbook": "docs/runbooks/V1-007-ring-rollback.md",
+    "dataCompatibility": "Mudança apenas aditiva; não altera nem migra memória ou dados persistidos."
+  },
+  "rings": ["internal"],
+  "findings": [],
+  "contractsVersion": "1.0.0"
+}

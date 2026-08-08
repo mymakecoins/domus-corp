@@ -2,13 +2,20 @@
 
 - Issue:
 - Classificação: baixa | moderada | alta/P0
-- Risco e rollback:
+- Versão candidata e contrato:
+- Impacto e riscos:
+- Manifesto de release: `release/candidate.json`
+- Evidências:
+- Rollback/runbook:
+- Anel inicial: internal | pilot | gradual | stable
 
 ## Verificação
 
 - Testes executados e resultados:
 - [ ] Revisei aderência a PRD, ADRs e contratos aplicáveis.
 - [ ] Não incluí segredos nem dados não autorizados.
+- [ ] Achados altos/críticos foram corrigidos ou possuem aceite formal vigente do responsável autorizado.
+- [ ] Mudanças incompatíveis de contrato incrementam a versão major e têm plano de migração.
 
 ## Assistência de IA
 
