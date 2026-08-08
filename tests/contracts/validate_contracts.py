@@ -16,10 +16,24 @@ SCHEMAS = ROOT / "contracts/json-schema/v1"
 VALID = ROOT / "contracts/examples/v1/valid/catalog.json"
 INVALID = ROOT / "contracts/examples/v1/invalid/catalog.json"
 EXPECTED = {
+    "external-identity.schema.json", "authenticated-session.schema.json",
+    "request-security-context.schema.json", "identity-event.schema.json",
+    "identity-error.schema.json",
     "effective-policy.schema.json", "knowledge-asset.schema.json",
     "evidence.schema.json", "claim.schema.json", "insight.schema.json",
     "action-request.schema.json", "usage-ledger.schema.json",
     "contract-error.schema.json", "domain-event.schema.json",
+}
+
+IDENTITY_SCHEMAS = {
+    "external-identity.schema.json",
+    "authenticated-session.schema.json",
+    "request-security-context.schema.json",
+}
+
+FORBIDDEN_SESSION_AUTHORITY = {
+    "allowed_sources", "allowed_models", "allowed_tools", "allowed_actions",
+    "allowed_classifications", "budget_scope", "effective_policy",
 }
 
 
@@ -148,17 +162,47 @@ def main() -> int:
         else:
             raise ContractViolation(f"{name}: invalid fixture was accepted")
 
+    for name in IDENTITY_SCHEMAS:
+        properties = load(SCHEMAS / name).get("properties", {})
+        leaked = FORBIDDEN_SESSION_AUTHORITY & set(properties)
+        if leaked:
+            raise ContractViolation(f"{name}: embeds policy authority {sorted(leaked)}")
+
+    identity_event = load(SCHEMAS / "identity-event.schema.json")
+    event_types = set(identity_event["properties"]["event_type"]["enum"])
+    expected_events = {
+        "identity.session_established.v1",
+        "identity.session_terminated.v1",
+        "device.registered.v1",
+        "device.revoked.v1",
+    }
+    if event_types != expected_events:
+        raise ContractViolation("identity event catalog mismatch")
+
+    identity_error = load(SCHEMAS / "identity-error.schema.json")
+    error_codes = set(identity_error["properties"]["code"]["enum"])
+    expected_errors = {
+        "IDENTITY_TOKEN_INVALID", "IDENTITY_TOKEN_EXPIRED",
+        "IDENTITY_ISSUER_INVALID", "IDENTITY_AUDIENCE_INVALID",
+        "IDENTITY_CLAIM_MISSING", "TENANT_CONTEXT_INVALID",
+        "WORKSPACE_ACCESS_DENIED", "DEVICE_NOT_REGISTERED",
+        "DEVICE_REVOKED", "IDENTITY_DEPENDENCY_UNAVAILABLE",
+        "IDENTITY_CONTRACT_VERSION_UNSUPPORTED",
+    }
+    if error_codes != expected_errors:
+        raise ContractViolation("identity error catalog mismatch")
+
     openapi_path = ROOT / "contracts/openapi/v1/openapi.json"
     asyncapi_path = ROOT / "contracts/asyncapi/v1/asyncapi.json"
     openapi = load(openapi_path)
     asyncapi = load(asyncapi_path)
     if openapi.get("openapi") != "3.1.0" or openapi.get("info", {}).get("version") != "1.0.0":
         raise ContractViolation("OpenAPI metadata mismatch")
-    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.0.0":
+    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.1.0":
         raise ContractViolation("AsyncAPI metadata mismatch")
     walk_refs(openapi, openapi_path)
     walk_refs(asyncapi, asyncapi_path)
-    print(f"OK: {len(EXPECTED)} schemas, 18 fixtures, OpenAPI 3.1 and AsyncAPI 3.0")
+    print(f"OK: {len(EXPECTED)} schemas, {len(EXPECTED) * 2} fixtures, OpenAPI 3.1 and AsyncAPI 3.0")
     return 0
 
 

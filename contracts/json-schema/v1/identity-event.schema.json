@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.domus.corp/v1/identity-event.schema.json",
+  "title": "IdentityEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "event_type", "occurred_at", "request_id", "tenant_id", "user_id", "device_id", "session_id", "producer", "attributes"],
+  "properties": {
+    "schema_version": {"type": "string", "const": "1.0.0"},
+    "event_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "event_type": {"type": "string", "enum": ["identity.session_established.v1", "identity.session_terminated.v1", "device.registered.v1", "device.revoked.v1"]},
+    "occurred_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "request_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "tenant_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "user_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "device_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "session_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "producer": {"type": "string", "minLength": 1},
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "device_version": {"type": "integer", "minimum": 1},
+        "reason_code": {"type": "string", "minLength": 1},
+        "client_version": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

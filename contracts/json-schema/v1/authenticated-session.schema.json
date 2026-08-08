@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.domus.corp/v1/authenticated-session.schema.json",
+  "title": "AuthenticatedSession",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session_id", "user_id", "tenant_id", "device_id", "client_version", "authenticated_at", "expires_at", "identity_provider", "external_subject"],
+  "properties": {
+    "schema_version": {"type": "string", "const": "1.0.0"},
+    "session_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "user_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "tenant_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "device_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "client_version": {"type": "string", "minLength": 1},
+    "authenticated_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "expires_at": {"$ref": "common.schema.json#/$defs/timestamp"},
+    "identity_provider": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "external_subject": {"type": "string", "minLength": 1}
+  }
+}

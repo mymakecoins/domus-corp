@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-007",
-  "version": "0.1.0",
+  "issue": "V1-101",
+  "version": "0.2.0",
   "classification": "high-p0",
-  "summary": "Governança versionada de mudanças e gates de release da fundação.",
-  "impact": "Introduz bloqueio automatizado e aprovação proporcional ao risco sem publicar produto.",
-  "risks": ["Configuração incorreta do gate pode bloquear ou liberar um candidato indevido."],
+  "summary": "Contratos versionados de identidade, sessão, contexto seguro, eventos e erros.",
+  "impact": "Adiciona contratos sem implementar autenticação, persistência ou integração externa.",
+  "risks": ["Contrato incorreto pode permitir que identidade ou sessão sejam tratadas como autoridade de policy."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": ["docs/evidence/V1-007-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-101.md"],
   "rollback": {
-    "runbook": "docs/runbooks/V1-007-ring-rollback.md",
-    "dataCompatibility": "Mudança apenas aditiva; não altera nem migra memória ou dados persistidos."
+    "runbook": "contracts/CHANGELOG.md",
+    "dataCompatibility": "Mudança aditiva de contratos; rollback restaura o catálogo 1.0.0 sem alterar dados persistidos."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "1.0.0"
+  "contractsVersion": "1.1.0"
 }

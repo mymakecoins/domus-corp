@@ -19,6 +19,8 @@ Todo payload cross-runtime contém `request_id`, `tenant_id`, `workspace_id`, `p
 
 Dados de autenticação e segredos não pertencem aos payloads. Identidade de workload e autenticação são controles de transporte; os identificadores do envelope servem a escopo, correlação e auditoria e não concedem autorização.
 
+Os contratos de identidade são uma exceção deliberada ao envelope cross-runtime: login e falhas de autenticação podem ocorrer antes da resolução de `workspace_id` e `policy_version`. `ExternalIdentity`, `AuthenticatedSession` e `RequestSecurityContext` identificam e correlacionam o ator, mas não carregam `EffectivePolicy`, fontes, modelos, ferramentas, ações ou budget autorizados.
+
 ## Validação local
 
 ```bash

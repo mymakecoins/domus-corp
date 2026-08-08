@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.domus.corp/v1/request-security-context.schema.json",
+  "title": "RequestSecurityContext",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "request_id", "trace_id", "session_id", "user_id", "tenant_id", "device_id", "workspace_id", "client_version", "authenticated_at"],
+  "properties": {
+    "schema_version": {"type": "string", "const": "1.0.0"},
+    "request_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "trace_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "session_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "user_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "tenant_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "device_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "workspace_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "client_version": {"type": "string", "minLength": 1},
+    "authenticated_at": {"$ref": "common.schema.json#/$defs/timestamp"}
+  }
+}
