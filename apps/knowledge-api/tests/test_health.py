@@ -12,6 +12,7 @@ def test_health_reports_a_healthy_knowledge_api() -> None:
     )
     payload = asyncio.run(route.endpoint())
 
+    assert route.methods is not None
     assert "GET" in route.methods
     assert payload == {
         "service": "knowledge-api",
