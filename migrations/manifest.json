@@ -32,6 +32,16 @@
       "owner": "Backend TypeScript / DBA",
       "requiredReviewers": ["DBA", "Security"],
       "rollback": "migrations/000003_v1_102_tenancy.down.sql"
+    },
+    {
+      "version": "000004",
+      "issue": "V1-103",
+      "description": "Camadas publicadas de policy e auditoria de avaliação",
+      "impact": "Adiciona regras versionadas e metadados redigidos de decisão fail-closed",
+      "risk": "high",
+      "owner": "Backend TypeScript / Security",
+      "requiredReviewers": ["DBA", "Security"],
+      "rollback": "migrations/000004_v1_103_policy.down.sql"
     }
   ]
 }

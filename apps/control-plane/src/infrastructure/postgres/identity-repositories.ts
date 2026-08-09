@@ -1,10 +1,11 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import type { AuthenticatedSession } from "../../domain/identity/authenticated-session.js";
 import type { Device } from "../../domain/identity/device.js";
 import type { ExternalIdentity } from "../../domain/identity/external-identity.js";
 import type {Workspace} from "../../domain/tenancy/workspace.js";
 import type {TenantRole} from "../../domain/tenancy/workspace-authorization.js";
+import type {PolicyLayer} from "../../domain/policy/policy-engine.js";
 
 type QueryResult<Row> = Readonly<{rows: Row[]; rowCount?: number | null}>;
 type Queryable = {query<Row = Record<string, unknown>>(text: string, values?: readonly unknown[]): Promise<QueryResult<Row>>};
@@ -159,6 +160,47 @@ export function createPostgresIdentityAdapters(pool: Pool) {
                 role: command.role, status: command.status, membership_version: row.version})],
           );
           return {version: row.version};
+        });
+      },
+    }),
+    policyRepository: Object.freeze({
+      async loadPublished(context: {tenantId: string; workspaceId: string; userId: string}): Promise<readonly PolicyLayer[]> {
+        return inIdentityTransaction(pool, context, async (client) => {
+          const result = await client.query<{
+            scope: PolicyLayer["scope"]; policy_id: string; version: number; rules: Omit<PolicyLayer, "scope" | "policyId" | "version">;
+          }>(
+            `SELECT layer.scope, layer.policy_id, layer.version, layer.rules
+               FROM governance_policy_layer layer
+              WHERE layer.state = 'published' AND (
+                    layer.scope = 'global'
+                 OR (layer.scope = 'tenant' AND layer.tenant_id = $1)
+                 OR (layer.scope = 'workspace' AND layer.tenant_id = $1 AND layer.workspace_id = $2)
+                 OR (layer.scope = 'role' AND layer.tenant_id = $1 AND layer.workspace_id = $2 AND layer.role = (
+                      SELECT membership.role FROM iam_workspace_membership membership
+                       WHERE membership.tenant_id = $1 AND membership.workspace_id = $2
+                         AND membership.user_id = $3 AND membership.status = 'active'
+                 )))
+              ORDER BY CASE layer.scope WHEN 'global' THEN 1 WHEN 'tenant' THEN 2 WHEN 'workspace' THEN 3 ELSE 4 END`,
+            [context.tenantId, context.workspaceId, context.userId],
+          );
+          return result.rows.map((row) => Object.freeze({scope: row.scope, policyId: row.policy_id, version: Number(row.version), ...row.rules}));
+        });
+      },
+    }),
+    policyAuditRepository: Object.freeze({
+      async record(event: {
+        requestId: string; tenantId: string; workspaceId: string; userId: string; deviceId: string;
+        policyVersion: string; decision: "ALLOW" | "DENY"; denyReasons: readonly string[];
+      }): Promise<void> {
+        await inIdentityTransaction(pool, event, async (client) => {
+          await client.query(
+            `INSERT INTO governance_policy_evaluation
+              (tenant_id, evaluation_id, request_id, workspace_id, user_id, device_id,
+               policy_version, decision, deny_reasons, evaluated_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,clock_timestamp())`,
+            [event.tenantId, randomUUID(), event.requestId, event.workspaceId, event.userId,
+              event.deviceId, event.policyVersion, event.decision, JSON.stringify(event.denyReasons)],
+          );
         });
       },
     }),

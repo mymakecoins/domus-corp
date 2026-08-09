@@ -12,6 +12,9 @@ import type { TerminateSessionCommand } from "./application/identity/terminate-s
 import type {ArchiveWorkspaceCommand, ChangeWorkspaceMembershipCommand, CreateWorkspaceCommand} from "./application/tenancy/manage-workspace.js";
 import type {Workspace} from "./domain/tenancy/workspace.js";
 import {registerTenancyRoutes} from "./interfaces/http/tenancy/routes.js";
+import {registerPolicyRoutes} from "./interfaces/http/policy/routes.js";
+import type {PolicySecurityContext} from "./application/policy/resolve-effective-policy.js";
+import type {EffectivePolicy} from "./domain/policy/policy-engine.js";
 
 type IdentityServices = Readonly<{
   establishSession(command: EstablishSessionCommand): Promise<AuthenticatedSession>;
@@ -24,6 +27,8 @@ type IdentityServices = Readonly<{
   createWorkspace(command: CreateWorkspaceCommand): Promise<Workspace>;
   archiveWorkspace(command: ArchiveWorkspaceCommand): Promise<{version: number}>;
   changeWorkspaceMembership(command: ChangeWorkspaceMembershipCommand): Promise<{version: number}>;
+  authorizePolicyRequest(request: FastifyRequest): Promise<PolicySecurityContext>;
+  resolveEffectivePolicy(context: PolicySecurityContext): Promise<EffectivePolicy>;
 }>;
 
 export function buildApp(identityServices?: IdentityServices): FastifyInstance {
@@ -39,6 +44,7 @@ export function buildApp(identityServices?: IdentityServices): FastifyInstance {
   if (identityServices) {
     registerIdentityRoutes(app, identityServices);
     registerTenancyRoutes(app, identityServices);
+    registerPolicyRoutes(app, identityServices);
   }
 
   return app;

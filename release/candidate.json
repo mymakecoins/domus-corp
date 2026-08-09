@@ -1,16 +1,16 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-102",
-  "version": "0.4.0",
+  "issue": "V1-103",
+  "version": "0.5.0",
   "classification": "high-p0",
-  "summary": "Administração tenant-bound de workspaces, papéis, clearance e RLS lógico.",
-  "impact": "Adiciona CRUD administrativo auditável, papel de tenant, membership e referência de policy sem antecipar a EffectivePolicy.",
-  "risks": ["Provisionamento do primeiro administrador exige processo humano externo; policy_id não pode ser tratado como autorização antes da V1-103."],
+  "summary": "EffectivePolicy 2.0 fail-closed, monotônica e vinculada ao contexto seguro.",
+  "impact": "Adiciona composição de quatro camadas, resolução e cache server-side, auditoria de decisões e persistência sob RLS.",
+  "risks": ["Promoção depende da operação externa de Redis, dos catálogos proprietários e da revisão humana de Segurança, Backend e DBA."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-102.md", "docs/evidence/V1-102-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-103.md", "docs/evidence/V1-103-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Migração 000003 adiciona campos obrigatórios e tabela de papéis; destina-se à baseline ainda não promovida. Rollback remove dados administrativos locais."
+    "dataCompatibility": "Migração 000004 adiciona camadas publicadas e avaliações; destina-se à baseline ainda não promovida. Rollback remove somente dados locais de política."
   },
   "rings": ["internal"],
   "findings": [],
