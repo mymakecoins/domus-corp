@@ -25,6 +25,7 @@ EXPECTED = {
     "evidence.schema.json", "claim.schema.json", "insight.schema.json",
     "action-request.schema.json", "usage-ledger.schema.json",
     "contract-error.schema.json", "domain-event.schema.json",
+    "model-route-decision.schema.json",
 }
 
 IDENTITY_SCHEMAS = {

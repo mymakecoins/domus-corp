@@ -53,6 +53,13 @@
       "requiredReviewers": ["DBA", "Security", "DevOps"],
       "rollback": "migrations/000005_v1_302_credentials.down.sql",
       "globalTables": ["provider_credential_binding", "provider_credential_audit"]
+    },
+    {
+      "version":"000006","issue":"V1-303","description":"Catálogo versionado de providers, modelos, preços e fallback",
+      "impact":"Adiciona metadados globais publicados para roteamento determinístico","risk":"high",
+      "owner":"Backend TypeScript / Product","requiredReviewers":["DBA","Security","Product"],
+      "rollback":"migrations/000006_v1_303_catalog.down.sql",
+      "globalTables":["model_provider_catalog","model_catalog","model_fallback","model_catalog_audit"]
     }
   ]
 }

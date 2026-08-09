@@ -17,5 +17,6 @@
   "action-request.schema.json": { "reason":"budget scope is mandatory", "payload":{"confirmation_state":"approved"} },
   "usage-ledger.schema.json": { "reason":"negative amount", "payload":{"amount_minor":-1} },
   "contract-error.schema.json": { "reason":"untyped error code", "payload":{"code":"UNKNOWN"} },
-  "domain-event.schema.json": { "reason":"unversioned event type", "payload":{"event_type":"usage.recorded"} }
+  "domain-event.schema.json": { "reason":"unversioned event type", "payload":{"event_type":"usage.recorded"} },
+  "model-route-decision.schema.json":{"reason":"client authority is forbidden","payload":{"client_selected_provider":"provider-a"}}
 }

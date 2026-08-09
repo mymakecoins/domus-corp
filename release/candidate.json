@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-302",
-  "version": "0.6.0",
+  "issue": "V1-303",
+  "version": "0.7.0",
   "classification": "high-p0",
-  "summary": "Credenciais server-side versionadas, efêmeras e fail-closed via Vault.",
-  "impact": "Adiciona lifecycle de cadastro, teste, ativação, rotação e revogação sem persistir material secreto.",
-  "risks": ["Promoção depende do Vault corporativo, identidade de workload, scanner de vazamento e revisão humana de Segurança, DevOps e DBA."],
+  "summary": "Catálogo versionado e roteamento determinístico de providers e modelos.",
+  "impact": "Adiciona seleção fail-closed por policy, capacidade, classificação, custo, credencial e health, sem executar egress.",
+  "risks": ["Promoção depende de defaults comerciais e classificações aprovados por Produto, Segurança, Backend e DBA."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-302.md", "docs/evidence/V1-302-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-303.md", "docs/evidence/V1-303-verificacao.md"],
   "rollback": {
-    "runbook": "docs/runbooks/V1-302-credential-rotation-rollback.md",
-    "dataCompatibility": "Migração 000005 adiciona somente referências e auditoria sintéticas na baseline não promovida. Rollback remove metadados locais, nunca restaura material revogado."
+    "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
+    "dataCompatibility": "Migração 000006 adiciona catálogo global ainda sem dados comerciais promovidos. Rollback remove somente metadados sintéticos locais."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.0.0"
+  "contractsVersion": "2.1.0"
 }

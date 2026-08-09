@@ -17,6 +17,8 @@ Este diretório é a fonte canônica das interfaces entre serviços TypeScript e
 
 Todo payload cross-runtime contém `request_id`, `tenant_id`, `workspace_id`, `policy_version`, `classification` e `provenance`. `budget_scope` é obrigatório nos contratos que admitem custo (`ActionRequest`, `UsageLedger` e chamadas de modelo). Python pode reduzir `allowed_sources`, capacidades, classificação máxima e orçamento recebidos, nunca ampliá-los.
 
+`ModelRouteDecision` registra a seleção server-side e o custo máximo estimado; não concede ao consumidor autoridade para escolher provider/preço e não substitui a reserva atômica da V1-305.
+
 Dados de autenticação e segredos não pertencem aos payloads. Identidade de workload e autenticação são controles de transporte; os identificadores do envelope servem a escopo, correlação e auditoria e não concedem autorização.
 
 Os contratos de identidade são uma exceção deliberada ao envelope cross-runtime: login e falhas de autenticação podem ocorrer antes da resolução de `workspace_id` e `policy_version`. `ExternalIdentity`, `AuthenticatedSession` e `RequestSecurityContext` identificam e correlacionam o ator, mas não carregam `EffectivePolicy`, fontes, modelos, ferramentas, ações ou budget autorizados.

@@ -84,6 +84,7 @@ jobs:
       - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f tests/migrations/verify_v1_101.sql
       - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f tests/migrations/verify_v1_103.sql
       - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f tests/migrations/verify_v1_302.sql
+      - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f tests/migrations/verify_v1_303.sql
       - run: bash scripts/run-migrations.sh down
         env:
           PGHOST: 127.0.0.1

@@ -14,6 +14,7 @@ python3 -m unittest tests.migrations.test_v1_701_governance -v
 python3 -m unittest tests.migrations.test_v1_102_tenancy -v
 python3 -m unittest tests.migrations.test_v1_103_policy -v
 python3 -m unittest tests.migrations.test_v1_302_credentials -v
+python3 -m unittest tests.migrations.test_v1_303_catalog -v
 python3 -m unittest tests.security.test_v1_302_secret_boundaries -v
 python3 scripts/check_release.py
 python3 tests/contracts/validate_contracts.py
