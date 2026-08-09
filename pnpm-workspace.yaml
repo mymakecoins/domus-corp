@@ -9,5 +9,8 @@ overrides:
   pg-protocol: 1.15.0
 
 allowBuilds:
+  electron: true
+  electron-builder: true
+  electron-winstaller: false
   # Transitive tooling dependency; Domus does not execute its install script.
   esbuild: false

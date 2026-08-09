@@ -1,0 +1,1 @@
+import React from "react";import {createRoot} from "react-dom/client";function App(){return <section><h1>Domus Corp</h1><p>Shell seguro em inicialização.</p></section>}createRoot(document.getElementById("root")!).render(<React.StrictMode><App/></React.StrictMode>);

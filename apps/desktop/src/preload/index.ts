@@ -1,0 +1,1 @@
+import {contextBridge,ipcRenderer} from "electron";const api=Object.freeze({app:Object.freeze({getVersion:()=>ipcRenderer.invoke("domus:app:get-version")}),controlPlane:Object.freeze({health:()=>ipcRenderer.invoke("domus:control-plane:health")})});contextBridge.exposeInMainWorld("domus",api);

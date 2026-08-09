@@ -1,0 +1,1 @@
+{"appId":"corp.domus.desktop","productName":"Domus Corp","asar":true,"directories":{"output":"release"},"files":["dist/**/*","package.json"],"linux":{"target":["dir"]}}
