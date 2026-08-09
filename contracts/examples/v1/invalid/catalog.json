@@ -18,5 +18,6 @@
   "usage-ledger.schema.json": { "reason":"negative amount", "payload":{"amount_minor":-1} },
   "contract-error.schema.json": { "reason":"untyped error code", "payload":{"code":"UNKNOWN"} },
   "domain-event.schema.json": { "reason":"unversioned event type", "payload":{"event_type":"usage.recorded"} },
-  "model-route-decision.schema.json":{"reason":"client authority is forbidden","payload":{"client_selected_provider":"provider-a"}}
+  "model-route-decision.schema.json":{"reason":"client authority is forbidden","payload":{"client_selected_provider":"provider-a"}},
+  "egress-guard-decision.schema.json":{"reason":"content may not enter audit decision","payload":{"original_payload":"secret"}}
 }

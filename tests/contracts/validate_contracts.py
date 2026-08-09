@@ -26,6 +26,7 @@ EXPECTED = {
     "action-request.schema.json", "usage-ledger.schema.json",
     "contract-error.schema.json", "domain-event.schema.json",
     "model-route-decision.schema.json",
+    "egress-guard-decision.schema.json",
 }
 
 IDENTITY_SCHEMAS = {
@@ -98,6 +99,9 @@ def validate(instance, schema, base: Path, at: str = "$"):
             unknown = set(instance) - set(properties)
             if unknown:
                 raise ContractViolation(f"{at}: unknown {sorted(unknown)}")
+        elif isinstance(schema.get("additionalProperties"), dict):
+            for name in set(instance) - set(properties):
+                validate(instance[name], schema["additionalProperties"], base, f"{at}.{name}")
         for name, child in properties.items():
             if name in instance:
                 validate(instance[name], child, base, f"{at}.{name}")

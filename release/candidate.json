@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-303",
-  "version": "0.7.0",
+  "issue": "V1-304",
+  "version": "0.8.0",
   "classification": "high-p0",
-  "summary": "Catálogo versionado e roteamento determinístico de providers e modelos.",
-  "impact": "Adiciona seleção fail-closed por policy, capacidade, classificação, custo, credencial e health, sem executar egress.",
-  "risks": ["Promoção depende de defaults comerciais e classificações aprovados por Produto, Segurança, Backend e DBA."],
+  "summary": "Classificação, redaction e governança fail-closed de egress.",
+  "impact": "Adiciona bloqueio de secrets/proibidos, masking de PII, exceções limitadas e auditoria sem conteúdo.",
+  "risks": ["Promoção depende da revisão de falsos negativos, DLP e regras corporativas por Segurança e Privacidade."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-303.md", "docs/evidence/V1-303-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-304.md", "docs/evidence/V1-304-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Migração 000006 adiciona catálogo global ainda sem dados comerciais promovidos. Rollback remove somente metadados sintéticos locais."
+    "dataCompatibility": "Migração 000007 adiciona regras, exceções e auditoria sem conteúdo na baseline não promovida. Rollback remove somente metadados locais."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.1.0"
+  "contractsVersion": "2.2.0"
 }

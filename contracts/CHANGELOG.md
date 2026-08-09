@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.2.0] — 2026-08-09
+
+- Adição de `EgressGuardDecision` com metadados e contagens redigidas, sem conteúdo ou matches.
+- Secrets e padrões proibidos permanecem controles não excepcionáveis.
+
 ## [2.1.0] — 2026-08-09
 
 - Adição de `ModelRouteDecision` para decisão determinística e auditável de provider/modelo, preço e fallback.
