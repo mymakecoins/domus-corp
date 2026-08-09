@@ -76,11 +76,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 scripts/check-migrations.py
-      - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f migrations/000001_v1_004_baseline.up.sql
-      - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f migrations/000002_v1_101_identity.up.sql
+      - run: bash scripts/run-migrations.sh up
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: domus
+          PGDATABASE: domus
       - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f tests/migrations/verify_v1_101.sql
-      - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f migrations/000002_v1_101_identity.down.sql
-      - run: psql -h 127.0.0.1 -U domus -d domus -v ON_ERROR_STOP=1 -f migrations/000001_v1_004_baseline.down.sql
+      - run: bash scripts/run-migrations.sh down
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: domus
+          PGDATABASE: domus
+          DOMUS_ALLOW_DESTRUCTIVE_ROLLBACK: local-or-ci
 
   images:
     runs-on: ubuntu-latest

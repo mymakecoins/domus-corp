@@ -18,7 +18,7 @@ Staging referencia imagens por digest, nunca apenas por tag. Um rollback troca o
 A migração desta issue cria somente a tabela técnica `schema_migrations`. Em ambiente descartável, o rollback controlado é:
 
 ```sh
-./scripts/migrate.sh down
+DOMUS_ALLOW_DESTRUCTIVE_ROLLBACK=local-or-ci ./scripts/run-migrations.sh down
 ```
 
 Não execute rollback de banco produtivo por este runbook. Migrações de domínio e seus procedimentos pertencem à V1-701.

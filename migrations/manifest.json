@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "migrations": [
+    {
+      "version": "000001",
+      "issue": "V1-004",
+      "description": "Baseline transacional do catálogo de migrações",
+      "impact": "Cria somente schema_migrations para controlar versões aplicadas",
+      "risk": "low",
+      "owner": "Platform Engineering",
+      "requiredReviewers": ["DBA", "Security"],
+      "rollback": "migrations/000001_v1_004_baseline.down.sql",
+      "globalTables": ["schema_migrations"]
+    },
+    {
+      "version": "000002",
+      "issue": "V1-101",
+      "description": "Identidade, tenancy, dispositivos, sessões, workspace e outbox",
+      "impact": "Cria nove tabelas IAM, role runtime sem BYPASSRLS e políticas tenant/workspace",
+      "risk": "high",
+      "owner": "Backend TypeScript / DBA",
+      "requiredReviewers": ["DBA", "Security"],
+      "rollback": "migrations/000002_v1_101_identity.down.sql",
+      "globalTables": ["iam_external_identity"]
+    }
+  ]
+}

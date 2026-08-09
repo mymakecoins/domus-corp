@@ -90,6 +90,18 @@ DO $$
 BEGIN
     BEGIN
         SET LOCAL ROLE domus_identity_runtime;
+        CREATE TABLE ddl_escape_attempt (id uuid);
+        RAISE EXCEPTION 'identity runtime unexpectedly executed DDL';
+    EXCEPTION WHEN insufficient_privilege THEN
+        NULL;
+    END;
+END
+$$;
+
+DO $$
+BEGIN
+    BEGIN
+        SET LOCAL ROLE domus_identity_runtime;
         PERFORM set_config('app.current_tenant_id', '22222222-2222-4222-8222-222222222222', true);
         INSERT INTO iam_user (tenant_id, user_id, status)
         VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'active');
