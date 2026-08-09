@@ -109,6 +109,8 @@ def validate(instance, schema, base: Path, at: str = "$"):
     elif kind == "string":
         if len(instance) < schema.get("minLength", 0):
             raise ContractViolation(f"{at}: string is too short")
+        if "maxLength" in schema and len(instance) > schema["maxLength"]:
+            raise ContractViolation(f"{at}: string is too long")
         if "pattern" in schema and not re.search(schema["pattern"], instance):
             raise ContractViolation(f"{at}: pattern mismatch")
         if schema.get("format") == "uuid":

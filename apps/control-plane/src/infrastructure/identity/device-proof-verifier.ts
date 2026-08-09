@@ -16,6 +16,8 @@ type ProofClaims = DeviceChallengeBinding & Readonly<{iat: number; exp: number; 
 
 const CLOCK_SKEW_SECONDS = 60;
 const MAX_PROOF_AGE_SECONDS = 120;
+const MAX_PROOF_LENGTH = 4096;
+const BASE64URL_256 = /^[A-Za-z0-9_-]{43}$/;
 
 function sameBinding(claims: DeviceChallengeBinding, expected: DeviceChallengeBinding): boolean {
   return claims.tenantId === expected.tenantId && claims.userId === expected.userId &&
@@ -34,7 +36,11 @@ export function createDeviceProofVerifier(dependencies: Readonly<{
   return Object.freeze({
     async verify(input: ProofInput): Promise<{publicKeyThumbprint: string}> {
       try {
-        if (input.publicKeyJwk.kty !== "EC" || input.publicKeyJwk.crv !== "P-256" || input.publicKeyJwk.d !== undefined) {
+        const keyFields = Object.keys(input.publicKeyJwk).sort();
+        if (input.proof.length > MAX_PROOF_LENGTH || !BASE64URL_256.test(input.nonce) ||
+            keyFields.join(",") !== "crv,kty,x,y" || input.publicKeyJwk.kty !== "EC" ||
+            input.publicKeyJwk.crv !== "P-256" || !BASE64URL_256.test(String(input.publicKeyJwk.x)) ||
+            !BASE64URL_256.test(String(input.publicKeyJwk.y))) {
           throw new Error("unsupported key");
         }
         const expected = await dependencies.store.peek(input.nonce);

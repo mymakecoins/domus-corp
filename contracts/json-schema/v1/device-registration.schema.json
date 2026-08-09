@@ -20,6 +20,6 @@
         "y": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"}
       }
     },
-    "proof": {"type": "string", "minLength": 64}
+    "proof": {"type": "string", "minLength": 64, "maxLength": 4096}
   }
 }

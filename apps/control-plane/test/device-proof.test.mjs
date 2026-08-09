@@ -8,7 +8,7 @@ const binding = {
   tenantId: "22222222-2222-4222-8222-222222222222",
   userId: "55555555-5555-4555-8555-555555555555",
   deviceId: "20202020-2020-4020-8020-202020202020",
-  nonce: "challenge-nonce",
+  nonce: "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
   audience: "domus-device-registration",
   purpose: "device-registration",
   expiresAt: "2026-08-08T12:02:00.000Z",
@@ -67,4 +67,6 @@ test("rejects invalid binding, algorithm, or expired proof without leaking mater
 
   const privateJwk = await exportJWK(privateKey);
   await assert.rejects(createDeviceProofVerifier(fixture()).verify({...binding, publicKeyJwk: privateJwk, proof: await proof()}), /DEVICE_PROOF_INVALID/);
+
+  await assert.rejects(createDeviceProofVerifier(fixture()).verify({...binding, publicKeyJwk: {...publicKeyJwk, kid: "client-controlled"}, proof: await proof()}), /DEVICE_PROOF_INVALID/);
 });
