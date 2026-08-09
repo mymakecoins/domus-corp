@@ -25,7 +25,7 @@ function dependencies(overrides = {}) {
       externalTenantHints: Object.freeze([]),
       claimsHash: `sha256:${"a".repeat(64)}`,
     })},
-    identityRepository: {resolve: async () => ({userId: ids.user, tenantIds: [ids.tenant]})},
+    identityRepository: {resolve: async () => ({memberships: [{userId: ids.user, tenantId: ids.tenant}]})},
     deviceRepository: {find: async () => ({
       deviceId: ids.device, tenantId: ids.tenant, userId: ids.user,
       publicKeyThumbprint: `sha256:${"b".repeat(64)}`, status: "ACTIVE", version: 2,
@@ -53,12 +53,37 @@ test("establishes a session from server-resolved identity and active device", as
 
 test("requires explicit eligible tenant when identity belongs to many", async () => {
   const deps = dependencies({
-    identityRepository: {resolve: async () => ({userId: ids.user, tenantIds: [ids.tenant, ids.otherTenant]})},
+    identityRepository: {resolve: async () => ({memberships: [
+      {userId: ids.user, tenantId: ids.tenant},
+      {userId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", tenantId: ids.otherTenant},
+    ]})},
   });
   await assert.rejects(
     establishSession(deps, {token: "synthetic", deviceId: ids.device, clientVersion: "1.0.0"}),
     /TENANT_SELECTION_REQUIRED/,
   );
+});
+
+test("selecting a tenant also selects its tenant-bound user", async () => {
+  const otherUser = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const deps = dependencies({
+    identityRepository: {resolve: async () => ({memberships: [
+      {userId: ids.user, tenantId: ids.tenant},
+      {userId: otherUser, tenantId: ids.otherTenant},
+    ]})},
+    deviceRepository: {find: async () => ({
+      deviceId: ids.device, tenantId: ids.otherTenant, userId: otherUser,
+      publicKeyThumbprint: `sha256:${"b".repeat(64)}`, status: "ACTIVE", version: 2,
+      registeredAt: "2026-08-08T11:00:00Z", activatedAt: "2026-08-08T11:01:00Z",
+    })},
+  });
+
+  const session = await establishSession(deps, {
+    token: "synthetic", deviceId: ids.device, clientVersion: "1.0.0",
+    requestedTenantId: ids.otherTenant,
+  });
+  assert.equal(session.userId, otherUser);
+  assert.equal(session.tenantId, ids.otherTenant);
 });
 
 test("rejects a revoked device before persisting the session", async () => {
