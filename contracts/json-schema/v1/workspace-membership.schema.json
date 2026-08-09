@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.domus.corp/v1/workspace-membership.schema.json","title":"WorkspaceMembership","type":"object","additionalProperties":false,
+  "required":["schema_version","tenant_id","workspace_id","user_id","role","status","classification_clearance","version"],
+  "properties":{"schema_version":{"type":"string","const":"1.0.0"},"tenant_id":{"$ref":"common.schema.json#/$defs/uuid"},"workspace_id":{"$ref":"common.schema.json#/$defs/uuid"},"user_id":{"$ref":"common.schema.json#/$defs/uuid"},"role":{"type":"string","enum":["member","manager","owner","admin"]},"status":{"type":"string","enum":["active","suspended","revoked"]},"classification_clearance":{"$ref":"common.schema.json#/$defs/classification"},"version":{"type":"integer","minimum":1}}
+}

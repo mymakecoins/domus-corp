@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import type { AuthenticatedSession } from "../../domain/identity/authenticated-session.js";
 import type { Device } from "../../domain/identity/device.js";
 import type { ExternalIdentity } from "../../domain/identity/external-identity.js";
+import type {Workspace} from "../../domain/tenancy/workspace.js";
+import type {TenantRole} from "../../domain/tenancy/workspace-authorization.js";
 
 type QueryResult<Row> = Readonly<{rows: Row[]; rowCount?: number | null}>;
 type Queryable = {query<Row = Record<string, unknown>>(text: string, values?: readonly unknown[]): Promise<QueryResult<Row>>};
@@ -46,6 +48,118 @@ export function createPostgresIdentityAdapters(pool: Pool) {
           [identity.issuer, identity.subject],
         );
         return {memberships: result.rows.map((row) => ({tenantId: row.tenant_id, userId: row.user_id}))};
+      },
+    }),
+    tenantRoleRepository: Object.freeze({
+      async find(tenantId: string, userId: string): Promise<TenantRole | undefined> {
+        return inIdentityTransaction(pool, {tenantId, userId}, async (client) => {
+          const result = await client.query<{tenant_id: string; user_id: string; role: "member" | "admin"; status: "ACTIVE" | "SUSPENDED" | "REVOKED"}>(
+            `SELECT tenant_id, user_id, role, upper(status) AS status
+               FROM iam_tenant_role WHERE tenant_id = $1 AND user_id = $2`,
+            [tenantId, userId],
+          );
+          const row = result.rows[0];
+          return row ? Object.freeze({tenantId: row.tenant_id, userId: row.user_id, role: row.role, status: row.status}) : undefined;
+        });
+      },
+    }),
+    userRepository: Object.freeze({
+      async assertActive(tenantId: string, userId: string): Promise<void> {
+        await inIdentityTransaction(pool, {tenantId, userId}, async (client) => {
+          const result = await client.query(`SELECT 1 FROM iam_user WHERE tenant_id = $1 AND user_id = $2 AND status = 'active'`, [tenantId, userId]);
+          if (result.rows[0] === undefined) throw new Error("TENANT_ACCESS_DENIED");
+        });
+      },
+    }),
+    workspaceRepository: Object.freeze({
+      async create(input: Readonly<{
+        workspace: Workspace;
+        ownerMembership: Readonly<{tenantId: string; workspaceId: string; userId: string; role: "owner"; status: "ACTIVE"; classificationClearance: "restricted"}>;
+        actor: Readonly<{userId: string; deviceId: string; sessionId: string}>;
+        requestId: string; eventId: string; occurredAt: string;
+      }>): Promise<void> {
+        await inIdentityTransaction(pool, {...input.workspace, userId: input.actor.userId}, async (client) => {
+          const workspace = input.workspace;
+          await client.query(
+            `INSERT INTO iam_workspace
+              (tenant_id, workspace_id, owner_user_id, name, status, default_classification, domain_key, policy_id, version)
+             VALUES ($1,$2,$3,$4,'active',$5,$6,$7,$8)`,
+            [workspace.tenantId, workspace.workspaceId, workspace.ownerUserId, workspace.name,
+              workspace.defaultClassification, workspace.domainKey, workspace.policyId, workspace.version],
+          );
+          await client.query(
+            `INSERT INTO iam_workspace_membership
+              (tenant_id, workspace_id, user_id, role, status, classification_clearance)
+             VALUES ($1,$2,$3,'owner','active',$4)`,
+            [input.ownerMembership.tenantId, input.ownerMembership.workspaceId,
+              input.ownerMembership.userId, input.ownerMembership.classificationClearance],
+          );
+          await client.query(
+            `INSERT INTO iam_outbox_event
+              (tenant_id, event_id, event_type, request_id, user_id, device_id, session_id, occurred_at, attributes)
+             VALUES ($1,$2,'workspace.created.v1',$3,$4,$5,$6,$7,$8::jsonb)`,
+            [workspace.tenantId, input.eventId, input.requestId, input.actor.userId,
+              input.actor.deviceId, input.actor.sessionId, input.occurredAt,
+              JSON.stringify({workspace_id: workspace.workspaceId, policy_id: workspace.policyId})],
+          );
+        });
+      },
+      async archive(command: {
+        tenantId: string; userId: string; deviceId: string; sessionId: string; workspaceId: string;
+        requestId: string; eventId: string; archivedAt: string;
+      }): Promise<{version: number}> {
+        return inIdentityTransaction(pool, command, async (client) => {
+          const result = await client.query<{version: number}>(
+            `UPDATE iam_workspace SET status = 'archived', version = version + 1
+              WHERE tenant_id = $1 AND workspace_id = $2 AND status = 'active'
+          RETURNING version`,
+            [command.tenantId, command.workspaceId],
+          );
+          const row = result.rows[0];
+          if (!row) throw new Error("WORKSPACE_ACCESS_DENIED");
+          await client.query(
+            `INSERT INTO iam_outbox_event
+              (tenant_id, event_id, event_type, request_id, user_id, device_id, session_id, occurred_at, attributes)
+             VALUES ($1,$2,'workspace.archived.v1',$3,$4,$5,$6,$7,$8::jsonb)`,
+            [command.tenantId, command.eventId, command.requestId, command.userId,
+              command.deviceId, command.sessionId, command.archivedAt,
+              JSON.stringify({workspace_id: command.workspaceId, workspace_version: row.version})],
+          );
+          return {version: row.version};
+        });
+      },
+      async changeMembership(command: {
+        tenantId: string; userId: string; deviceId: string; sessionId: string; workspaceId: string;
+        memberUserId: string; role: "member" | "manager" | "owner" | "admin";
+        status: "ACTIVE" | "SUSPENDED" | "REVOKED"; classificationClearance: string;
+        requestId: string; eventId: string; changedAt: string;
+      }): Promise<{version: number}> {
+        return inIdentityTransaction(pool, command, async (client) => {
+          const result = await client.query<{version: number}>(
+            `INSERT INTO iam_workspace_membership
+              (tenant_id, workspace_id, user_id, role, status, classification_clearance)
+             VALUES ($1,$2,$3,$4,lower($5),$6)
+             ON CONFLICT (tenant_id, workspace_id, user_id) DO UPDATE
+               SET role = EXCLUDED.role, status = EXCLUDED.status,
+                   classification_clearance = EXCLUDED.classification_clearance,
+                   version = iam_workspace_membership.version + 1
+             RETURNING version`,
+            [command.tenantId, command.workspaceId, command.memberUserId, command.role,
+              command.status, command.classificationClearance],
+          );
+          const row = result.rows[0];
+          if (!row) throw new Error("WORKSPACE_ACCESS_DENIED");
+          await client.query(
+            `INSERT INTO iam_outbox_event
+              (tenant_id, event_id, event_type, request_id, user_id, device_id, session_id, occurred_at, attributes)
+             VALUES ($1,$2,'workspace.membership_changed.v1',$3,$4,$5,$6,$7,$8::jsonb)`,
+            [command.tenantId, command.eventId, command.requestId, command.userId,
+              command.deviceId, command.sessionId, command.changedAt,
+              JSON.stringify({workspace_id: command.workspaceId, member_user_id: command.memberUserId,
+                role: command.role, status: command.status, membership_version: row.version})],
+          );
+          return {version: row.version};
+        });
       },
     }),
     deviceRepository: Object.freeze({

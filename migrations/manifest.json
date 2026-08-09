@@ -22,6 +22,16 @@
       "requiredReviewers": ["DBA", "Security"],
       "rollback": "migrations/000002_v1_101_identity.down.sql",
       "globalTables": ["iam_external_identity"]
+    },
+    {
+      "version": "000003",
+      "issue": "V1-102",
+      "description": "Papéis de tenant, governança de workspace e RLS administrativa",
+      "impact": "Adiciona papel administrativo server-side, domínio/policy do workspace, clearance e eventos de administração",
+      "risk": "high",
+      "owner": "Backend TypeScript / DBA",
+      "requiredReviewers": ["DBA", "Security"],
+      "rollback": "migrations/000003_v1_102_tenancy.down.sql"
     }
   ]
 }

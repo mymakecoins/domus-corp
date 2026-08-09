@@ -20,6 +20,7 @@ EXPECTED = {
     "request-security-context.schema.json", "identity-event.schema.json",
     "identity-error.schema.json",
     "device-challenge.schema.json", "device-registration.schema.json",
+    "workspace.schema.json", "workspace-membership.schema.json", "tenancy-event.schema.json",
     "effective-policy.schema.json", "knowledge-asset.schema.json",
     "evidence.schema.json", "claim.schema.json", "insight.schema.json",
     "action-request.schema.json", "usage-ledger.schema.json",
@@ -202,7 +203,7 @@ def main() -> int:
     asyncapi = load(asyncapi_path)
     if openapi.get("openapi") != "3.1.0" or openapi.get("info", {}).get("version") != "1.0.0":
         raise ContractViolation("OpenAPI metadata mismatch")
-    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.1.0":
+    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.2.0":
         raise ContractViolation("AsyncAPI metadata mismatch")
     walk_refs(openapi, openapi_path)
     walk_refs(asyncapi, asyncapi_path)

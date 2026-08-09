@@ -2,6 +2,12 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [1.3.0] — 2026-08-08
+
+- Adição de `Workspace`, `WorkspaceMembership` e eventos administrativos de tenancy.
+- Adição do canal AsyncAPI `domus.v1.tenancy.events`.
+- Papéis e clearance permanecem server-side; `policy_id` é somente referência e não materializa `EffectivePolicy`.
+
 ## [1.2.0] — 2026-08-08
 
 - Adição dos contratos de challenge e registro de dispositivo com chave pública P-256 e prova JWS `ES256`.

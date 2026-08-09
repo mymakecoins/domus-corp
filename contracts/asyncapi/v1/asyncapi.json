@@ -1,9 +1,10 @@
 {
   "asyncapi": "3.0.0",
-  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.1.0" },
+  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.2.0" },
   "defaultContentType": "application/json",
   "channels": {
     "identityEvents": { "address": "domus.v1.identity.events", "messages": { "identityEvent": { "$ref": "#/components/messages/IdentityEvent" } } },
+    "tenancyEvents": { "address": "domus.v1.tenancy.events", "messages": { "tenancyEvent": { "$ref": "#/components/messages/TenancyEvent" } } },
     "knowledgeEvents": { "address": "domus.v1.knowledge.events", "messages": { "domainEvent": { "$ref": "#/components/messages/DomainEvent" } } },
     "intelligenceEvents": { "address": "domus.v1.intelligence.events", "messages": { "domainEvent": { "$ref": "#/components/messages/DomainEvent" } } },
     "actionEvents": { "address": "domus.v1.action.events", "messages": { "domainEvent": { "$ref": "#/components/messages/DomainEvent" } } },
@@ -11,6 +12,7 @@
   },
   "operations": {
     "sendIdentityEvent": { "action": "send", "channel": { "$ref": "#/channels/identityEvents" } },
+    "sendTenancyEvent": { "action": "send", "channel": { "$ref": "#/channels/tenancyEvents" } },
     "consumeIngestionJob": { "action": "receive", "channel": { "$ref": "#/channels/ingestionJobs" } },
     "sendKnowledgeEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeEvents" } },
     "sendIntelligenceEvent": { "action": "send", "channel": { "$ref": "#/channels/intelligenceEvents" } },
@@ -18,6 +20,7 @@
   },
   "components": { "messages": {
     "IdentityEvent": { "name": "IdentityEventV1", "title": "Evento de identidade sem dados de autenticação", "payload": { "$ref": "../../json-schema/v1/identity-event.schema.json" } },
+    "TenancyEvent": { "name": "TenancyEventV1", "title": "Evento administrativo de tenant/workspace", "payload": { "$ref": "../../json-schema/v1/tenancy-event.schema.json" } },
     "DomainEvent": { "name": "DomainEventV1", "title": "Evento cross-runtime versionado", "payload": { "$ref": "../../json-schema/v1/domain-event.schema.json" } },
     "KnowledgeAssetJob": { "name": "KnowledgeAssetJobV1", "title": "Job de ingestão versionado", "payload": { "$ref": "../../json-schema/v1/knowledge-asset.schema.json" } }
   } }

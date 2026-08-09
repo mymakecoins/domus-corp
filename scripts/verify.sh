@@ -11,6 +11,7 @@ python3 -m unittest tests.environments.test_v1_006 -v
 python3 -m unittest tests.release.test_release_gate -v
 python3 -m unittest tests.migrations.test_v1_101_identity -v
 python3 -m unittest tests.migrations.test_v1_701_governance -v
+python3 -m unittest tests.migrations.test_v1_102_tenancy -v
 python3 scripts/check_release.py
 python3 tests/contracts/validate_contracts.py
 python3 scripts/check-migrations.py

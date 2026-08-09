@@ -19,9 +19,22 @@ INSERT INTO iam_device (tenant_id, device_id, user_id, public_key_thumbprint, st
     ('22222222-2222-4222-8222-222222222222', '20202020-2020-4020-8020-202020202020', '55555555-5555-4555-8555-555555555555', 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'active', clock_timestamp(), clock_timestamp()),
     ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '21212121-2121-4121-8121-212121212121', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'sha256:ccccccccccccccccccccccccccccccccccccccccccc', 'active', clock_timestamp(), clock_timestamp());
 
-INSERT INTO iam_workspace (tenant_id, workspace_id, owner_user_id, name, status, default_classification) VALUES
-    ('22222222-2222-4222-8222-222222222222', '33333333-3333-4333-8333-333333333333', '55555555-5555-4555-8555-555555555555', 'Workspace A', 'active', 'internal'),
-    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '31313131-3131-4131-8131-313131313131', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Workspace B', 'active', 'internal');
+INSERT INTO iam_tenant_role (tenant_id, user_id, role, status, granted_by) VALUES
+    ('22222222-2222-4222-8222-222222222222', '55555555-5555-4555-8555-555555555555', 'admin', 'active', '55555555-5555-4555-8555-555555555555'),
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'member', 'active', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+
+INSERT INTO iam_workspace
+    (tenant_id, workspace_id, owner_user_id, name, status, default_classification, domain_key, policy_id)
+VALUES
+    ('22222222-2222-4222-8222-222222222222', '33333333-3333-4333-8333-333333333333', '55555555-5555-4555-8555-555555555555', 'Workspace A', 'active', 'internal', 'finance', '44444444-4444-4444-8444-444444444444'),
+    ('22222222-2222-4222-8222-222222222222', '34343434-3434-4434-8434-343434343434', '55555555-5555-4555-8555-555555555555', 'Workspace A2', 'active', 'confidential', 'operations', '45454545-4545-4545-8545-454545454545'),
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '31313131-3131-4131-8131-313131313131', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Workspace B', 'active', 'internal', 'people', '46464646-4646-4646-8646-464646464646');
+
+INSERT INTO iam_workspace_membership
+    (tenant_id, workspace_id, user_id, role, status, classification_clearance)
+VALUES
+    ('22222222-2222-4222-8222-222222222222', '33333333-3333-4333-8333-333333333333', '55555555-5555-4555-8555-555555555555', 'owner', 'active', 'restricted'),
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '31313131-3131-4131-8131-313131313131', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'member', 'active', 'internal');
 
 DO $$
 BEGIN
@@ -74,8 +87,11 @@ BEGIN
     IF (SELECT count(*) FROM iam_device) <> 1 THEN
         RAISE EXCEPTION 'tenant A actor must see exactly one device';
     END IF;
-    IF (SELECT count(*) FROM iam_workspace) <> 1 THEN
-        RAISE EXCEPTION 'tenant A must see exactly one selected workspace';
+    IF (SELECT count(*) FROM iam_workspace) <> 2 THEN
+        RAISE EXCEPTION 'tenant A admin must see both same-tenant workspaces';
+    END IF;
+    IF EXISTS (SELECT 1 FROM iam_workspace WHERE tenant_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa') THEN
+        RAISE EXCEPTION 'tenant A admin escaped into tenant B workspace';
     END IF;
     IF EXISTS (SELECT 1 FROM iam_user WHERE tenant_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa') THEN
         RAISE EXCEPTION 'cross-tenant user escaped RLS';
@@ -112,4 +128,4 @@ BEGIN
 END
 $$;
 
-SELECT 'OK: V1-101 PostgreSQL isolation and multi-tenant identity links' AS result;
+SELECT 'OK: V1-101/V1-102 PostgreSQL tenant, workspace, role and DDL isolation' AS result;

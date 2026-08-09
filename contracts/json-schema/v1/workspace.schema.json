@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.domus.corp/v1/workspace.schema.json","title":"Workspace","type":"object","additionalProperties":false,
+  "required":["schema_version","tenant_id","workspace_id","owner_user_id","name","domain_key","policy_id","default_classification","status","version"],
+  "properties":{"schema_version":{"type":"string","const":"1.0.0"},"tenant_id":{"$ref":"common.schema.json#/$defs/uuid"},"workspace_id":{"$ref":"common.schema.json#/$defs/uuid"},"owner_user_id":{"$ref":"common.schema.json#/$defs/uuid"},"name":{"type":"string","minLength":1,"maxLength":120},"domain_key":{"type":"string","pattern":"^[a-z][a-z0-9]*(-[a-z0-9]+)*$"},"policy_id":{"$ref":"common.schema.json#/$defs/uuid"},"default_classification":{"$ref":"common.schema.json#/$defs/classification"},"status":{"type":"string","enum":["active","archived"]},"version":{"type":"integer","minimum":1}}
+}
