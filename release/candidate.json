@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-301",
-  "version": "0.10.0",
+  "issue": "V1-307",
+  "version": "0.11.0",
   "classification": "high-p0",
-  "summary": "Model Gateway TypeScript integrado e fail-closed.",
-  "impact": "Encadeia policy, catálogo, egress, budget, credencial efêmera, provider controlado, reconciliação e auditoria.",
-  "risks": ["Promoção depende da revisão de Segurança sobre adapters, conectividade e providers externos."],
+  "summary": "Streaming tipado e controles fail-closed de resiliência.",
+  "impact": "Adiciona rate/concurrency distribuídos, circuit breaker, cancelamento, timeouts e limites de stream.",
+  "risks": ["Promoção depende da calibração de capacidade, SLOs e limites por SRE e FinOps."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-301.md", "docs/evidence/V1-301-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-307.md", "docs/evidence/V1-307-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "A issue não adiciona migração. Rollback remove rotas e adapters do gateway sem alterar dados persistidos."
+    "dataCompatibility": "A issue não adiciona migração. Rollback remove controles e contrato aditivo sem alterar dados persistidos."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.4.0"
+  "contractsVersion": "2.5.0"
 }

@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.5.0] — 2026-08-09
+
+- Adição de `ModelStreamEvent` com sequência monotônica e estados SSE iniciados, incrementais e terminais.
+- Cancelamento, timeout, circuito e limites possuem códigos seguros sem autorizar retry automático.
+
 ## [2.4.0] — 2026-08-09
 
 - Adição de `ModelGatewayRequest` sem campos de autoridade e `ModelGatewayResult` correlacionado à policy, rota, reserva e reconciliação.

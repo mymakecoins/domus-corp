@@ -22,5 +22,6 @@
   "egress-guard-decision.schema.json":{"reason":"content may not enter audit decision","payload":{"original_payload":"secret"}},
   "budget-reservation-decision.schema.json":{"reason":"binary floating point money is forbidden","payload":{"estimated_minor":1.5}},
   "model-gateway-request.schema.json":{"reason":"client cannot select provider","payload":{"provider_key":"provider-a"}},
-  "model-gateway-result.schema.json":{"reason":"secret cannot enter result","payload":{"secret":"forbidden"}}
+  "model-gateway-result.schema.json":{"reason":"secret cannot enter result","payload":{"secret":"forbidden"}},
+  "model-stream-event.schema.json":{"reason":"untyped stream event is rejected","payload":{"type":"retry"}}
 }
