@@ -74,7 +74,7 @@ test("device lifecycle is monotonic and revoked devices cannot reactivate", () =
     deviceId: ids.device,
     tenantId: ids.tenant,
     userId: ids.user,
-    publicKeyThumbprint: `sha256:${"b".repeat(64)}`,
+    publicKeyThumbprint: `sha256:${"b".repeat(43)}`,
     registeredAt: "2026-08-08T12:00:00Z",
   });
   const active = activateDevice(pending, "2026-08-08T12:01:00Z");

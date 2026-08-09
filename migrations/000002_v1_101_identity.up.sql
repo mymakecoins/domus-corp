@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS iam_device (
     tenant_id uuid NOT NULL,
     device_id uuid NOT NULL,
     user_id uuid NOT NULL,
-    public_key_thumbprint text NOT NULL CHECK (public_key_thumbprint ~ '^sha256:[a-f0-9]{64}$'),
+    public_key_thumbprint text NOT NULL CHECK (public_key_thumbprint ~ '^sha256:[A-Za-z0-9_-]{43}$'),
     status text NOT NULL CHECK (status IN ('pending', 'active', 'revoked')),
     registered_at timestamptz NOT NULL,
     activated_at timestamptz,

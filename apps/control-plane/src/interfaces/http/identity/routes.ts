@@ -4,12 +4,14 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import type { AuthenticatedSession } from "../../../domain/identity/authenticated-session.js";
 import type { EstablishSessionCommand } from "../../../application/identity/establish-session.js";
+import type { IssueDeviceChallengeCommand } from "../../../application/identity/issue-device-challenge.js";
 import type { RegisterDeviceCommand } from "../../../application/identity/register-device.js";
 import type { RevokeDeviceCommand } from "../../../application/identity/revoke-device.js";
 import type { TerminateSessionCommand } from "../../../application/identity/terminate-session.js";
 
 type Services = Readonly<{
   establishSession(command: EstablishSessionCommand): Promise<AuthenticatedSession>;
+  issueDeviceChallenge(command: IssueDeviceChallengeCommand): Promise<{nonce: string; audience: string; expiresAt: string}>;
   registerDevice(command: RegisterDeviceCommand): Promise<{status: "ACTIVE"; version: number}>;
   terminateSession(command: TerminateSessionCommand): Promise<{version: number}>;
   revokeDevice(command: RevokeDeviceCommand): Promise<{version: number}>;
@@ -26,7 +28,7 @@ const SAFE_CODES = [
   "IDENTITY_TOKEN_INVALID", "IDENTITY_TOKEN_EXPIRED", "IDENTITY_ISSUER_INVALID",
   "IDENTITY_AUDIENCE_INVALID", "IDENTITY_CLAIM_MISSING", "TENANT_ACCESS_DENIED",
   "TENANT_SELECTION_REQUIRED", "WORKSPACE_ACCESS_DENIED", "DEVICE_NOT_REGISTERED",
-  "DEVICE_REVOKED", "IDENTITY_DEPENDENCY_UNAVAILABLE",
+  "DEVICE_REVOKED", "DEVICE_PROOF_INVALID", "IDENTITY_DEPENDENCY_UNAVAILABLE",
 ] as const;
 
 function safeCode(error: unknown): string {
@@ -65,11 +67,31 @@ export function registerIdentityRoutes(app: FastifyInstance, services: Services)
     },
   );
 
-  app.post<{Body: {deviceId?: string; publicKeyThumbprint?: string; proof?: string}}>(
+  app.post<{Body: {deviceId?: string}}>(
+    "/v1/identity/devices/challenges",
+    async (request, reply) => {
+      try {
+        if (!request.body?.deviceId) throw new Error("IDENTITY_CLAIM_MISSING");
+        const actor = await services.authorizeIdentity(request);
+        const challenge = await services.issueDeviceChallenge({
+          tenantId: actor.tenantId,
+          userId: actor.userId,
+          deviceId: request.body.deviceId,
+          audience: "domus-device-registration",
+        });
+        return reply.code(201).send(challenge);
+      } catch (error) {
+        const code = safeCode(error);
+        return reply.code(statusFor(code)).send({code});
+      }
+    },
+  );
+
+  app.post<{Body: {deviceId?: string; nonce?: string; publicKeyJwk?: Readonly<Record<string, unknown>>; proof?: string}}>(
     "/v1/identity/devices",
     async (request, reply) => {
       try {
-        if (!request.body?.deviceId || !request.body.publicKeyThumbprint || !request.body.proof) {
+        if (!request.body?.deviceId || !request.body.nonce || !request.body.publicKeyJwk || !request.body.proof) {
           throw new Error("IDENTITY_CLAIM_MISSING");
         }
         const actor = await services.authorizeIdentity(request);
@@ -77,7 +99,9 @@ export function registerIdentityRoutes(app: FastifyInstance, services: Services)
           tenantId: actor.tenantId,
           userId: actor.userId,
           deviceId: request.body.deviceId,
-          publicKeyThumbprint: request.body.publicKeyThumbprint,
+          publicKeyJwk: request.body.publicKeyJwk,
+          nonce: request.body.nonce,
+          audience: "domus-device-registration",
           proof: request.body.proof,
           requestId: randomUUID(),
           eventId: randomUUID(),

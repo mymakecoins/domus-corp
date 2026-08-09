@@ -71,13 +71,12 @@ test("PostgreSQL device registration writes active binding and outbox atomically
   const adapters = createPostgresIdentityAdapters({connect: async () => client, query: client.query});
   const result = await adapters.deviceRepository.registerActive({
     tenantId: ids.tenant, userId: ids.user, deviceId: ids.device,
-    publicKeyThumbprint: `sha256:${"b".repeat(64)}`, proof: "must-not-be-persisted",
+    publicKeyThumbprint: `sha256:${"b".repeat(43)}`,
     registeredAt: "2026-08-08T12:00:00Z", requestId: ids.request, eventId: ids.event,
   });
 
   assert.equal(result.version, 2);
   assert.match(calls[2].text, /insert into iam_device/i);
-  assert.equal(calls[2].values.includes("must-not-be-persisted"), false);
   assert.match(calls[3].text, /device\.registered\.v1/);
   assert.equal(calls[4].text, "COMMIT");
 });

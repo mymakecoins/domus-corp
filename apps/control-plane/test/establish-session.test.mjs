@@ -28,7 +28,7 @@ function dependencies(overrides = {}) {
     identityRepository: {resolve: async () => ({memberships: [{userId: ids.user, tenantId: ids.tenant}]})},
     deviceRepository: {find: async () => ({
       deviceId: ids.device, tenantId: ids.tenant, userId: ids.user,
-      publicKeyThumbprint: `sha256:${"b".repeat(64)}`, status: "ACTIVE", version: 2,
+      publicKeyThumbprint: `sha256:${"b".repeat(43)}`, status: "ACTIVE", version: 2,
       registeredAt: "2026-08-08T11:00:00Z", activatedAt: "2026-08-08T11:01:00Z",
     })},
     sessionRepository: {save: async (session) => saved.push(session)},
@@ -74,7 +74,7 @@ test("selecting a tenant also selects its tenant-bound user", async () => {
     ]})},
     deviceRepository: {find: async () => ({
       deviceId: ids.device, tenantId: ids.otherTenant, userId: otherUser,
-      publicKeyThumbprint: `sha256:${"b".repeat(64)}`, status: "ACTIVE", version: 2,
+      publicKeyThumbprint: `sha256:${"b".repeat(43)}`, status: "ACTIVE", version: 2,
       registeredAt: "2026-08-08T11:00:00Z", activatedAt: "2026-08-08T11:01:00Z",
     })},
   });
@@ -91,7 +91,7 @@ test("rejects a revoked device before persisting the session", async () => {
   const deps = dependencies({
     deviceRepository: {find: async () => ({
       deviceId: ids.device, tenantId: ids.tenant, userId: ids.user,
-      publicKeyThumbprint: `sha256:${"b".repeat(64)}`, status: "REVOKED", version: 3,
+      publicKeyThumbprint: `sha256:${"b".repeat(43)}`, status: "REVOKED", version: 3,
       registeredAt: "2026-08-08T11:00:00Z", revokedAt: "2026-08-08T11:30:00Z",
       revokedBy: ids.user, reasonCode: "COMPROMISED",
     })},

@@ -16,8 +16,8 @@ INSERT INTO iam_user_identity_link (tenant_id, user_id, external_identity_id) VA
     ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '90909090-9090-4090-8090-909090909090');
 
 INSERT INTO iam_device (tenant_id, device_id, user_id, public_key_thumbprint, status, registered_at, activated_at) VALUES
-    ('22222222-2222-4222-8222-222222222222', '20202020-2020-4020-8020-202020202020', '55555555-5555-4555-8555-555555555555', 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'active', clock_timestamp(), clock_timestamp()),
-    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '21212121-2121-4121-8121-212121212121', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', 'active', clock_timestamp(), clock_timestamp());
+    ('22222222-2222-4222-8222-222222222222', '20202020-2020-4020-8020-202020202020', '55555555-5555-4555-8555-555555555555', 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'active', clock_timestamp(), clock_timestamp()),
+    ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '21212121-2121-4121-8121-212121212121', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'sha256:ccccccccccccccccccccccccccccccccccccccccccc', 'active', clock_timestamp(), clock_timestamp());
 
 INSERT INTO iam_workspace (tenant_id, workspace_id, owner_user_id, name, status, default_classification) VALUES
     ('22222222-2222-4222-8222-222222222222', '33333333-3333-4333-8333-333333333333', '55555555-5555-4555-8555-555555555555', 'Workspace A', 'active', 'internal'),

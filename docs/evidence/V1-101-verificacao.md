@@ -6,7 +6,7 @@ Baseline local implementada. Integrações de ambientes externos permanecem como
 
 ## Cobertura
 
-- contratos separados de identidade, sessão, contexto, eventos e erros;
+- contratos 1.2.0 separados de identidade, sessão, contexto, challenge, registro, eventos e erros;
 - domínio imutável, dispositivo monotônico e sessão de tenant único;
 - OIDC genérico com discovery/JWKS, `RS256`/`ES256`, issuer/audience e fail-closed;
 - PostgreSQL com nove tabelas IAM, vínculos tenant-bound, RLS forçado e migração reversível;
@@ -17,8 +17,8 @@ Baseline local implementada. Integrações de ambientes externos permanecem como
 
 ## Evidência
 
-- 14 schemas e 28 fixtures válidas/negativas;
-- 31 testes TypeScript;
+- 16 schemas e 32 fixtures válidas/negativas;
+- 37 testes TypeScript;
 - seis testes estruturais de migração;
 - teste PostgreSQL real de isolamento, multi-tenant e rollback em Compose efêmero;
 - `scripts/verify.sh`, `git diff --check` e `pnpm audit --prod`.
@@ -27,9 +27,9 @@ Baseline local implementada. Integrações de ambientes externos permanecem como
 
 Consultar `docs/debt/V1-101-external-environments.md`. Esses débitos bloqueiam promoção externa, não a baseline de desenvolvimento.
 
-## Limite local ainda aberto
+## Prova de posse
 
-O fluxo de registro exige prova de posse antes da persistência e expõe essa verificação como porta obrigatória. O formato criptográfico da prova, emissão/consumo de challenge e vínculo com a chave pública ainda não possuem contrato aprovado. Um double prova a ordem e o comportamento negativo, mas não substitui o verificador criptográfico. Esse ponto impede declarar a V1-101 encerrada; não é decisão de ambiente externo.
+O protocolo aprovado usa chave pública P-256, JWS `ES256`, challenge de 256 bits com TTL de 120 segundos, audiência e finalidade fixas, tolerância de relógio de 60 segundos e consumo único atômico no Redis. O servidor deriva o thumbprint RFC 7638; replay, chave privada no JWK, algoritmo divergente, vínculo inválido, expiração ou indisponibilidade falham fechados.
 
 ## Aprovações
 

@@ -10,9 +10,9 @@
   "evidence": [".ai/context-packs/V1-101.md", "docs/evidence/V1-101-verificacao.md"],
   "rollback": {
     "runbook": "contracts/CHANGELOG.md",
-    "dataCompatibility": "Mudança aditiva de contratos; rollback restaura o catálogo 1.0.0 sem alterar dados persistidos."
+    "dataCompatibility": "Mudança aditiva de contratos; rollback restaura o catálogo 1.1.0. A migração ainda não promovida passa a armazenar thumbprints RFC 7638 em Base64URL."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "1.1.0"
+  "contractsVersion": "1.2.0"
 }

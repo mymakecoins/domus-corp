@@ -25,8 +25,8 @@ export function registerDevice(input: RegisterDeviceInput): Device {
   requireUuid(input.tenantId, "tenantId");
   requireUuid(input.userId, "userId");
   requireTimestamp(input.registeredAt, "registeredAt");
-  if (!/^sha256:[a-f0-9]{64}$/.test(input.publicKeyThumbprint)) {
-    throw new IdentityDomainError("IDENTITY_INVALID", "publicKeyThumbprint must be SHA-256");
+  if (!/^sha256:[A-Za-z0-9_-]{43}$/.test(input.publicKeyThumbprint)) {
+    throw new IdentityDomainError("IDENTITY_INVALID", "publicKeyThumbprint must be an RFC 7638 SHA-256 thumbprint");
   }
   return Object.freeze({...input, status: "PENDING", version: 1});
 }

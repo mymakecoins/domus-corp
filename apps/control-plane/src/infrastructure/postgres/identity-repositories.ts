@@ -51,7 +51,7 @@ export function createPostgresIdentityAdapters(pool: Pool) {
     deviceRepository: Object.freeze({
       async registerActive(command: {
         tenantId: string; userId: string; deviceId: string; publicKeyThumbprint: string;
-        proof: string; requestId: string; eventId: string; registeredAt: string;
+        requestId: string; eventId: string; registeredAt: string;
       }): Promise<{version: number}> {
         return inIdentityTransaction(pool, command, async (client) => {
           const result = await client.query<{version: number}>(

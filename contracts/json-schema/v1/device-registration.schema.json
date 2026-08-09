@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.domus.corp/v1/device-registration.schema.json",
+  "title": "DeviceRegistration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "device_id", "nonce", "public_key_jwk", "proof"],
+  "properties": {
+    "schema_version": {"type": "string", "const": "1.0.0"},
+    "device_id": {"$ref": "common.schema.json#/$defs/uuid"},
+    "nonce": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"},
+    "public_key_jwk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kty", "crv", "x", "y"],
+      "properties": {
+        "kty": {"type": "string", "const": "EC"},
+        "crv": {"type": "string", "const": "P-256"},
+        "x": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"},
+        "y": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"}
+      }
+    },
+    "proof": {"type": "string", "minLength": 64}
+  }
+}

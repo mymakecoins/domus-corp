@@ -2,6 +2,12 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [1.2.0] — 2026-08-08
+
+- Adição dos contratos de challenge e registro de dispositivo com chave pública P-256 e prova JWS `ES256`.
+- Challenge de 256 bits, audiência `domus-device-registration`, validade de 120 segundos e consumo único fail-closed.
+- Thumbprint da chave é derivado pelo servidor conforme RFC 7638 e não integra o payload confiável do cliente.
+
 ## [1.1.0] — 2026-08-08
 
 - Adição dos contratos separados `ExternalIdentity`, `AuthenticatedSession` e `RequestSecurityContext` para a V1-101.

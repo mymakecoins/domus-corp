@@ -12,6 +12,7 @@ test("session route uses bearer token and never returns external subject", async
       calls.push(command);
       return {sessionId: "10101010-1010-4010-8010-101010101010", tenantId: "22222222-2222-4222-8222-222222222222", userId: "55555555-5555-4555-8555-555555555555", deviceId: command.deviceId, clientVersion: command.clientVersion, authenticatedAt: "2026-08-08T12:00:00Z", expiresAt: "2026-08-08T20:00:00Z", identityProvider: "https://idp.example.test", externalSubject: "must-not-leak"};
     },
+    issueDeviceChallenge: async () => ({nonce: "nonce", audience: "domus-device-registration", expiresAt: "2026-08-08T12:02:00Z"}),
     registerDevice: async () => ({status: "ACTIVE", version: 2}),
     terminateSession: async () => ({version: 2}),
     revokeDevice: async () => ({version: 4}),
@@ -29,6 +30,7 @@ test("revocation ignores tenant and actor supplied by the client", async () => {
   const app = Fastify({logger: false});
   registerIdentityRoutes(app, {
     establishSession: async () => { throw new Error("unused"); },
+    issueDeviceChallenge: async () => ({nonce: "nonce", audience: "domus-device-registration", expiresAt: "2026-08-08T12:02:00Z"}),
     registerDevice: async () => ({status: "ACTIVE", version: 2}),
     terminateSession: async () => ({version: 2}),
     revokeDevice: async (value) => { command = value; return {version: 4}; },
@@ -46,6 +48,7 @@ test("device registration derives ownership server-side and requires proof", asy
   const app = Fastify({logger: false});
   registerIdentityRoutes(app, {
     establishSession: async () => { throw new Error("unused"); },
+    issueDeviceChallenge: async () => ({nonce: "nonce", audience: "domus-device-registration", expiresAt: "2026-08-08T12:02:00Z"}),
     registerDevice: async (value) => { command = value; return {status: "ACTIVE", version: 2}; },
     terminateSession: async () => ({version: 2}),
     revokeDevice: async () => ({version: 4}),
@@ -55,7 +58,8 @@ test("device registration derives ownership server-side and requires proof", asy
   const response = await app.inject({method: "POST", url: "/v1/identity/devices", payload: {
     tenantId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     deviceId: "20202020-2020-4020-8020-202020202020",
-    publicKeyThumbprint: `sha256:${"b".repeat(64)}`,
+    nonce: "challenge-nonce",
+    publicKeyJwk: {kty: "EC", crv: "P-256", x: "x", y: "y"},
     proof: "synthetic-proof",
   }});
   assert.equal(response.statusCode, 201);
@@ -64,11 +68,33 @@ test("device registration derives ownership server-side and requires proof", asy
   assert.equal(command.proof, "synthetic-proof");
 });
 
+test("device challenge derives binding server-side", async () => {
+  let command;
+  const app = Fastify({logger: false});
+  registerIdentityRoutes(app, {
+    establishSession: async () => { throw new Error("unused"); },
+    issueDeviceChallenge: async (value) => { command = value; return {nonce: "nonce", audience: value.audience, expiresAt: "2026-08-08T12:02:00Z"}; },
+    registerDevice: async () => ({status: "ACTIVE", version: 2}),
+    terminateSession: async () => ({version: 2}),
+    revokeDevice: async () => ({version: 4}),
+    authorizeIdentity: async () => ({tenantId: "22222222-2222-4222-8222-222222222222", userId: "55555555-5555-4555-8555-555555555555"}),
+    authorizeAdministration: async () => ({tenantId: "22222222-2222-4222-8222-222222222222", userId: "55555555-5555-4555-8555-555555555555"}),
+  });
+  const response = await app.inject({method: "POST", url: "/v1/identity/devices/challenges", payload: {
+    tenantId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    deviceId: "20202020-2020-4020-8020-202020202020",
+  }});
+  assert.equal(response.statusCode, 201);
+  assert.equal(command.tenantId, "22222222-2222-4222-8222-222222222222");
+  assert.equal(command.audience, "domus-device-registration");
+});
+
 test("session termination cannot target another user's session", async () => {
   let command;
   const app = Fastify({logger: false});
   registerIdentityRoutes(app, {
     establishSession: async () => { throw new Error("unused"); },
+    issueDeviceChallenge: async () => ({nonce: "nonce", audience: "domus-device-registration", expiresAt: "2026-08-08T12:02:00Z"}),
     registerDevice: async () => ({status: "ACTIVE", version: 2}),
     terminateSession: async (value) => { command = value; return {version: 2}; },
     revokeDevice: async () => ({version: 4}),

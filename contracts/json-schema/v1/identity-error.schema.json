@@ -10,7 +10,7 @@
     "error_id": {"$ref": "common.schema.json#/$defs/uuid"},
     "request_id": {"$ref": "common.schema.json#/$defs/uuid"},
     "occurred_at": {"$ref": "common.schema.json#/$defs/timestamp"},
-    "code": {"type": "string", "enum": ["IDENTITY_TOKEN_INVALID", "IDENTITY_TOKEN_EXPIRED", "IDENTITY_ISSUER_INVALID", "IDENTITY_AUDIENCE_INVALID", "IDENTITY_CLAIM_MISSING", "TENANT_CONTEXT_INVALID", "WORKSPACE_ACCESS_DENIED", "DEVICE_NOT_REGISTERED", "DEVICE_REVOKED", "IDENTITY_DEPENDENCY_UNAVAILABLE", "IDENTITY_CONTRACT_VERSION_UNSUPPORTED"]},
+    "code": {"type": "string", "enum": ["IDENTITY_TOKEN_INVALID", "IDENTITY_TOKEN_EXPIRED", "IDENTITY_ISSUER_INVALID", "IDENTITY_AUDIENCE_INVALID", "IDENTITY_CLAIM_MISSING", "TENANT_CONTEXT_INVALID", "TENANT_ACCESS_DENIED", "TENANT_SELECTION_REQUIRED", "WORKSPACE_ACCESS_DENIED", "DEVICE_NOT_REGISTERED", "DEVICE_REVOKED", "DEVICE_PROOF_INVALID", "IDENTITY_DEPENDENCY_UNAVAILABLE", "IDENTITY_CONTRACT_VERSION_UNSUPPORTED"]},
     "http_status": {"type": "integer", "enum": [401, 403, 503]},
     "message": {"type": "string", "minLength": 1},
     "retryable": {"type": "boolean"},
