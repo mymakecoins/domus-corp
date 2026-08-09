@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-305",
-  "version": "0.9.0",
+  "issue": "V1-301",
+  "version": "0.10.0",
   "classification": "high-p0",
-  "summary": "Reserva e reconciliação atômicas de budgets cumulativos.",
-  "impact": "Adiciona limites multi-escopo, idempotência, ledger e bloqueio de overage sob RLS.",
-  "risks": ["Promoção depende da aprovação dos limites, moeda e alertas operacionais por FinOps."],
+  "summary": "Model Gateway TypeScript integrado e fail-closed.",
+  "impact": "Encadeia policy, catálogo, egress, budget, credencial efêmera, provider controlado, reconciliação e auditoria.",
+  "risks": ["Promoção depende da revisão de Segurança sobre adapters, conectividade e providers externos."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-305.md", "docs/evidence/V1-305-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-301.md", "docs/evidence/V1-301-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Migração 000008 adiciona estado financeiro na baseline não promovida. Rollback remove somente dados sintéticos locais."
+    "dataCompatibility": "A issue não adiciona migração. Rollback remove rotas e adapters do gateway sem alterar dados persistidos."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.3.0"
+  "contractsVersion": "2.4.0"
 }

@@ -28,6 +28,7 @@ EXPECTED = {
     "model-route-decision.schema.json",
     "egress-guard-decision.schema.json",
     "budget-reservation-decision.schema.json",
+    "model-gateway-request.schema.json", "model-gateway-result.schema.json",
 }
 
 IDENTITY_SCHEMAS = {

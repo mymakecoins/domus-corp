@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.4.0] — 2026-08-09
+
+- Adição de `ModelGatewayRequest` sem campos de autoridade e `ModelGatewayResult` correlacionado à policy, rota, reserva e reconciliação.
+- O transporte operacional pode devolver texto; auditoria e eventos continuam restritos a metadados redigidos.
+
 ## [2.3.0] — 2026-08-09
 
 - Adição de `BudgetReservationDecision` para reservas cumulativas, idempotentes e reconciliáveis.
