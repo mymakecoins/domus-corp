@@ -3,7 +3,7 @@
     --background: 220 50% 98%; --foreground: 221 39% 11%;
     --card: 0 0% 100%; --card-foreground: 221 39% 11%;
     --popover: 0 0% 100%; --popover-foreground: 221 39% 11%;
-    --primary: 215 97% 49%; --primary-foreground: 0 0% 100%; --primary-hover: 224 76% 48%; --link: 224 76% 48%;
+    --primary: 215 97% 49%; --primary-foreground: 0 0% 100%; --primary-hover: 224 76% 48%; --primary-hover-foreground: 0 0% 100%; --link: 224 76% 48%;
     --secondary: 210 40% 96%; --secondary-foreground: 222 47% 11%; --secondary-hover: 214 32% 91%;
     --muted: 220 50% 98%; --muted-foreground: 217 11% 40%;
     --accent: 214 32% 91%; --accent-foreground: 221 39% 11%;
@@ -19,7 +19,7 @@
   }
   [data-theme='dark'], .dark {
     --background: 226 49% 8%; --foreground: 210 40% 98%; --card: 224 18% 12%; --card-foreground: 210 40% 98%;
-    --popover: 224 18% 12%; --popover-foreground: 210 40% 98%; --primary-hover: 201 98% 50%; --link: 201 98% 62%;
+    --popover: 224 18% 12%; --popover-foreground: 210 40% 98%; --primary-hover: 201 98% 50%; --primary-hover-foreground: 221 39% 11%; --link: 201 98% 62%;
     --secondary: 224 13% 17%; --secondary-foreground: 210 40% 98%; --secondary-hover: 215 28% 24%;
     --muted: 224 13% 17%; --muted-foreground: 214 32% 83%; --accent: 215 28% 24%; --accent-foreground: 210 40% 98%;
     --border: 215 28% 24%; --input: 217 19% 34%; --ring: 201 98% 50%;
@@ -37,7 +37,7 @@
   .domus-button:focus-visible,.domus-select-trigger:focus-visible,.domus-tabs-trigger:focus-visible,.domus-dialog-close:focus-visible { outline:2px solid hsl(var(--ring)); outline-offset:2px; }
   .domus-button:disabled { pointer-events:none; opacity:.5; }
   .domus-button svg,.domus-badge svg { width:1rem; height:1rem; }
-  .domus-button.bg-primary { color:hsl(var(--primary-foreground)); background:hsl(var(--primary)); }.domus-button.bg-primary:hover { background:hsl(var(--primary-hover)); }
+  .domus-button.bg-primary { color:hsl(var(--primary-foreground)); background:hsl(var(--primary)); }.domus-button.bg-primary:hover { color:hsl(var(--primary-hover-foreground)); background:hsl(var(--primary-hover)); }
   .domus-button.bg-secondary { color:hsl(var(--secondary-foreground)); background:hsl(var(--secondary)); }.domus-button.bg-secondary:hover { background:hsl(var(--secondary-hover)); }
   .domus-button.bg-outline { color:hsl(var(--foreground)); background:transparent; border:1px solid hsl(var(--input)); }.domus-button.bg-outline:hover,.domus-button.bg-ghost:hover { background:hsl(var(--accent)); }
   .domus-button.bg-ghost,.domus-button.bg-link { color:hsl(var(--foreground)); background:transparent; }.domus-button.bg-link { color:hsl(var(--link)); text-decoration:underline; }

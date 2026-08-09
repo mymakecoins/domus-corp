@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-205",
-  "version": "0.18.0",
+  "issue": "V1-206",
+  "version": "0.19.0",
   "classification": "high-p0",
-  "summary": "Design System Domus com tokens, estados semânticos e acessibilidade.",
-  "impact": "Adiciona pacote de UI reutilizável, Storybook e gates axe/Playwright para as superfícies da v1.0.",
-  "risks": ["Validação humana de UX, acessibilidade e compreensão dos estados é obrigatória antes do encerramento."],
+  "summary": "Chat corporativo com SSE, cancelamento e histórico local cifrado.",
+  "impact": "Adiciona transporte streaming tipado, UI sem secrets e tratamento distinto de bloqueio, falha e incerteza.",
+  "risks": ["Sessão OIDC, dependências reais do Gateway e parâmetros externos exigem validação antes da promoção."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-205.md", "docs/evidence/V1-205-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-206.md", "docs/evidence/V1-206-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "A issue não altera dados persistidos; rollback remove o pacote de UI e restaura o manifesto anterior."
+    "dataCompatibility": "O histórico usa o schema local existente; rollback preserva itens cifrados e remove apenas a superfície de chat."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.7.0"
+  "contractsVersion": "2.8.0"
 }
