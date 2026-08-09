@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-402",
-  "version": "0.21.0",
+  "issue": "V1-403",
+  "version": "0.22.0",
   "classification": "high-p0",
-  "summary": "Framework de conectores com cursor persistente, fencing, ACL, retry e dead-letter.",
-  "impact": "Adiciona contratos e fundação transacional testada com double, sem habilitar adapters externos ou armazenar conteúdo.",
-  "risks": ["Adapters reais, Vault, quotas, scheduler e parâmetros externos exigem homologação nas issues consumidoras."],
+  "summary": "Armazenamento imutável de originais com checksum, quarentena, lifecycle e restore.",
+  "impact": "Adiciona domínio e adapter S3/MinIO injetável, metadata RLS e contratos sem habilitar dados corporativos.",
+  "risks": ["KMS, malware engine, Object Lock, backup e parâmetros externos exigem homologação antes da promoção."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-402.md", "docs/evidence/V1-402-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-403.md", "docs/evidence/V1-403-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Rollback remove somente metadados do framework sob runbook aprovado; nenhum original ou dado corporativo é armazenado nesta issue."
+    "dataCompatibility": "Rollback do schema preserva objetos no storage; remoção exige reconciliação explícita pelo checksum e versão exata."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.10.0"
+  "contractsVersion": "2.11.0"
 }

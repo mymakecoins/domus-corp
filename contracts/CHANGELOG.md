@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.11.0] — 2026-08-09
+
+- Adição de admissão, recibo, lifecycle e restore de objetos de conhecimento.
+- Contratos preservam lineage e integridade sem conteúdo, nome original, segredo ou URL assinada.
+
 ## [2.10.0] — 2026-08-09
 
 - Adição de conexão de fonte, página normalizada, job/evento de sync e dead-letter.

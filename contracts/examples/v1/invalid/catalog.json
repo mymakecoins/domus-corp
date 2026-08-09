@@ -1,4 +1,8 @@
 {
+  "knowledge-object-admission.schema.json":{"reason":"client cannot admit executable content","payload":{"schema_version":"1.0.0","media_type":"application/x-executable"}},
+  "knowledge-object-receipt.schema.json":{"reason":"receipt cannot contain untyped checksum","payload":{"schema_version":"1.0.0","checksum":"etag"}},
+  "knowledge-object-lifecycle-event.schema.json":{"reason":"event must be versioned","payload":{"schema_version":"1.0.0","event_type":"knowledge.object.accepted"}},
+  "knowledge-object-restore-result.schema.json":{"reason":"restore result is bounded","payload":{"schema_version":"1.0.0","result":"MAYBE"}},
   "source-connection.schema.json":{"reason":"raw secret reference is forbidden","payload":{"schema_version":"1.0.0","credential_ref":"token-secret"}},
   "connector-page.schema.json":{"reason":"ACL is mandatory","payload":{"schema_version":"1.0.0","items":[{"acl":[]}],"has_more":false}},
   "connector-sync-job.schema.json":{"reason":"fencing token must be positive","payload":{"schema_version":"1.0.0","fencing_token":0}},

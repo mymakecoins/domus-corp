@@ -35,6 +35,8 @@ EXPECTED = {
     "source-registry-entry.schema.json", "source-lifecycle-event.schema.json",
     "source-connection.schema.json", "connector-page.schema.json", "connector-sync-job.schema.json",
     "connector-sync-event.schema.json", "connector-dead-letter.schema.json",
+    "knowledge-object-admission.schema.json", "knowledge-object-receipt.schema.json",
+    "knowledge-object-lifecycle-event.schema.json", "knowledge-object-restore-result.schema.json",
 }
 
 IDENTITY_SCHEMAS = {
@@ -216,7 +218,7 @@ def main() -> int:
     asyncapi = load(asyncapi_path)
     if openapi.get("openapi") != "3.1.0" or openapi.get("info", {}).get("version") != "1.0.0":
         raise ContractViolation("OpenAPI metadata mismatch")
-    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.4.0":
+    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.5.0":
         raise ContractViolation("AsyncAPI metadata mismatch")
     walk_refs(openapi, openapi_path)
     walk_refs(asyncapi, asyncapi_path)

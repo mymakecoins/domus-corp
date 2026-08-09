@@ -1,6 +1,6 @@
 {
   "asyncapi": "3.0.0",
-  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.4.0" },
+  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.5.0" },
   "defaultContentType": "application/json",
   "channels": {
     "identityEvents": { "address": "domus.v1.identity.events", "messages": { "identityEvent": { "$ref": "#/components/messages/IdentityEvent" } } },
@@ -11,7 +11,8 @@
     "ingestionJobs": { "address": "domus.v1.ingestion.jobs", "messages": { "knowledgeAsset": { "$ref": "#/components/messages/KnowledgeAssetJob" } } },
     "sourceEvents": { "address": "domus.v1.source.events", "messages": { "sourceEvent": { "$ref": "#/components/messages/SourceLifecycleEvent" } } },
     "connectorJobs": { "address": "domus.v1.connector.jobs", "messages": { "connectorJob": { "$ref": "#/components/messages/ConnectorSyncJob" } } },
-    "connectorEvents": { "address": "domus.v1.connector.events", "messages": { "connectorEvent": { "$ref": "#/components/messages/ConnectorSyncEvent" } } }
+    "connectorEvents": { "address": "domus.v1.connector.events", "messages": { "connectorEvent": { "$ref": "#/components/messages/ConnectorSyncEvent" } } },
+    "knowledgeObjectEvents": { "address": "domus.v1.knowledge.objects", "messages": { "knowledgeObjectEvent": { "$ref": "#/components/messages/KnowledgeObjectEvent" } } }
   },
   "operations": {
     "sendIdentityEvent": { "action": "send", "channel": { "$ref": "#/channels/identityEvents" } },
@@ -22,7 +23,8 @@
     "sendActionEvent": { "action": "send", "channel": { "$ref": "#/channels/actionEvents" } },
     "sendSourceEvent": { "action": "send", "channel": { "$ref": "#/channels/sourceEvents" } },
     "consumeConnectorJob": { "action": "receive", "channel": { "$ref": "#/channels/connectorJobs" } },
-    "sendConnectorEvent": { "action": "send", "channel": { "$ref": "#/channels/connectorEvents" } }
+    "sendConnectorEvent": { "action": "send", "channel": { "$ref": "#/channels/connectorEvents" } },
+    "sendKnowledgeObjectEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeObjectEvents" } }
   },
   "components": { "messages": {
     "IdentityEvent": { "name": "IdentityEventV1", "title": "Evento de identidade sem dados de autenticação", "payload": { "$ref": "../../json-schema/v1/identity-event.schema.json" } },
@@ -31,6 +33,7 @@
     "KnowledgeAssetJob": { "name": "KnowledgeAssetJobV1", "title": "Job de ingestão versionado", "payload": { "$ref": "../../json-schema/v1/knowledge-asset.schema.json" } },
     "SourceLifecycleEvent": { "name": "SourceLifecycleEventV1", "title": "Evento governado de ciclo de vida da fonte", "payload": { "$ref": "../../json-schema/v1/source-lifecycle-event.schema.json" } },
     "ConnectorSyncJob": { "name": "ConnectorSyncJobV1", "title": "Job de sync com fencing", "payload": { "$ref": "../../json-schema/v1/connector-sync-job.schema.json" } },
-    "ConnectorSyncEvent": { "name": "ConnectorSyncEventV1", "title": "Resultado sanitizado de sync", "payload": { "$ref": "../../json-schema/v1/connector-sync-event.schema.json" } }
+    "ConnectorSyncEvent": { "name": "ConnectorSyncEventV1", "title": "Resultado sanitizado de sync", "payload": { "$ref": "../../json-schema/v1/connector-sync-event.schema.json" } },
+    "KnowledgeObjectEvent": { "name": "KnowledgeObjectLifecycleEventV1", "title": "Lifecycle de objeto sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-object-lifecycle-event.schema.json" } }
   } }
 }

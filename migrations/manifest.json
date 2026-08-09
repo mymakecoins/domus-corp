@@ -78,6 +78,9 @@
     },
     {
       "version":"000012","issue":"V1-402","description":"Framework transacional de conectores, cursores e dead-letter","impact":"Adiciona conexão por fonte, fencing, dedupe, retry e eventos sem persistir tokens ou conteúdo","risk":"high","owner":"Backend TypeScript / Python Workers","requiredReviewers":["DBA","Security","Backend Python"],"rollback":"migrations/000012_v1_402_connectors.down.sql"
+    },
+    {
+      "version":"000013","issue":"V1-403","description":"Metadados imutáveis de originais e lifecycle de objetos","impact":"Adiciona assets/version lineage, RLS, auditoria e outbox sem conteúdo ou URLs assinadas","risk":"high","owner":"Backend Python / DBA / DevOps","requiredReviewers":["DBA","Security","DevOps"],"rollback":"migrations/000013_v1_403_knowledge_objects.down.sql"
     }
   ]
 }
