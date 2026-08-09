@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.7.0] — 2026-08-09
+
+- Adição de `CostLedgerEntry`, `CostAggregate` e `CostThresholdEvent` com moeda explícita e valores decimais seguros entre runtimes.
+- Recibos e versões de preço permanecem autoridade server-side e divergências exigem reconciliação.
+
 ## [2.6.0] — 2026-08-09
 
 - Adição de `AuditEvent` mínimo e `AuditAccessEvent` para autoauditoria de consultas e exportações.

@@ -1,0 +1,3 @@
+import assert from "node:assert/strict";import {test} from "node:test";import {toSafeCsv,validateCostQuery} from "../dist/application/budget/query-costs.js";
+test("query bounds interval rows and grouping dimensions",()=>{assert.throws(()=>validateCostQuery({from:"2026-01-01T00:00:00Z",to:"2026-08-01T00:00:00Z",limit:10,groupBy:["day"]}),/COST_QUERY_RANGE_INVALID/);assert.throws(()=>validateCostQuery({from:"2026-08-01T00:00:00Z",to:"2026-08-02T00:00:00Z",limit:10,groupBy:["day","provider","model"]}),/COST_QUERY_GROUP_INVALID/);});
+test("CSV neutralizes formula injection",()=>{const csv=toSafeCsv([{provider:"=cmd|' /C calc'!A0",currency:"BRL",actual_minor:"3"}]);assert.match(csv,/"'=cmd/);assert.equal(csv.includes("\n=cmd"),false);});

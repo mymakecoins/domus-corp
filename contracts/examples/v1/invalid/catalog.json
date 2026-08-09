@@ -25,5 +25,8 @@
   "model-gateway-result.schema.json":{"reason":"secret cannot enter result","payload":{"secret":"forbidden"}},
   "model-stream-event.schema.json":{"reason":"untyped stream event is rejected","payload":{"type":"retry"}},
   "audit-event.schema.json":{"reason":"content is forbidden","payload":{"prompt":"secret"}},
-  "audit-access-event.schema.json":{"reason":"purpose is mandatory","payload":{"purpose":""}}
+  "audit-access-event.schema.json":{"reason":"purpose is mandatory","payload":{"purpose":""}},
+  "cost-ledger-entry.schema.json":{"reason":"floating point money is forbidden","payload":{"actual_minor":1.5}},
+  "cost-aggregate.schema.json":{"reason":"currency is mandatory","payload":{"currency":"mixed"}},
+  "cost-threshold-event.schema.json":{"reason":"threshold is governed","payload":{"threshold":75}}
 }

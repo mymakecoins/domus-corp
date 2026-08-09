@@ -69,6 +69,9 @@
     },
     {
       "version":"000009","issue":"V1-308","description":"Auditoria correlacionada append-only e leitura autoauditada","impact":"Adiciona eventos particionados, RLS, retenção local e trilha de acesso","risk":"high","owner":"Backend TypeScript / Security / DBA","requiredReviewers":["DBA","Security","Compliance"],"rollback":"migrations/000009_v1_308_audit.down.sql"
+    },
+    {
+      "version":"000010","issue":"V1-306","description":"Ledger financeiro correlacionado e alertas de threshold","impact":"Adiciona custos estimado/real, tokens, dimensões e eventos 80/100 por tenant","risk":"high","owner":"Backend TypeScript / FinOps / DBA","requiredReviewers":["DBA","Security","FinOps"],"rollback":"migrations/000010_v1_306_cost_ledger.down.sql"
     }
   ]
 }

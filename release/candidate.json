@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-308",
-  "version": "0.12.0",
+  "issue": "V1-306",
+  "version": "0.13.0",
   "classification": "high-p0",
-  "summary": "Auditoria correlacionada, mínima e autoauditada.",
-  "impact": "Adiciona trilha append-only particionada, RLS, leitura com finalidade e retenção local separada.",
-  "risks": ["Promoção depende da aprovação de retenção, WORM, exportação e legal hold por Segurança, DBA e Compliance."],
+  "summary": "Ledger financeiro reconciliável e agregações administrativas.",
+  "impact": "Adiciona custos/tokens correlacionados, recibos idempotentes, consultas seguras e thresholds 80/100.",
+  "risks": ["Promoção depende da validação de moeda, thresholds, alertas e reconciliação por FinOps e DBA."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-308.md", "docs/evidence/V1-308-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-306.md", "docs/evidence/V1-306-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Migração 000009 adiciona somente metadados sintéticos na baseline não promovida; rollback remove as tabelas locais."
+    "dataCompatibility": "Migração 000010 adiciona ledger e thresholds na baseline não promovida; rollback remove somente dados sintéticos locais."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.6.0"
+  "contractsVersion": "2.7.0"
 }

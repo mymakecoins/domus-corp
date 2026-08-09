@@ -31,6 +31,7 @@ EXPECTED = {
     "model-gateway-request.schema.json", "model-gateway-result.schema.json",
     "model-stream-event.schema.json",
     "audit-event.schema.json", "audit-access-event.schema.json",
+    "cost-ledger-entry.schema.json", "cost-aggregate.schema.json", "cost-threshold-event.schema.json",
 }
 
 IDENTITY_SCHEMAS = {
