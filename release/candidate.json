@@ -1,16 +1,16 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-201",
-  "version": "0.14.0",
+  "issue": "V1-202",
+  "version": "0.15.0",
   "classification": "high-p0",
-  "summary": "Shell Electron isolado com IPC mínimo e validado.",
-  "impact": "Adiciona desktop React sandboxed, CSP deny-by-default, preload mínimo e healthcheck controlado.",
-  "risks": ["Distribuição exige assinatura, notarização, update seguro e validação por sistema operacional."],
+  "summary": "Onboarding local retomável com consentimento por campo.",
+  "impact": "Adiciona estados versionados, persistência cifrada e seleção explícita de contexto elegível.",
+  "risks": ["Cópia final, retenção, backup e roaming exigem validação de UX e Privacidade."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-201.md", "docs/evidence/V1-201-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-202.md", "docs/evidence/V1-202-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "A issue não adiciona migração nem persiste dados locais. Rollback remove o workspace desktop."
+    "dataCompatibility": "A issue adiciona somente arquivo local cifrado versionado; rollback pode apagá-lo pela ação explícita do usuário."
   },
   "rings": ["internal"],
   "findings": [],
