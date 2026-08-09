@@ -5,6 +5,9 @@ packages:
 storeDir: .pnpm-store
 injectWorkspacePackages: true
 
+overrides:
+  pg-protocol: 1.15.0
+
 allowBuilds:
   # Transitive tooling dependency; Domus does not execute its install script.
   esbuild: false
