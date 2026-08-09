@@ -49,6 +49,34 @@ export function createPostgresIdentityAdapters(pool: Pool) {
       },
     }),
     deviceRepository: Object.freeze({
+      async registerActive(command: {
+        tenantId: string; userId: string; deviceId: string; publicKeyThumbprint: string;
+        proof: string; requestId: string; eventId: string; registeredAt: string;
+      }): Promise<{version: number}> {
+        return inIdentityTransaction(pool, command, async (client) => {
+          const result = await client.query<{version: number}>(
+            `INSERT INTO iam_device
+              (tenant_id, device_id, user_id, public_key_thumbprint, status,
+               version, registered_at, activated_at)
+             VALUES ($1,$2,$3,$4,'active',2,$5,$5)
+             RETURNING version`,
+            [command.tenantId, command.deviceId, command.userId,
+              command.publicKeyThumbprint, command.registeredAt],
+          );
+          const row = result.rows[0];
+          if (!row) throw new Error("IDENTITY_DEPENDENCY_UNAVAILABLE");
+          await client.query(
+            `INSERT INTO iam_outbox_event
+              (tenant_id, event_id, event_type, request_id, user_id, device_id,
+               session_id, occurred_at, attributes)
+             VALUES ($1,$2,'device.registered.v1',$3,$4,$5,NULL,$6,$7::jsonb)`,
+            [command.tenantId, command.eventId, command.requestId, command.userId,
+              command.deviceId, command.registeredAt,
+              JSON.stringify({device_version: row.version})],
+          );
+          return {version: row.version};
+        });
+      },
       async find(deviceId: string, tenantId: string, userId: string): Promise<Device | undefined> {
         return inIdentityTransaction(pool, {tenantId, userId}, async (client) => {
           const result = await client.query<{
@@ -129,6 +157,33 @@ export function createPostgresIdentityAdapters(pool: Pool) {
             [session.tenantId, context.eventId, context.requestId, session.userId, session.deviceId,
               session.sessionId, session.authenticatedAt, JSON.stringify({client_version: session.clientVersion})],
           );
+        });
+      },
+      async terminate(command: {
+        tenantId: string; userId: string; sessionId: string; requestId: string;
+        eventId: string; terminatedAt: string;
+      }): Promise<{version: number}> {
+        return inIdentityTransaction(pool, command, async (client) => {
+          const result = await client.query<{version: number; device_id: string}>(
+            `UPDATE iam_auth_session
+                SET revoked_at = $4, revoked_by = $2, revocation_reason = 'USER_LOGOUT',
+                    version = version + 1
+              WHERE tenant_id = $1 AND user_id = $2 AND session_id = $3 AND revoked_at IS NULL
+          RETURNING version, device_id`,
+            [command.tenantId, command.userId, command.sessionId, command.terminatedAt],
+          );
+          const row = result.rows[0];
+          if (!row) throw new Error("IDENTITY_TOKEN_INVALID");
+          await client.query(
+            `INSERT INTO iam_outbox_event
+              (tenant_id, event_id, event_type, request_id, user_id, device_id,
+               session_id, occurred_at, attributes)
+             VALUES ($1,$2,'identity.session_terminated.v1',$3,$4,$5,$6,$7,$8::jsonb)`,
+            [command.tenantId, command.eventId, command.requestId, command.userId,
+              row.device_id, command.sessionId, command.terminatedAt,
+              JSON.stringify({reason_code: "USER_LOGOUT"})],
+          );
+          return {version: row.version};
         });
       },
     }),

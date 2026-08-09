@@ -4,11 +4,16 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import type { AuthenticatedSession } from "../../../domain/identity/authenticated-session.js";
 import type { EstablishSessionCommand } from "../../../application/identity/establish-session.js";
+import type { RegisterDeviceCommand } from "../../../application/identity/register-device.js";
 import type { RevokeDeviceCommand } from "../../../application/identity/revoke-device.js";
+import type { TerminateSessionCommand } from "../../../application/identity/terminate-session.js";
 
 type Services = Readonly<{
   establishSession(command: EstablishSessionCommand): Promise<AuthenticatedSession>;
+  registerDevice(command: RegisterDeviceCommand): Promise<{status: "ACTIVE"; version: number}>;
+  terminateSession(command: TerminateSessionCommand): Promise<{version: number}>;
   revokeDevice(command: RevokeDeviceCommand): Promise<{version: number}>;
+  authorizeIdentity(request: FastifyRequest): Promise<{tenantId: string; userId: string}>;
   authorizeAdministration(request: FastifyRequest): Promise<{tenantId: string; userId: string}>;
 }>;
 
@@ -53,6 +58,51 @@ export function registerIdentityRoutes(app: FastifyInstance, services: Services)
           deviceId: session.deviceId, clientVersion: session.clientVersion,
           authenticatedAt: session.authenticatedAt, expiresAt: session.expiresAt,
         });
+      } catch (error) {
+        const code = safeCode(error);
+        return reply.code(statusFor(code)).send({code});
+      }
+    },
+  );
+
+  app.post<{Body: {deviceId?: string; publicKeyThumbprint?: string; proof?: string}}>(
+    "/v1/identity/devices",
+    async (request, reply) => {
+      try {
+        if (!request.body?.deviceId || !request.body.publicKeyThumbprint || !request.body.proof) {
+          throw new Error("IDENTITY_CLAIM_MISSING");
+        }
+        const actor = await services.authorizeIdentity(request);
+        const result = await services.registerDevice({
+          tenantId: actor.tenantId,
+          userId: actor.userId,
+          deviceId: request.body.deviceId,
+          publicKeyThumbprint: request.body.publicKeyThumbprint,
+          proof: request.body.proof,
+          requestId: randomUUID(),
+          eventId: randomUUID(),
+        });
+        return reply.code(201).send(result);
+      } catch (error) {
+        const code = safeCode(error);
+        return reply.code(statusFor(code)).send({code});
+      }
+    },
+  );
+
+  app.delete<{Params: {sessionId: string}}>(
+    "/v1/identity/sessions/:sessionId",
+    async (request, reply) => {
+      try {
+        const actor = await services.authorizeIdentity(request);
+        const result = await services.terminateSession({
+          tenantId: actor.tenantId,
+          userId: actor.userId,
+          sessionId: request.params.sessionId,
+          requestId: randomUUID(),
+          eventId: randomUUID(),
+        });
+        return reply.send(result);
       } catch (error) {
         const code = safeCode(error);
         return reply.code(statusFor(code)).send({code});

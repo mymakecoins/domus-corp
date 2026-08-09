@@ -58,6 +58,52 @@ test("PostgreSQL transaction rolls back and always releases on failure", async (
   assert.deepEqual(calls.slice(-2), ["ROLLBACK", "RELEASE"]);
 });
 
+test("PostgreSQL device registration writes active binding and outbox atomically", async () => {
+  const calls = [];
+  const client = {
+    query: async (text, values = []) => {
+      calls.push({text, values});
+      if (/returning version/i.test(text)) return {rows: [{version: 2}], rowCount: 1};
+      return {rows: [], rowCount: 1};
+    },
+    release: () => calls.push({text: "RELEASE", values: []}),
+  };
+  const adapters = createPostgresIdentityAdapters({connect: async () => client, query: client.query});
+  const result = await adapters.deviceRepository.registerActive({
+    tenantId: ids.tenant, userId: ids.user, deviceId: ids.device,
+    publicKeyThumbprint: `sha256:${"b".repeat(64)}`, proof: "must-not-be-persisted",
+    registeredAt: "2026-08-08T12:00:00Z", requestId: ids.request, eventId: ids.event,
+  });
+
+  assert.equal(result.version, 2);
+  assert.match(calls[2].text, /insert into iam_device/i);
+  assert.equal(calls[2].values.includes("must-not-be-persisted"), false);
+  assert.match(calls[3].text, /device\.registered\.v1/);
+  assert.equal(calls[4].text, "COMMIT");
+});
+
+test("PostgreSQL session termination is scoped and audited atomically", async () => {
+  const calls = [];
+  const client = {
+    query: async (text, values = []) => {
+      calls.push({text, values});
+      if (/update iam_auth_session/i.test(text)) return {rows: [{version: 2, device_id: ids.device}], rowCount: 1};
+      return {rows: [], rowCount: 1};
+    },
+    release: () => calls.push({text: "RELEASE", values: []}),
+  };
+  const adapters = createPostgresIdentityAdapters({connect: async () => client, query: client.query});
+  await adapters.sessionRepository.terminate({
+    tenantId: ids.tenant, userId: ids.user, sessionId: ids.session,
+    terminatedAt: "2026-08-08T13:00:00Z", requestId: ids.request, eventId: ids.event,
+  });
+
+  assert.match(calls[2].text, /update iam_auth_session/i);
+  assert.match(calls[2].text, /tenant_id = \$1 AND user_id = \$2 AND session_id = \$3/);
+  assert.match(calls[3].text, /identity\.session_terminated\.v1/);
+  assert.equal(calls[4].text, "COMMIT");
+});
+
 test("revocation cache fails closed on missing, malformed, stale, or unavailable state", async () => {
   const values = new Map([[`domus:device:${ids.device}`, JSON.stringify({status: "ACTIVE", version: 3})]]);
   const cache = createRevocationCache({

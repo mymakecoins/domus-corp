@@ -10,7 +10,7 @@
 2. Criar projetos e variáveis protegidas de staging conforme V1-006, incluindo OIDC de workload.
 3. Provisionar PostgreSQL e Redis de staging e aplicar a role `domus_identity_runtime` sem `BYPASSRLS`.
 4. Validar revogação distribuída contra o SLA p95 de 5 s e limite de 30 s.
-5. Integrar prova de posse e Keychain/KeyStore com o cliente Electron na V1-201.
+5. Integrar no cliente Electron a prova de posse contratada na V1-101 e o Keychain/KeyStore na V1-201.
 
 ## Critério de remoção
 
