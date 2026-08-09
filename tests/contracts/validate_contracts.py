@@ -27,6 +27,7 @@ EXPECTED = {
     "contract-error.schema.json", "domain-event.schema.json",
     "model-route-decision.schema.json",
     "egress-guard-decision.schema.json",
+    "budget-reservation-decision.schema.json",
 }
 
 IDENTITY_SCHEMAS = {

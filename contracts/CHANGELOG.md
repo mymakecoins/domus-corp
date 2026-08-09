@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.3.0] — 2026-08-09
+
+- Adição de `BudgetReservationDecision` para reservas cumulativas, idempotentes e reconciliáveis.
+- Valores monetários cruzam runtimes como strings decimais em unidades menores; a persistência usa `bigint`.
+
 ## [2.2.0] — 2026-08-09
 
 - Adição de `EgressGuardDecision` com metadados e contagens redigidas, sem conteúdo ou matches.

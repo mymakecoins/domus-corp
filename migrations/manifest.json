@@ -63,6 +63,9 @@
     },
     {
       "version":"000007","issue":"V1-304","description":"Regras, exceções PII e auditoria redigida de egress","impact":"Adiciona governança fail-closed sem persistir conteúdo","risk":"high","owner":"Security / Backend TypeScript","requiredReviewers":["DBA","Security","Privacy"],"rollback":"migrations/000007_v1_304_egress.down.sql","globalTables":["egress_rule"]
+    },
+    {
+      "version":"000008","issue":"V1-305","description":"Reserva e reconciliação atômicas de budget","impact":"Adiciona limites cumulativos, reservas idempotentes, alocações e ledger financeiro","risk":"high","owner":"Backend TypeScript / FinOps","requiredReviewers":["DBA","Security","FinOps"],"rollback":"migrations/000008_v1_305_budget.down.sql"
     }
   ]
 }
