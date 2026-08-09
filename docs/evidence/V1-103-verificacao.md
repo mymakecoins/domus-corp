@@ -2,7 +2,7 @@
 
 ## Estado
 
-Implementação local concluída; revisão humana de Backend, DBA e Segurança permanece obrigatória para encerrar o gate da onda ou promover a mudança.
+Implementação local concluída e gate G2 aprovado pelo responsável humano em 2026-08-09. Revisões especializadas de Backend, DBA e Segurança continuam obrigatórias antes de promoção externa.
 
 ## Cobertura
 
