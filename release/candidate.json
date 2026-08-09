@@ -7,7 +7,7 @@
   "impact": "Adiciona contratos sem implementar autenticação, persistência ou integração externa.",
   "risks": ["Contrato incorreto pode permitir que identidade ou sessão sejam tratadas como autoridade de policy."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-101.md"],
+  "evidence": [".ai/context-packs/V1-101.md", "docs/evidence/V1-101-verificacao.md"],
   "rollback": {
     "runbook": "contracts/CHANGELOG.md",
     "dataCompatibility": "Mudança aditiva de contratos; rollback restaura o catálogo 1.0.0 sem alterar dados persistidos."
