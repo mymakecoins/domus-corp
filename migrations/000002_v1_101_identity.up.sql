@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS iam_outbox_event (
     request_id uuid NOT NULL,
     user_id uuid NOT NULL,
     device_id uuid NOT NULL,
-    session_id uuid NOT NULL,
+    session_id uuid,
     occurred_at timestamptz NOT NULL,
     attributes jsonb NOT NULL DEFAULT '{}'::jsonb,
     published_at timestamptz,

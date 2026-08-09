@@ -8,8 +8,8 @@ export type EstablishSessionDependencies = Readonly<{
   identityRepository: {resolve(identity: ExternalIdentity): Promise<{
     memberships: readonly Readonly<{userId: string; tenantId: string}>[];
   }>};
-  deviceRepository: {find(deviceId: string): Promise<Device | undefined>};
-  sessionRepository: {save(session: AuthenticatedSession): Promise<unknown>};
+  deviceRepository: {find(deviceId: string, tenantId: string, userId: string): Promise<Device | undefined>};
+  sessionRepository: {save(session: AuthenticatedSession, context: {requestId: string; eventId: string}): Promise<unknown>};
   clock: {now(): Date};
   ids: {next(): string};
 }>;
@@ -18,6 +18,7 @@ export type EstablishSessionCommand = Readonly<{
   token: string;
   deviceId: string;
   clientVersion: string;
+  requestId: string;
   requestedTenantId?: string;
 }>;
 
@@ -41,7 +42,7 @@ export async function establishSession(
     throw new IdentityDomainError("TENANT_ACCESS_DENIED");
   }
 
-  const device = await dependencies.deviceRepository.find(command.deviceId);
+  const device = await dependencies.deviceRepository.find(command.deviceId, tenantId, membership.userId);
   if (device === undefined) throw new IdentityDomainError("DEVICE_NOT_REGISTERED");
   if (device.status === "REVOKED") throw new IdentityDomainError("DEVICE_REVOKED");
   if (device.status !== "ACTIVE" || device.userId !== membership.userId || device.tenantId !== tenantId) {
@@ -60,6 +61,6 @@ export async function establishSession(
     identityProvider: external.issuer,
     externalSubject: external.subject,
   });
-  await dependencies.sessionRepository.save(session);
+  await dependencies.sessionRepository.save(session, {requestId: command.requestId, eventId: dependencies.ids.next()});
   return session;
 }

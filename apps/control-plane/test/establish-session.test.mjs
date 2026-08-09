@@ -42,6 +42,7 @@ test("establishes a session from server-resolved identity and active device", as
   const deps = dependencies();
   const session = await establishSession(deps, {
     token: "synthetic-token-never-logged",
+    requestId: "11111111-1111-4111-8111-111111111111",
     deviceId: ids.device,
     clientVersion: "1.0.0",
   });
@@ -59,7 +60,7 @@ test("requires explicit eligible tenant when identity belongs to many", async ()
     ]})},
   });
   await assert.rejects(
-    establishSession(deps, {token: "synthetic", deviceId: ids.device, clientVersion: "1.0.0"}),
+    establishSession(deps, {token: "synthetic", requestId: "11111111-1111-4111-8111-111111111111", deviceId: ids.device, clientVersion: "1.0.0"}),
     /TENANT_SELECTION_REQUIRED/,
   );
 });
@@ -79,7 +80,7 @@ test("selecting a tenant also selects its tenant-bound user", async () => {
   });
 
   const session = await establishSession(deps, {
-    token: "synthetic", deviceId: ids.device, clientVersion: "1.0.0",
+    token: "synthetic", requestId: "11111111-1111-4111-8111-111111111111", deviceId: ids.device, clientVersion: "1.0.0",
     requestedTenantId: ids.otherTenant,
   });
   assert.equal(session.userId, otherUser);
@@ -96,7 +97,7 @@ test("rejects a revoked device before persisting the session", async () => {
     })},
   });
   await assert.rejects(
-    establishSession(deps, {token: "synthetic", deviceId: ids.device, clientVersion: "1.0.0"}),
+    establishSession(deps, {token: "synthetic", requestId: "11111111-1111-4111-8111-111111111111", deviceId: ids.device, clientVersion: "1.0.0"}),
     /DEVICE_REVOKED/,
   );
   assert.equal(deps.saved.length, 0);
