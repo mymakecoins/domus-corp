@@ -1,16 +1,16 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-202",
-  "version": "0.15.0",
+  "issue": "V1-203",
+  "version": "0.16.0",
   "classification": "high-p0",
-  "summary": "Onboarding local retomável com consentimento por campo.",
-  "impact": "Adiciona estados versionados, persistência cifrada e seleção explícita de contexto elegível.",
-  "risks": ["Cópia final, retenção, backup e roaming exigem validação de UX e Privacidade."],
+  "summary": "Memória pessoal local cifrada e isolada em SQLite.",
+  "impact": "Adiciona migração local, proveniência, retenção, recuperação escopada, exclusão e exportação cifrada.",
+  "risks": ["Backup, roaming, limites e retenção externos exigem validação de Privacidade e Dados."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-202.md", "docs/evidence/V1-202-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-203.md", "docs/evidence/V1-203-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "A issue adiciona somente arquivo local cifrado versionado; rollback pode apagá-lo pela ação explícita do usuário."
+    "dataCompatibility": "A issue adiciona SQLite local versionado; rollback preserva o arquivo até exclusão explícita do usuário."
   },
   "rings": ["internal"],
   "findings": [],
