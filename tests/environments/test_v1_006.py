@@ -41,7 +41,8 @@ class EnvironmentIsolationTest(unittest.TestCase):
 
     def test_kubernetes_is_not_an_approved_target(self) -> None:
         self.assertFalse((ROOT / "deploy/k8s").exists())
-        self.assertFalse((ROOT / "infra/vault/policies").exists())
+        self.assertFalse((ROOT / "charts").exists())
+        self.assertFalse((ROOT / "helmfile.yaml").exists())
 
 
 if __name__ == "__main__":

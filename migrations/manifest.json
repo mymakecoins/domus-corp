@@ -42,6 +42,17 @@
       "owner": "Backend TypeScript / Security",
       "requiredReviewers": ["DBA", "Security"],
       "rollback": "migrations/000004_v1_103_policy.down.sql"
+    },
+    {
+      "version": "000005",
+      "issue": "V1-302",
+      "description": "Metadados versionados de credenciais e auditoria redigida",
+      "impact": "Adiciona referências opacas globais sem persistir material secreto",
+      "risk": "high",
+      "owner": "Security / DevOps / Backend TypeScript",
+      "requiredReviewers": ["DBA", "Security", "DevOps"],
+      "rollback": "migrations/000005_v1_302_credentials.down.sql",
+      "globalTables": ["provider_credential_binding", "provider_credential_audit"]
     }
   ]
 }

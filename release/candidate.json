@@ -1,16 +1,16 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-103",
-  "version": "0.5.0",
+  "issue": "V1-302",
+  "version": "0.6.0",
   "classification": "high-p0",
-  "summary": "EffectivePolicy 2.0 fail-closed, monotônica e vinculada ao contexto seguro.",
-  "impact": "Adiciona composição de quatro camadas, resolução e cache server-side, auditoria de decisões e persistência sob RLS.",
-  "risks": ["Promoção depende da operação externa de Redis, dos catálogos proprietários e da revisão humana de Segurança, Backend e DBA."],
+  "summary": "Credenciais server-side versionadas, efêmeras e fail-closed via Vault.",
+  "impact": "Adiciona lifecycle de cadastro, teste, ativação, rotação e revogação sem persistir material secreto.",
+  "risks": ["Promoção depende do Vault corporativo, identidade de workload, scanner de vazamento e revisão humana de Segurança, DevOps e DBA."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-103.md", "docs/evidence/V1-103-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-302.md", "docs/evidence/V1-302-verificacao.md"],
   "rollback": {
-    "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Migração 000004 adiciona camadas publicadas e avaliações; destina-se à baseline ainda não promovida. Rollback remove somente dados locais de política."
+    "runbook": "docs/runbooks/V1-302-credential-rotation-rollback.md",
+    "dataCompatibility": "Migração 000005 adiciona somente referências e auditoria sintéticas na baseline não promovida. Rollback remove metadados locais, nunca restaura material revogado."
   },
   "rings": ["internal"],
   "findings": [],
