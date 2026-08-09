@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-206",
-  "version": "0.19.0",
+  "issue": "V1-401",
+  "version": "0.20.0",
   "classification": "high-p0",
-  "summary": "Chat corporativo com SSE, cancelamento e histórico local cifrado.",
-  "impact": "Adiciona transporte streaming tipado, UI sem secrets e tratamento distinto de bloqueio, falha e incerteza.",
-  "risks": ["Sessão OIDC, dependências reais do Gateway e parâmetros externos exigem validação antes da promoção."],
+  "summary": "Source Registry governado com owner, classificação, SLA, retenção e estados auditáveis.",
+  "impact": "Adiciona contratos, API, persistência RLS/outbox e painel administrativo mínimo sem antecipar ingestão ou retrieval.",
+  "risks": ["Sessão OIDC, transporte do outbox, catálogo real de connectors e parâmetros externos exigem validação antes da promoção."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-206.md", "docs/evidence/V1-206-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-401.md", "docs/evidence/V1-401-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "O histórico usa o schema local existente; rollback preserva itens cifrados e remove apenas a superfície de chat."
+    "dataCompatibility": "Rollback remove tabelas de fontes apenas sob runbook destrutivo aprovado; não altera conteúdo de conhecimento porque ingestão ainda não pertence a esta issue."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.8.0"
+  "contractsVersion": "2.9.0"
 }

@@ -1,0 +1,9 @@
+import assert from "node:assert/strict";
+import {test} from "node:test";
+import {acceptSourceOwnership,activateSource,changeSourceState,createSource,ingestionEligible,submitSource} from "../dist/domain/source/source-registry.js";
+
+const now="2026-08-09T12:00:00.000Z";
+const base={sourceId:"66666666-6666-4666-8666-666666666666",tenantId:"22222222-2222-4222-8222-222222222222",workspaceId:"33333333-3333-4333-8333-333333333333",ownerUserId:"55555555-5555-4555-8555-555555555555",name:"Manual financeiro",purpose:"Fundamentar procedimentos aprovados",sourceType:"document-library",originSystemKey:"sharepoint.finance",connectorKey:"sharepoint",classification:"confidential",schedule:{mode:"SCHEDULED",intervalSeconds:3600},freshnessSlaSeconds:86400,retentionDays:365};
+test("source is ineligible until owner accepts and activation succeeds",()=>{let source=createSource(base,now);assert.equal(ingestionEligible(source),false);source=submitSource(source,now);source=acceptSourceOwnership(source,base.ownerUserId,now);source=activateSource(source,now);assert.equal(source.status,"ACTIVE");assert.equal(ingestionEligible(source),true);source=changeSourceState(source,"DISCONNECTED","connector authorization unavailable",now);assert.equal(ingestionEligible(source),false);});
+test("missing owner remains pending and cannot activate",()=>{const {ownerUserId,...withoutOwner}=base;const pending=submitSource(createSource(withoutOwner,now),now);assert.equal(pending.status,"PENDING_OWNER");assert.throws(()=>activateSource(pending,now),/SOURCE_NOT_READY/);});
+test("limits and arbitrary transitions fail closed",()=>{assert.throws(()=>createSource({...base,freshnessSlaSeconds:299},now),/SOURCE_INVALID/);assert.throws(()=>changeSourceState(createSource(base,now),"PAUSED","x",now),/SOURCE_TRANSITION_DENIED/);});

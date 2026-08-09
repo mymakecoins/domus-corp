@@ -159,6 +159,18 @@ export function createPostgresIdentityAdapters(pool: Pool) {
               JSON.stringify({workspace_id: command.workspaceId, member_user_id: command.memberUserId,
                 role: command.role, status: command.status, membership_version: row.version})],
           );
+          const paused = await client.query<{source_id:string;version:number;classification:string}>(
+            `UPDATE source_registry SET status='paused',status_reason='owner_membership_ineligible',version=version+1,updated_at=$1
+              WHERE tenant_id=$2 AND workspace_id=$3 AND owner_user_id=$4 AND status='active'
+                AND ($5<>'ACTIVE' OR CASE classification WHEN 'public' THEN 0 WHEN 'internal' THEN 1 WHEN 'confidential' THEN 2 ELSE 3 END > CASE $6 WHEN 'public' THEN 0 WHEN 'internal' THEN 1 WHEN 'confidential' THEN 2 ELSE 3 END)
+          RETURNING source_id,version,classification`,
+            [command.changedAt,command.tenantId,command.workspaceId,command.memberUserId,command.status,command.classificationClearance],
+          );
+          for(const source of paused.rows){
+            const auditId=randomUUID();const sourceEventId=randomUUID();
+            await client.query(`INSERT INTO source_registry_audit(tenant_id,workspace_id,audit_id,request_id,actor_id,source_id,source_version,operation,attributes,occurred_at) VALUES($1,$2,$3,$4,$5,$6,$7,'source.paused.v1',$8::jsonb,$9)`,[command.tenantId,command.workspaceId,auditId,command.requestId,command.userId,source.source_id,source.version,JSON.stringify({source_id:source.source_id,source_version:source.version,status:"PAUSED",classification:source.classification,reason_code:"owner_membership_ineligible"}),command.changedAt]);
+            await client.query(`INSERT INTO source_registry_outbox(tenant_id,workspace_id,event_id,event_type,request_id,actor_id,source_id,source_version,classification,status,occurred_at,attributes) VALUES($1,$2,$3,'source.paused.v1',$4,$5,$6,$7,$8,'paused',$9,$10::jsonb)`,[command.tenantId,command.workspaceId,sourceEventId,command.requestId,command.userId,source.source_id,source.version,source.classification,command.changedAt,JSON.stringify({reason_code:"owner_membership_ineligible"})]);
+          }
           return {version: row.version};
         });
       },

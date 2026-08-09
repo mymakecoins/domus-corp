@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.9.0] — 2026-08-09
+
+- Adição de `SourceRegistryEntry` e `SourceLifecycleEvent` para governança e consumo cross-runtime.
+- Elegibilidade de ingestão permanece derivada no servidor; eventos carregam somente metadados redigidos.
+
 ## [2.8.0] — 2026-08-09
 
 - `ModelStreamEvent` aceita estado semântico e referências opacas de citação na conclusão do chat.

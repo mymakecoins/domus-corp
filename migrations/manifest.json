@@ -72,6 +72,9 @@
     },
     {
       "version":"000010","issue":"V1-306","description":"Ledger financeiro correlacionado e alertas de threshold","impact":"Adiciona custos estimado/real, tokens, dimensões e eventos 80/100 por tenant","risk":"high","owner":"Backend TypeScript / FinOps / DBA","requiredReviewers":["DBA","Security","FinOps"],"rollback":"migrations/000010_v1_306_cost_ledger.down.sql"
+    },
+    {
+      "version":"000011","issue":"V1-401","description":"Source Registry governado, auditoria e outbox de ciclo de vida","impact":"Adiciona fontes por tenant/workspace com owner, classificação, SLA, retenção, RLS e eventos atômicos","risk":"high","owner":"Knowledge Product / Backend TypeScript","requiredReviewers":["DBA","Security","Knowledge Product"],"rollback":"migrations/000011_v1_401_source_registry.down.sql"
     }
   ]
 }
