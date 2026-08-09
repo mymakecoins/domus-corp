@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.10.0] — 2026-08-09
+
+- Adição de conexão de fonte, página normalizada, job/evento de sync e dead-letter.
+- Credenciais permanecem referências opacas; cursor bruto, ACL completa e conteúdo não entram em eventos.
+
 ## [2.9.0] — 2026-08-09
 
 - Adição de `SourceRegistryEntry` e `SourceLifecycleEvent` para governança e consumo cross-runtime.

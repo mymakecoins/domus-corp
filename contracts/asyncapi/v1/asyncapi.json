@@ -1,6 +1,6 @@
 {
   "asyncapi": "3.0.0",
-  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.3.0" },
+  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.4.0" },
   "defaultContentType": "application/json",
   "channels": {
     "identityEvents": { "address": "domus.v1.identity.events", "messages": { "identityEvent": { "$ref": "#/components/messages/IdentityEvent" } } },
@@ -9,7 +9,9 @@
     "intelligenceEvents": { "address": "domus.v1.intelligence.events", "messages": { "domainEvent": { "$ref": "#/components/messages/DomainEvent" } } },
     "actionEvents": { "address": "domus.v1.action.events", "messages": { "domainEvent": { "$ref": "#/components/messages/DomainEvent" } } },
     "ingestionJobs": { "address": "domus.v1.ingestion.jobs", "messages": { "knowledgeAsset": { "$ref": "#/components/messages/KnowledgeAssetJob" } } },
-    "sourceEvents": { "address": "domus.v1.source.events", "messages": { "sourceEvent": { "$ref": "#/components/messages/SourceLifecycleEvent" } } }
+    "sourceEvents": { "address": "domus.v1.source.events", "messages": { "sourceEvent": { "$ref": "#/components/messages/SourceLifecycleEvent" } } },
+    "connectorJobs": { "address": "domus.v1.connector.jobs", "messages": { "connectorJob": { "$ref": "#/components/messages/ConnectorSyncJob" } } },
+    "connectorEvents": { "address": "domus.v1.connector.events", "messages": { "connectorEvent": { "$ref": "#/components/messages/ConnectorSyncEvent" } } }
   },
   "operations": {
     "sendIdentityEvent": { "action": "send", "channel": { "$ref": "#/channels/identityEvents" } },
@@ -18,13 +20,17 @@
     "sendKnowledgeEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeEvents" } },
     "sendIntelligenceEvent": { "action": "send", "channel": { "$ref": "#/channels/intelligenceEvents" } },
     "sendActionEvent": { "action": "send", "channel": { "$ref": "#/channels/actionEvents" } },
-    "sendSourceEvent": { "action": "send", "channel": { "$ref": "#/channels/sourceEvents" } }
+    "sendSourceEvent": { "action": "send", "channel": { "$ref": "#/channels/sourceEvents" } },
+    "consumeConnectorJob": { "action": "receive", "channel": { "$ref": "#/channels/connectorJobs" } },
+    "sendConnectorEvent": { "action": "send", "channel": { "$ref": "#/channels/connectorEvents" } }
   },
   "components": { "messages": {
     "IdentityEvent": { "name": "IdentityEventV1", "title": "Evento de identidade sem dados de autenticação", "payload": { "$ref": "../../json-schema/v1/identity-event.schema.json" } },
     "TenancyEvent": { "name": "TenancyEventV1", "title": "Evento administrativo de tenant/workspace", "payload": { "$ref": "../../json-schema/v1/tenancy-event.schema.json" } },
     "DomainEvent": { "name": "DomainEventV1", "title": "Evento cross-runtime versionado", "payload": { "$ref": "../../json-schema/v1/domain-event.schema.json" } },
     "KnowledgeAssetJob": { "name": "KnowledgeAssetJobV1", "title": "Job de ingestão versionado", "payload": { "$ref": "../../json-schema/v1/knowledge-asset.schema.json" } },
-    "SourceLifecycleEvent": { "name": "SourceLifecycleEventV1", "title": "Evento governado de ciclo de vida da fonte", "payload": { "$ref": "../../json-schema/v1/source-lifecycle-event.schema.json" } }
+    "SourceLifecycleEvent": { "name": "SourceLifecycleEventV1", "title": "Evento governado de ciclo de vida da fonte", "payload": { "$ref": "../../json-schema/v1/source-lifecycle-event.schema.json" } },
+    "ConnectorSyncJob": { "name": "ConnectorSyncJobV1", "title": "Job de sync com fencing", "payload": { "$ref": "../../json-schema/v1/connector-sync-job.schema.json" } },
+    "ConnectorSyncEvent": { "name": "ConnectorSyncEventV1", "title": "Resultado sanitizado de sync", "payload": { "$ref": "../../json-schema/v1/connector-sync-event.schema.json" } }
   } }
 }

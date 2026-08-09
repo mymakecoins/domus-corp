@@ -1,4 +1,9 @@
 {
+  "source-connection.schema.json":{"reason":"raw secret reference is forbidden","payload":{"schema_version":"1.0.0","credential_ref":"token-secret"}},
+  "connector-page.schema.json":{"reason":"ACL is mandatory","payload":{"schema_version":"1.0.0","items":[{"acl":[]}],"has_more":false}},
+  "connector-sync-job.schema.json":{"reason":"fencing token must be positive","payload":{"schema_version":"1.0.0","fencing_token":0}},
+  "connector-sync-event.schema.json":{"reason":"event type must be versioned","payload":{"schema_version":"1.0.0","event_type":"source.sync.completed"}},
+  "connector-dead-letter.schema.json":{"reason":"error hash cannot contain content","payload":{"schema_version":"1.0.0","error_hash":"raw-error"}},
   "source-registry-entry.schema.json":{"reason":"active source requires complete governed metadata","payload":{"schema_version":"1.0.0","status":"ACTIVE"}},
   "source-lifecycle-event.schema.json":{"reason":"unversioned lifecycle event is rejected","payload":{"schema_version":"1.0.0","event_type":"source.activated"}},
   "external-identity.schema.json": {"reason":"missing subject must fail closed","payload":{"schema_version":"1.0.0","issuer":"https://idp.example.test","audiences":["domus-control-plane"]}},

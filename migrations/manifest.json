@@ -75,6 +75,9 @@
     },
     {
       "version":"000011","issue":"V1-401","description":"Source Registry governado, auditoria e outbox de ciclo de vida","impact":"Adiciona fontes por tenant/workspace com owner, classificação, SLA, retenção, RLS e eventos atômicos","risk":"high","owner":"Knowledge Product / Backend TypeScript","requiredReviewers":["DBA","Security","Knowledge Product"],"rollback":"migrations/000011_v1_401_source_registry.down.sql"
+    },
+    {
+      "version":"000012","issue":"V1-402","description":"Framework transacional de conectores, cursores e dead-letter","impact":"Adiciona conexão por fonte, fencing, dedupe, retry e eventos sem persistir tokens ou conteúdo","risk":"high","owner":"Backend TypeScript / Python Workers","requiredReviewers":["DBA","Security","Backend Python"],"rollback":"migrations/000012_v1_402_connectors.down.sql"
     }
   ]
 }
