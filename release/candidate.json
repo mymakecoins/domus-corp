@@ -1,16 +1,16 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-204",
-  "version": "0.17.0",
+  "issue": "V1-205",
+  "version": "0.18.0",
   "classification": "high-p0",
-  "summary": "OAuth local PKCE com armazenamento seguro por referência.",
-  "impact": "Adiciona callback loopback de uso único, tokens fora do renderer e adapter cifrado pelo SO.",
-  "risks": ["Providers, scopes e validação de credential stores por SO exigem revisão externa de Segurança."],
+  "summary": "Design System Domus com tokens, estados semânticos e acessibilidade.",
+  "impact": "Adiciona pacote de UI reutilizável, Storybook e gates axe/Playwright para as superfícies da v1.0.",
+  "risks": ["Validação humana de UX, acessibilidade e compreensão dos estados é obrigatória antes do encerramento."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-204.md", "docs/evidence/V1-204-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-205.md", "docs/evidence/V1-205-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "A issue adiciona referências locais e blobs cifrados pelo SO; rollback exige desconexão/exclusão explícita das credenciais."
+    "dataCompatibility": "A issue não altera dados persistidos; rollback remove o pacote de UI e restaura o manifesto anterior."
   },
   "rings": ["internal"],
   "findings": [],

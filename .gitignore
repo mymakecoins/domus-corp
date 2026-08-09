@@ -11,6 +11,9 @@ apps/*/release/
 .mypy_cache/
 .ruff_cache/
 coverage/
+storybook-static/
+test-results/
+playwright-report/
 *.tsbuildinfo
 __pycache__/
 *.py[cod]
