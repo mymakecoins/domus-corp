@@ -30,6 +30,7 @@ EXPECTED = {
     "budget-reservation-decision.schema.json",
     "model-gateway-request.schema.json", "model-gateway-result.schema.json",
     "model-stream-event.schema.json",
+    "audit-event.schema.json", "audit-access-event.schema.json",
 }
 
 IDENTITY_SCHEMAS = {

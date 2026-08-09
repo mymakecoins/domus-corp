@@ -23,5 +23,7 @@
   "budget-reservation-decision.schema.json":{"reason":"binary floating point money is forbidden","payload":{"estimated_minor":1.5}},
   "model-gateway-request.schema.json":{"reason":"client cannot select provider","payload":{"provider_key":"provider-a"}},
   "model-gateway-result.schema.json":{"reason":"secret cannot enter result","payload":{"secret":"forbidden"}},
-  "model-stream-event.schema.json":{"reason":"untyped stream event is rejected","payload":{"type":"retry"}}
+  "model-stream-event.schema.json":{"reason":"untyped stream event is rejected","payload":{"type":"retry"}},
+  "audit-event.schema.json":{"reason":"content is forbidden","payload":{"prompt":"secret"}},
+  "audit-access-event.schema.json":{"reason":"purpose is mandatory","payload":{"purpose":""}}
 }

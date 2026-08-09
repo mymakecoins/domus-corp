@@ -66,6 +66,9 @@
     },
     {
       "version":"000008","issue":"V1-305","description":"Reserva e reconciliação atômicas de budget","impact":"Adiciona limites cumulativos, reservas idempotentes, alocações e ledger financeiro","risk":"high","owner":"Backend TypeScript / FinOps","requiredReviewers":["DBA","Security","FinOps"],"rollback":"migrations/000008_v1_305_budget.down.sql"
+    },
+    {
+      "version":"000009","issue":"V1-308","description":"Auditoria correlacionada append-only e leitura autoauditada","impact":"Adiciona eventos particionados, RLS, retenção local e trilha de acesso","risk":"high","owner":"Backend TypeScript / Security / DBA","requiredReviewers":["DBA","Security","Compliance"],"rollback":"migrations/000009_v1_308_audit.down.sql"
     }
   ]
 }
