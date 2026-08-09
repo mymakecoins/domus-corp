@@ -2,6 +2,12 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.0.0] — 2026-08-08
+
+- `EffectivePolicy` passa a refletir integralmente o ADR-001: usuário, dispositivo, assets, models, tools, actions, classificações, retenção, frescor, insights, budget, decisão, motivos e proveniência por camada.
+- Remoção de `subject_id` e `capabilities`; consumidores devem migrar para os campos explícitos antes da integração cross-runtime.
+- A major é intencional e ocorre antes de promoção externa ou existência de consumidor produtivo.
+
 ## [1.3.0] — 2026-08-08
 
 - Adição de `Workspace`, `WorkspaceMembership` e eventos administrativos de tenancy.

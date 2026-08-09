@@ -6,12 +6,24 @@
     { "$ref": "common.schema.json#/$defs/envelope" },
     {
       "type": "object", "additionalProperties": false,
-      "required": ["schema_version", "request_id", "tenant_id", "workspace_id", "policy_version", "classification", "provenance", "subject_id", "allowed_sources", "capabilities", "expires_at"],
+      "required": ["schema_version", "request_id", "tenant_id", "workspace_id", "policy_version", "classification", "provenance", "user_id", "device_id", "allowed_sources", "allowed_assets", "allowed_models", "allowed_tools", "allowed_actions", "allowed_classifications", "retention_rules", "freshness_rules", "insight_rules", "budget_scope", "decision", "deny_reasons", "policy_provenance", "evaluated_at", "expires_at"],
       "properties": {
         "schema_version": {}, "request_id": {}, "tenant_id": {}, "workspace_id": {}, "policy_version": {}, "classification": {}, "provenance": {},
-        "subject_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "user_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "device_id": { "$ref": "common.schema.json#/$defs/uuid" },
         "allowed_sources": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" }, "uniqueItems": true },
-        "capabilities": { "type": "array", "items": { "type": "string", "enum": ["knowledge.read", "knowledge.ingest", "model.invoke", "insight.create", "action.propose"] }, "uniqueItems": true },
+        "allowed_assets": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/uuid" }, "uniqueItems": true },
+        "allowed_models": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "allowed_tools": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "allowed_actions": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "allowed_classifications": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/classification" }, "uniqueItems": true },
+        "retention_rules": {"type":"object","additionalProperties":false,"required":["max_days"],"properties":{"max_days":{"type":"integer","minimum":0}}},
+        "freshness_rules": {"type":"object","additionalProperties":false,"required":["max_age_seconds"],"properties":{"max_age_seconds":{"type":"integer","minimum":0}}},
+        "insight_rules": {"type":"object","additionalProperties":false,"required":["allowed"],"properties":{"allowed":{"type":"boolean"}}},
+        "decision": {"type":"string","enum":["ALLOW","DENY"]},
+        "deny_reasons": {"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},
+        "policy_provenance": {"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["scope","policy_id","version"],"properties":{"scope":{"type":"string","enum":["global","tenant","workspace","role"]},"policy_id":{"type":"string","minLength":1},"version":{"type":"integer","minimum":1}}}},
+        "evaluated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
         "expires_at": { "$ref": "common.schema.json#/$defs/timestamp" },
         "budget_scope": { "$ref": "common.schema.json#/$defs/budget_scope" }
       }
