@@ -31,4 +31,10 @@ describe("PathAllowlistGuard", () => {
     assert.equal(res.allowed, false);
     assert.equal(res.reason, "PATH_OUTSIDE_ALLOWLIST");
   });
+
+  it("blocks paths with prefix confusion vulnerabilities", () => {
+    const res = validatePathAllowlist("/workspace/docs-secret/file.txt", ["/workspace/docs"]);
+    assert.equal(res.allowed, false);
+    assert.equal(res.reason, "PATH_OUTSIDE_ALLOWLIST");
+  });
 });

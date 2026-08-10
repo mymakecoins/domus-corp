@@ -30,10 +30,12 @@ export function validatePathAllowlist(
   if (allowedPrefixes.length > 0) {
     const matchesPrefix = allowedPrefixes.some((prefix) => {
       const normPrefix = path.normalize(prefix);
+      const prefixWithSep = normPrefix.endsWith(path.sep)
+        ? normPrefix
+        : normPrefix + path.sep;
       return (
         normalized === normPrefix ||
-        normalized.startsWith(normPrefix + path.sep) ||
-        normalized.startsWith(normPrefix)
+        normalized.startsWith(prefixWithSep)
       );
     });
 
