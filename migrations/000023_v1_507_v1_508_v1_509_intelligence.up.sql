@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS change_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id VARCHAR(64) NOT NULL,
@@ -71,9 +73,12 @@ CREATE TABLE IF NOT EXISTS insight_thresholds (
 
 CREATE TABLE IF NOT EXISTS insight_feedbacks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id VARCHAR(64) NOT NULL,
     insight_id UUID NOT NULL REFERENCES operational_insights(id) ON DELETE CASCADE,
     user_id VARCHAR(64) NOT NULL,
     feedback_type VARCHAR(32) NOT NULL,
     comment TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+COMMIT;

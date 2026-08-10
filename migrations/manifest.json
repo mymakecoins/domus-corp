@@ -108,6 +108,9 @@
     },
     {
       "version":"000022","issue":"V1-505/V1-506","description":"Quality Loop e auto-recuperação de Knowledge Gaps","impact":"Cria tabelas de feedback, sugestões do loop de qualidade e lacunas de conhecimento","risk":"medium","owner":"Knowledge Engineering / QA / DBA","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000022_v1_505_v1_506_quality_loop.down.sql"
+    },
+    {
+      "version":"000023","issue":"V1-507/V1-508/V1-509","description":"Detecção de mudanças, briefings contextuais e insights operacionais explicáveis","impact":"Cria tabelas para registros de mudanças, briefings, preferências e insights operacionais explicáveis","risk":"medium","owner":"Backend Python / Intelligence / DBA","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000023_v1_507_v1_508_v1_509_intelligence.down.sql"
     }
   ]
 }

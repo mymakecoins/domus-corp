@@ -9,11 +9,14 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from domus_knowledge.access_control import build_authorized_filter, derive_access_context
+from domus_knowledge.briefings import BriefingEngine, BriefingPreferences, BriefingRecord
+from domus_knowledge.change_detection import ChangeImpactDetector, ChangeRecord
 from domus_knowledge.config import load_config
 from domus_knowledge.context_orchestrator import ContextOrchestrator
 from domus_knowledge.decision_support import ComparisonResult, DecisionSupportEngine, SynthesisResult
 from domus_knowledge.knowledge_gaps import KnowledgeGap, KnowledgeGapDetector
 from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
+from domus_knowledge.operational_insights import InsightFeedback, OperationalInsight, OperationalInsightsEngine
 from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse
 from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, QualityLoopSuggestion
 from domus_knowledge.retrieval import hybrid_search
@@ -43,6 +46,49 @@ class UpdateKnowledgeGapRequest(BaseModel):
     candidate_sources: Optional[list[str]] = None
 
 
+class DetectChangeRequest(BaseModel):
+    tenant_id: str
+    workspace_id: str
+    source_id: str
+    source_type: str
+    before_content: str
+    after_content: str
+    affected_domains: Optional[list[str]] = None
+    owners: Optional[list[str]] = None
+
+
+class GenerateBriefingRequest(BaseModel):
+    tenant_id: str
+    workspace_id: str
+    user_id: str
+    role: str
+    time_window: str = "7d"
+
+
+class UpdateBriefingPreferencesRequest(BaseModel):
+    tenant_id: str
+    workspace_id: str
+    user_id: str
+    is_paused: bool = False
+    periodicity: str = "weekly"
+
+
+class EvaluateInsightsRequest(BaseModel):
+    tenant_id: str
+    workspace_id: str
+    signals: list[dict[str, Any]]
+
+
+class ReviewInsightRequest(BaseModel):
+    status: str
+    reviewer: str = "Knowledge Owner"
+
+
+class SubmitInsightFeedbackRequest(BaseModel):
+    user_id: str
+    feedback_type: str
+    comment: Optional[str] = None
+
 
 orchestrator = ContextOrchestrator()
 control_plane_url = os.getenv("CONTROL_PLANE_URL", "http://localhost:3000")
@@ -54,6 +100,9 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Domus Corp Knowledge API", version=config.app_version)
     quality_loop_engine = QualityLoopEngine()
     knowledge_gap_detector = KnowledgeGapDetector()
+    change_detector = ChangeImpactDetector()
+    briefing_engine = BriefingEngine(change_repo=change_detector.repo)
+    insights_engine = OperationalInsightsEngine()
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -312,8 +361,79 @@ def create_app() -> FastAPI:
         except ValueError as err:
             raise HTTPException(status_code=404, detail=str(err))
 
+    # V1-507 Change Detection Endpoints
+    @app.post("/intelligence/changes/detect", response_model=ChangeRecord)
+    async def detect_change_endpoint(req: DetectChangeRequest) -> ChangeRecord:
+        return change_detector.detect_change(
+            tenant_id=req.tenant_id,
+            workspace_id=req.workspace_id,
+            source_id=req.source_id,
+            source_type=req.source_type,
+            before_content=req.before_content,
+            after_content=req.after_content,
+            affected_domains=req.affected_domains,
+            owners=req.owners,
+        )
+
+    @app.get("/intelligence/changes", response_model=list[ChangeRecord])
+    async def list_changes_endpoint(tenant_id: str, workspace_id: Optional[str] = None) -> list[ChangeRecord]:
+        return change_detector.repo.list_records(tenant_id, workspace_id)
+
+    # V1-508 Briefing Endpoints
+    @app.post("/intelligence/briefings/generate", response_model=BriefingRecord)
+    async def generate_briefing_endpoint(req: GenerateBriefingRequest) -> BriefingRecord:
+        return briefing_engine.generate_briefing(
+            tenant_id=req.tenant_id,
+            workspace_id=req.workspace_id,
+            user_id=req.user_id,
+            role=req.role,
+            time_window=req.time_window,
+        )
+
+    @app.get("/intelligence/briefings", response_model=list[BriefingRecord])
+    async def list_briefings_endpoint(tenant_id: str, workspace_id: Optional[str] = None) -> list[BriefingRecord]:
+        return briefing_engine.briefing_repo.list_briefings(tenant_id, workspace_id)
+
+    @app.post("/intelligence/briefings/preferences", response_model=BriefingPreferences)
+    async def update_briefing_preferences_endpoint(req: UpdateBriefingPreferencesRequest) -> BriefingPreferences:
+        return briefing_engine.update_preferences(
+            tenant_id=req.tenant_id,
+            workspace_id=req.workspace_id,
+            user_id=req.user_id,
+            is_paused=req.is_paused,
+            periodicity=req.periodicity,
+        )
+
+    # V1-509 Operational Insights Endpoints
+    @app.post("/intelligence/insights/evaluate", response_model=list[OperationalInsight])
+    async def evaluate_insights_endpoint(req: EvaluateInsightsRequest) -> list[OperationalInsight]:
+        return insights_engine.evaluate_signals(
+            tenant_id=req.tenant_id,
+            workspace_id=req.workspace_id,
+            signals=req.signals,
+        )
+
+    @app.get("/intelligence/insights", response_model=list[OperationalInsight])
+    async def list_insights_endpoint(tenant_id: str, workspace_id: Optional[str] = None) -> list[OperationalInsight]:
+        return insights_engine.repo.list_insights(tenant_id, workspace_id)
+
+    @app.post("/intelligence/insights/{insight_id}/review", response_model=OperationalInsight)
+    async def review_insight_endpoint(insight_id: str, req: ReviewInsightRequest) -> OperationalInsight:
+        res = insights_engine.review_insight(insight_id=insight_id, status=req.status, reviewer=req.reviewer)
+        if not res:
+            raise HTTPException(status_code=404, detail="Insight not found")
+        return res
+
+    @app.post("/intelligence/insights/{insight_id}/feedback", response_model=InsightFeedback)
+    async def submit_insight_feedback_endpoint(insight_id: str, req: SubmitInsightFeedbackRequest) -> InsightFeedback:
+        return insights_engine.submit_feedback(
+            insight_id=insight_id,
+            user_id=req.user_id,
+            feedback_type=req.feedback_type,
+            comment=req.comment,
+        )
+
     return app
 
 
 app = create_app()
-
