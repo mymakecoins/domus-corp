@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://domuscorp.com/schemas/v1/operational-insight.schema.json",
+  "title": "OperationalInsight",
+  "type": "object",
+  "required": ["id", "tenant_id", "workspace_id", "title", "description", "rule_id", "severity", "confidence", "time_window", "status"],
+  "properties": {
+    "id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "workspace_id": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "rule_id": { "type": "string" },
+    "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "time_window": { "type": "string" },
+    "evidences": { "type": "array", "items": { "type": "object" } },
+    "recommended_owner": { "type": "string" },
+    "recommended_action": { "type": "string" },
+    "status": { "type": "string", "enum": ["draft", "under_review", "published", "dismissed"] },
+    "created_at": { "type": "string" }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://domuscorp.com/schemas/v1/change-record.schema.json",
+  "title": "ChangeRecord",
+  "type": "object",
+  "required": ["id", "tenant_id", "workspace_id", "source_id", "source_type", "change_type", "impact_score", "status"],
+  "properties": {
+    "id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "workspace_id": { "type": "string" },
+    "source_id": { "type": "string" },
+    "source_type": { "type": "string", "enum": ["document", "process", "policy", "claim"] },
+    "change_type": { "type": "string", "enum": ["structural", "normative", "informative", "irrelevant"] },
+    "impact_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "impacted_domains": { "type": "array", "items": { "type": "string" } },
+    "impacted_owners": { "type": "array", "items": { "type": "string" } },
+    "before_digest": { "type": "string" },
+    "after_digest": { "type": "string" },
+    "status": { "type": "string", "enum": ["pending", "reviewed", "grouped"] },
+    "created_at": { "type": "string" }
+  }
+}

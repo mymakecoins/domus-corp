@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://domuscorp.com/schemas/v1/briefing-record.schema.json",
+  "title": "BriefingRecord",
+  "type": "object",
+  "required": ["id", "tenant_id", "workspace_id", "user_id", "role", "summary", "is_paused"],
+  "properties": {
+    "id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "workspace_id": { "type": "string" },
+    "user_id": { "type": "string" },
+    "role": { "type": "string" },
+    "summary": { "type": "string" },
+    "changes_included": { "type": "array", "items": { "type": "object" } },
+    "gaps_included": { "type": "array", "items": { "type": "object" } },
+    "quality_alerts": { "type": "array", "items": { "type": "object" } },
+    "staleness_warnings": { "type": "array", "items": { "type": "object" } },
+    "is_paused": { "type": "boolean" },
+    "created_at": { "type": "string" }
+  }
+}
