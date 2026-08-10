@@ -12,8 +12,10 @@ from domus_knowledge.access_control import build_authorized_filter, derive_acces
 from domus_knowledge.config import load_config
 from domus_knowledge.context_orchestrator import ContextOrchestrator
 from domus_knowledge.decision_support import ComparisonResult, DecisionSupportEngine, SynthesisResult
+from domus_knowledge.knowledge_gaps import KnowledgeGap, KnowledgeGapDetector
 from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
 from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse
+from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, QualityLoopSuggestion
 from domus_knowledge.retrieval import hybrid_search
 
 
@@ -29,6 +31,18 @@ class CompareRequest(OrchestrateRequest):
     alternatives: Optional[list[str]] = Field(None, description="Lista opcional de alternativas para comparação.")
 
 
+class ResolveSuggestionRequest(BaseModel):
+    before_state: dict[str, Any] = Field(default_factory=dict)
+    after_state: dict[str, Any] = Field(default_factory=dict)
+    owner: str = Field("Knowledge Owner")
+
+
+class UpdateKnowledgeGapRequest(BaseModel):
+    status: Optional[str] = None
+    assigned_owner: Optional[str] = None
+    candidate_sources: Optional[list[str]] = None
+
+
 
 orchestrator = ContextOrchestrator()
 control_plane_url = os.getenv("CONTROL_PLANE_URL", "http://localhost:3000")
@@ -38,6 +52,8 @@ gateway_client = ModelGatewayClient(base_url=control_plane_url)
 def create_app() -> FastAPI:
     config = load_config()
     app = FastAPI(title="Domus Corp Knowledge API", version=config.app_version)
+    quality_loop_engine = QualityLoopEngine()
+    knowledge_gap_detector = KnowledgeGapDetector()
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -216,7 +232,88 @@ def create_app() -> FastAPI:
                 content={"code": "KNOWLEDGE_ACCESS_DENIED", "detail": "Access denied"},
             )
 
+    # Quality Loop Endpoints
+    @app.post("/v1/quality-loop/feedback", response_model=FeedbackRecord)
+    async def submit_feedback_endpoint(feedback: FeedbackRecord) -> FeedbackRecord:
+        return await quality_loop_engine.submit_feedback(feedback)
+
+    @app.get("/v1/quality-loop/feedback", response_model=list[FeedbackRecord])
+    async def list_feedback_endpoint(
+        tenant_id: str,
+        workspace_id: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> list[FeedbackRecord]:
+        return await quality_loop_engine.list_feedbacks(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            status=status,
+        )
+
+    @app.get("/v1/quality-loop/suggestions", response_model=list[QualityLoopSuggestion])
+    async def list_suggestions_endpoint(
+        tenant_id: str,
+        status: Optional[str] = None,
+    ) -> list[QualityLoopSuggestion]:
+        return await quality_loop_engine.list_suggestions(
+            tenant_id=tenant_id,
+            status=status,
+        )
+
+    @app.post("/v1/quality-loop/suggestions/{suggestion_id}/resolve", response_model=QualityLoopSuggestion)
+    async def resolve_suggestion_endpoint(
+        suggestion_id: str,
+        req: ResolveSuggestionRequest,
+    ) -> QualityLoopSuggestion:
+        try:
+            return await quality_loop_engine.resolve_suggestion(
+                suggestion_id=suggestion_id,
+                before_state=req.before_state,
+                after_state=req.after_state,
+                owner=req.owner,
+            )
+        except ValueError as err:
+            raise HTTPException(status_code=404, detail=str(err))
+
+    # Knowledge Gap Endpoints
+    @app.post("/v1/knowledge-gaps/detect", response_model=list[KnowledgeGap])
+    async def detect_knowledge_gaps_endpoint(
+        logs: list[dict[str, Any]],
+        tenant_id: str,
+        min_frequency: int = 1,
+    ) -> list[KnowledgeGap]:
+        return await knowledge_gap_detector.detect_gaps(
+            tenant_id=tenant_id,
+            retrieval_logs=logs,
+            min_frequency=min_frequency,
+        )
+
+    @app.get("/v1/knowledge-gaps", response_model=list[KnowledgeGap])
+    async def list_knowledge_gaps_endpoint(
+        tenant_id: str,
+        status: Optional[str] = None,
+    ) -> list[KnowledgeGap]:
+        return await knowledge_gap_detector.list_gaps(
+            tenant_id=tenant_id,
+            status=status,
+        )
+
+    @app.patch("/v1/knowledge-gaps/{gap_id}", response_model=KnowledgeGap)
+    async def update_knowledge_gap_endpoint(
+        gap_id: str,
+        req: UpdateKnowledgeGapRequest,
+    ) -> KnowledgeGap:
+        try:
+            return await knowledge_gap_detector.update_gap(
+                gap_id=gap_id,
+                status=req.status,
+                assigned_owner=req.assigned_owner,
+                candidate_sources=req.candidate_sources,
+            )
+        except ValueError as err:
+            raise HTTPException(status_code=404, detail=str(err))
+
     return app
 
 
 app = create_app()
+
