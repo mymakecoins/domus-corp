@@ -57,3 +57,50 @@ def test_orchestrate_endpoint_gateway_error():
 
     assert response.status_code == 502
     assert "Gateway timeout" in response.json()["detail"]
+
+
+def test_orchestrate_stream_endpoint_success():
+    client = TestClient(app)
+    payload = {
+        "query": "Qual a regra de segurança?",
+        "user_roles": ["user"],
+        "evidences": [{"chunk_id": "c1", "content": "Regra X"}],
+        "max_tokens": 500,
+    }
+
+    async def mock_stream(*args, **kwargs):
+        yield "chunk1"
+        yield "chunk2"
+
+    with patch("domus_knowledge.main.gateway_client.stream", side_effect=mock_stream):
+        response = client.post("/v1/intelligence/orchestrate/stream", json=payload)
+
+    assert response.status_code == 200
+    assert "text/event-stream" in response.headers["content-type"]
+    assert "data: chunk1\n\ndata: chunk2\n\n" in response.text
+
+
+def test_orchestrate_stream_endpoint_gateway_error():
+    client = TestClient(app)
+    payload = {
+        "query": "Qual a regra de segurança?",
+        "user_roles": ["user"],
+        "evidences": [],
+    }
+
+    async def mock_stream_error(*args, **kwargs):
+        raise ModelGatewayError("Stream connection failed")
+        yield "never"
+
+    with patch("domus_knowledge.main.gateway_client.stream", side_effect=mock_stream_error):
+        response = client.post("/v1/intelligence/orchestrate/stream", json=payload)
+
+    assert response.status_code == 200
+    assert "event: error" in response.text
+    assert "Stream connection failed" in response.text
+
+
+def test_control_plane_url_config():
+    from domus_knowledge.main import gateway_client
+    assert gateway_client.base_url in ("http://localhost:3000", "http://localhost:3000/")
+

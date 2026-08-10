@@ -1,10 +1,11 @@
 """Minimal, governed entry point for the Knowledge runtime."""
 
+import os
 import uuid
-from typing import Any, Optional
+from typing import Any, AsyncGenerator, Optional
 
 from fastapi import FastAPI, HTTPException, Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from domus_knowledge.access_control import build_authorized_filter, derive_access_context
@@ -23,7 +24,8 @@ class OrchestrateRequest(BaseModel):
 
 
 orchestrator = ContextOrchestrator()
-gateway_client = ModelGatewayClient()
+control_plane_url = os.getenv("CONTROL_PLANE_URL", "http://localhost:3000")
+gateway_client = ModelGatewayClient(base_url=control_plane_url)
 
 
 def create_app() -> FastAPI:
@@ -65,6 +67,30 @@ def create_app() -> FastAPI:
             }
         except ModelGatewayError as err:
             raise HTTPException(status_code=502, detail=str(err))
+
+    @app.post("/v1/intelligence/orchestrate/stream")
+    async def orchestrate_and_stream(req: OrchestrateRequest) -> StreamingResponse:
+        idempotency_key = req.idempotency_key or str(uuid.uuid4())
+
+        orchestration = orchestrator.orchestrate(
+            query=req.query,
+            user_roles=req.user_roles,
+            evidences=req.evidences,
+            max_tokens=req.max_tokens,
+        )
+
+        async def event_generator() -> AsyncGenerator[str, None]:
+            try:
+                async for chunk in gateway_client.stream(
+                    idempotency_key=idempotency_key,
+                    messages=orchestration.messages,
+                    max_tokens=orchestration.maximum_output_tokens,
+                ):
+                    yield f"data: {chunk}\n\n"
+            except ModelGatewayError as err:
+                yield f"event: error\ndata: {err}\n\n"
+
+        return StreamingResponse(event_generator(), media_type="text/event-stream")
 
     @app.post("/api/v1/knowledge/access-check", response_model=None)
     async def access_check(request: Request) -> Response | dict[str, Any]:
