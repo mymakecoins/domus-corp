@@ -3,6 +3,12 @@
 from typing import Any
 from pydantic import BaseModel, Field
 from domus_knowledge.prompt_sanitizer import build_sanitized_messages
+from domus_knowledge.semantic_state import (
+    SemanticState,
+    SemanticStateCatalog,
+    SemanticStateEvaluator,
+    SemanticEvaluationResult,
+)
 
 DEFAULT_SYSTEM_INSTRUCTION = (
     "Você é o assistente de inteligência corporativa Domus Corp. "
@@ -19,11 +25,12 @@ class OrchestratedContextResult(BaseModel):
 
 
 class ContextOrchestrator:
-    """Orchestrates authorized knowledge requests into sanitized prompt contexts."""
+    """Orchestrates authorized knowledge requests into sanitized prompt contexts and evaluates semantic state."""
 
     def __init__(self, policy_version: str = "2.17.0", system_instruction: str = DEFAULT_SYSTEM_INSTRUCTION):
         self.policy_version = policy_version
         self.system_instruction = system_instruction
+        self.evaluator = SemanticStateEvaluator()
 
     def filter_authorized_evidences(
         self,
@@ -61,4 +68,22 @@ class ContextOrchestrator:
             authorized_chunk_count=len(authorized_evidences),
             policy_version=self.policy_version,
             maximum_output_tokens=max_tokens,
+        )
+
+    def evaluate_semantic_state(
+        self,
+        query: str,
+        user_roles: list[str],
+        evidences: list[dict[str, Any]],
+        model_output: str = "",
+    ) -> SemanticEvaluationResult:
+        """Evaluates authorized evidences and model output for semantic state."""
+        authorized = self.filter_authorized_evidences(user_roles, evidences)
+        access_denied = len(evidences) > 0 and len(authorized) == 0
+
+        return self.evaluator.evaluate(
+            query=query,
+            evidences=authorized,
+            model_output=model_output,
+            access_denied=access_denied,
         )

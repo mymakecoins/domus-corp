@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     def healthz() -> dict[str, str]:
         return {"status": "OK"}
 
+    @app.post("/intelligence/query")
     @app.post("/v1/intelligence/orchestrate")
     async def orchestrate_and_execute(req: OrchestrateRequest) -> dict[str, Any]:
         idempotency_key = req.idempotency_key or str(uuid.uuid4())
@@ -55,6 +56,12 @@ def create_app() -> FastAPI:
             max_tokens=req.max_tokens,
         )
 
+        eval_result = orchestrator.evaluate_semantic_state(
+            query=req.query,
+            user_roles=req.user_roles,
+            evidences=req.evidences,
+        )
+
         try:
             result = await gateway_client.execute(
                 idempotency_key=idempotency_key,
@@ -64,6 +71,10 @@ def create_app() -> FastAPI:
             return {
                 "orchestration": orchestration.model_dump(),
                 "gateway_result": result,
+                "semantic_state": eval_result.state.value,
+                "semantic_metadata": eval_result.metadata.model_dump(),
+                "conflicting_sources": eval_result.conflicting_sources,
+                "outdated_sources": eval_result.outdated_sources,
             }
         except ModelGatewayError as err:
             raise HTTPException(status_code=502, detail=str(err))
@@ -79,6 +90,12 @@ def create_app() -> FastAPI:
             max_tokens=req.max_tokens,
         )
 
+        eval_result = orchestrator.evaluate_semantic_state(
+            query=req.query,
+            user_roles=req.user_roles,
+            evidences=req.evidences,
+        )
+
         async def event_generator() -> AsyncGenerator[str, None]:
             try:
                 async for chunk in gateway_client.stream(
@@ -87,6 +104,13 @@ def create_app() -> FastAPI:
                     max_tokens=orchestration.maximum_output_tokens,
                 ):
                     yield f"data: {chunk}\n\n"
+                # Send completed event with semantic state
+                completed_payload = {
+                    "type": "completed",
+                    "semantic_state": eval_result.state.value,
+                    "semantic_metadata": eval_result.metadata.model_dump(),
+                }
+                yield f"event: completed\ndata: {completed_payload}\n\n"
             except ModelGatewayError as err:
                 yield f"event: error\ndata: {err}\n\n"
 
