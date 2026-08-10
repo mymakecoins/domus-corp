@@ -68,5 +68,10 @@
   "knowledge-retrieval-result.schema.json": {"reason":"missing freshness","payload":{"chunk_id":"chunk-123","asset_id":"77777777-7777-4777-8777-777777777777","version_id":"88888888-8888-4888-8888-888888888888","source_id":"src-1","locator":"page:1","score":0.95,"checksum":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
   "feedback-record.schema.json": {"reason":"missing required tenant_id","payload":{"workspace_id":"33333333-3333-4333-8333-333333333333","user_id":"55555555-5555-4555-8555-555555555555","target_id":"res-123","target_type":"response","feedback_type":"error"}},
   "quality-loop-suggestion.schema.json": {"reason":"missing required recommended_owner","payload":{"tenant_id":"22222222-2222-4222-8222-222222222222","target_type":"response","target_id":"res-123","suggested_action":"Revisar norma V2"}},
-  "knowledge-gap.schema.json": {"reason":"missing required sample_queries","payload":{"tenant_id":"22222222-2222-4222-8222-222222222222","workspace_ids":["33333333-3333-4333-8333-333333333333"],"topic":"Reembolso viagem"}}
+  "knowledge-gap.schema.json": {"reason":"missing required sample_queries","payload":{"tenant_id":"22222222-2222-4222-8222-222222222222","workspace_ids":["33333333-3333-4333-8333-333333333333"],"topic":"Reembolso viagem"}},
+  "briefing-record.schema.json": {"reason":"missing required summary","payload":{"id":"b-1","tenant_id":"22222222-2222-4222-8222-222222222222"}},
+  "change-record.schema.json": {"reason":"missing required change_type","payload":{"id":"c-1","tenant_id":"22222222-2222-4222-8222-222222222222"}},
+  "operational-insight.schema.json": {"reason":"invalid severity enum","payload":{"id":"o-1","severity":"unknown"}},
+  "mcp-manifest.schema.json": {"reason":"status must be valid enum","payload":{"schema_version":"1.0.0","status":"INVALID_STATUS"}}
 }
+

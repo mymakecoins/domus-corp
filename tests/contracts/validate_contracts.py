@@ -54,6 +54,8 @@ EXPECTED = {
     "knowledge-embedding-v1.schema.json", "knowledge-retrieval-result.schema.json",
     "feedback-record.schema.json", "quality-loop-suggestion.schema.json",
     "knowledge-gap.schema.json",
+    "briefing-record.schema.json", "change-record.schema.json",
+    "operational-insight.schema.json", "mcp-manifest.schema.json",
 }
 
 IDENTITY_SCHEMAS = {
