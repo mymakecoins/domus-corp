@@ -1,4 +1,9 @@
 {
+  "taxonomy-version.schema.json":{"reason":"only bounded states are accepted","payload":{"schema_version":"1.0.0","state":"AUTO_PUBLISHED"}},
+  "taxonomy-publication-command.schema.json":{"reason":"reason is mandatory","payload":{"schema_version":"1.0.0","reason":"short"}},
+  "asset-taxonomy-assignment.schema.json":{"reason":"model cannot confirm","payload":{"schema_version":"1.0.0","method":"MODEL","state":"CONFIRMED"}},
+  "taxonomy-reprocessing-plan.schema.json":{"reason":"batch is bounded","payload":{"schema_version":"1.0.0","batch_size":1000}},
+  "taxonomy-event.schema.json":{"reason":"definitions stay outside events","payload":{"schema_version":"1.0.0","definition":"forbidden"}},
   "content-safety-assessment.schema.json":{"reason":"content can never become trusted","payload":{"schema_version":"1.0.0","trust_origin":"TRUSTED"}},
   "content-safety-review-command.schema.json":{"reason":"automatic release is forbidden","payload":{"schema_version":"1.0.0","decision":"AUTO_RELEASE"}},
   "content-safety-event.schema.json":{"reason":"detected content cannot enter event","payload":{"schema_version":"1.0.0","excerpt":"forbidden"}},

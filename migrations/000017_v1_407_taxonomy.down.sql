@@ -1,0 +1,1 @@
+BEGIN;DROP TABLE IF EXISTS knowledge_taxonomy_outbox;DROP TABLE IF EXISTS knowledge_taxonomy_reprocessing;DROP TABLE IF EXISTS knowledge_taxonomy_assignment;DROP TABLE IF EXISTS knowledge_taxonomy_term;DROP TABLE IF EXISTS knowledge_taxonomy_version;DELETE FROM schema_migrations WHERE version=17;COMMIT;

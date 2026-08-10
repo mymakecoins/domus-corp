@@ -22,6 +22,7 @@ python3 -m unittest tests.migrations.test_v1_403_knowledge_objects -v
 python3 -m unittest tests.migrations.test_v1_404_ingestion_pipeline -v
 python3 -m unittest tests.migrations.test_v1_405_knowledge_governance -v
 python3 -m unittest tests.migrations.test_v1_406_content_safety -v
+python3 -m unittest tests.migrations.test_v1_407_taxonomy -v
 python3 -m unittest tests.security.test_v1_302_secret_boundaries -v
 python3 scripts/check_release.py
 python3 tests/contracts/validate_contracts.py

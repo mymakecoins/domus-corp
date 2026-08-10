@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-406",
-  "version": "0.25.0",
+  "issue": "V1-407",
+  "version": "0.26.0",
   "classification": "high-p0",
-  "summary": "Defesa contra prompt injection indireto e quarentena de conteúdo não confiável.",
-  "impact": "Adiciona scanner determinístico, revisão segregada, envelope delimitado e eventos sem conteúdo.",
-  "risks": ["Engine, benchmark, limiares e operação externa exigem homologação antes da promoção."],
+  "summary": "Taxonomia corporativa versionada, assignments e reprocessamento governado.",
+  "impact": "Adiciona publicação segregada, classificação monotônica e eventos sem definições.",
+  "risks": ["Vocabulário real, owners, regras e operação externa exigem aprovação antes da promoção."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-406.md", "docs/evidence/V1-406-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-407.md", "docs/evidence/V1-407-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Rollback remove assessments V1-406; originais, derivados e governança permanecem preservados."
+    "dataCompatibility": "Rollback remove taxonomia V1-407; assets e versões permanecem preservados."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.14.0"
+  "contractsVersion": "2.15.0"
 }
