@@ -1,0 +1,1 @@
+BEGIN;DROP TABLE IF EXISTS knowledge_governance_outbox;DROP TABLE IF EXISTS knowledge_version_conflict;DROP TABLE IF EXISTS knowledge_version_governance;DELETE FROM schema_migrations WHERE version=15;COMMIT;

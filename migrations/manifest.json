@@ -84,6 +84,9 @@
     },
     {
       "version":"000014","issue":"V1-404","description":"Pipeline determinístico de ingestão, parsing e normalização","impact":"Adiciona jobs idempotentes, fencing, lineage de derivados e outbox sem conteúdo","risk":"high","owner":"Backend Python / Knowledge Engineering","requiredReviewers":["DBA","Security","Backend Python"],"rollback":"migrations/000014_v1_404_ingestion_pipeline.down.sql"
+    },
+    {
+      "version":"000015","issue":"V1-405","description":"Governança de versões, aprovação, vigência, frescor e conflitos","impact":"Adiciona unicidade de versão efetiva, decisões humanas e outbox sem conteúdo","risk":"high","owner":"Knowledge Governance / Backend","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000015_v1_405_knowledge_governance.down.sql"
     }
   ]
 }

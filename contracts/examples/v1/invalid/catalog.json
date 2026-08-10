@@ -1,4 +1,8 @@
 {
+  "knowledge-version-governance.schema.json":{"reason":"unknown state fails closed","payload":{"schema_version":"1.0.0","state":"AUTO_APPROVED"}},
+  "knowledge-review-command.schema.json":{"reason":"reason is mandatory and bounded","payload":{"schema_version":"1.0.0","reason":"ok"}},
+  "knowledge-conflict-resolution.schema.json":{"reason":"content cannot be merged","payload":{"schema_version":"1.0.0","resolution":"MERGE"}},
+  "knowledge-governance-event.schema.json":{"reason":"justification cannot enter event","payload":{"schema_version":"1.0.0","justification":"forbidden"}},
   "knowledge-ingestion-job.schema.json":{"reason":"fencing token must be positive","payload":{"schema_version":"1.0.0","fencing_token":0}},
   "knowledge-ingestion-result.schema.json":{"reason":"content cannot enter an event","payload":{"schema_version":"1.0.0","content":"forbidden"}},
   "normalized-knowledge-artifact-manifest.schema.json":{"reason":"artifact must be opaque","payload":{"schema_version":"1.0.0","artifact_ref":"https://signed.example/secret"}},

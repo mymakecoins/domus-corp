@@ -39,6 +39,8 @@ EXPECTED = {
     "knowledge-object-lifecycle-event.schema.json", "knowledge-object-restore-result.schema.json",
     "knowledge-ingestion-job.schema.json", "knowledge-ingestion-result.schema.json",
     "normalized-knowledge-artifact-manifest.schema.json",
+    "knowledge-version-governance.schema.json", "knowledge-review-command.schema.json",
+    "knowledge-conflict-resolution.schema.json", "knowledge-governance-event.schema.json",
 }
 
 IDENTITY_SCHEMAS = {
@@ -220,7 +222,7 @@ def main() -> int:
     asyncapi = load(asyncapi_path)
     if openapi.get("openapi") != "3.1.0" or openapi.get("info", {}).get("version") != "1.0.0":
         raise ContractViolation("OpenAPI metadata mismatch")
-    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.6.0":
+    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.7.0":
         raise ContractViolation("AsyncAPI metadata mismatch")
     walk_refs(openapi, openapi_path)
     walk_refs(asyncapi, asyncapi_path)
