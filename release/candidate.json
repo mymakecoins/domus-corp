@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-405",
-  "version": "0.24.0",
+  "issue": "V1-406",
+  "version": "0.25.0",
   "classification": "high-p0",
-  "summary": "Governança de versões, aprovação humana, vigência, frescor e conflitos.",
-  "impact": "Adiciona autoridade transacional para uma única versão efetiva e eventos sem conteúdo.",
-  "risks": ["Alçadas, scheduler, SLOs e parâmetros externos exigem homologação antes da promoção."],
+  "summary": "Defesa contra prompt injection indireto e quarentena de conteúdo não confiável.",
+  "impact": "Adiciona scanner determinístico, revisão segregada, envelope delimitado e eventos sem conteúdo.",
+  "risks": ["Engine, benchmark, limiares e operação externa exigem homologação antes da promoção."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-405.md", "docs/evidence/V1-405-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-406.md", "docs/evidence/V1-406-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Rollback remove governança V1-405; originais e derivados permanecem preservados."
+    "dataCompatibility": "Rollback remove assessments V1-406; originais, derivados e governança permanecem preservados."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.13.0"
+  "contractsVersion": "2.14.0"
 }

@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.14.0] — 2026-08-10
+
+- Adição de assessment, revisão e eventos para conteúdo sempre não confiável.
+- Eventos publicam somente hashes, categorias, decisões e referências bounded.
+
 ## [2.13.0] — 2026-08-09
 
 - Adição de governança de versão, revisão humana, resolução de conflito e eventos de vigência.

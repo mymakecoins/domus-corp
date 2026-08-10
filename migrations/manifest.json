@@ -87,6 +87,9 @@
     },
     {
       "version":"000015","issue":"V1-405","description":"Governança de versões, aprovação, vigência, frescor e conflitos","impact":"Adiciona unicidade de versão efetiva, decisões humanas e outbox sem conteúdo","risk":"high","owner":"Knowledge Governance / Backend","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000015_v1_405_knowledge_governance.down.sql"
+    },
+    {
+      "version":"000016","issue":"V1-406","description":"Assessment de conteúdo não confiável e quarentena","impact":"Adiciona decisões safety versionadas, revisão segregada e outbox sem conteúdo","risk":"high","owner":"Security / Backend Python","requiredReviewers":["DBA","Security","Backend Python"],"rollback":"migrations/000016_v1_406_content_safety.down.sql"
     }
   ]
 }

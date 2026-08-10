@@ -1,6 +1,6 @@
 {
   "asyncapi": "3.0.0",
-  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.7.0" },
+  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.8.0" },
   "defaultContentType": "application/json",
   "channels": {
     "identityEvents": { "address": "domus.v1.identity.events", "messages": { "identityEvent": { "$ref": "#/components/messages/IdentityEvent" } } },
@@ -15,7 +15,8 @@
     "knowledgeObjectEvents": { "address": "domus.v1.knowledge.objects", "messages": { "knowledgeObjectEvent": { "$ref": "#/components/messages/KnowledgeObjectEvent" } } },
     "knowledgeIngestionJobs": { "address": "domus.v1.knowledge.ingestion.jobs", "messages": { "ingestionJob": { "$ref": "#/components/messages/KnowledgeIngestionJob" } } },
     "knowledgeIngestionEvents": { "address": "domus.v1.knowledge.ingestion.events", "messages": { "ingestionResult": { "$ref": "#/components/messages/KnowledgeIngestionResult" } } },
-    "knowledgeGovernanceEvents": { "address": "domus.v1.knowledge.governance.events", "messages": { "governanceEvent": { "$ref": "#/components/messages/KnowledgeGovernanceEvent" } } }
+    "knowledgeGovernanceEvents": { "address": "domus.v1.knowledge.governance.events", "messages": { "governanceEvent": { "$ref": "#/components/messages/KnowledgeGovernanceEvent" } } },
+    "contentSafetyEvents": { "address": "domus.v1.knowledge.safety.events", "messages": { "safetyEvent": { "$ref": "#/components/messages/ContentSafetyEvent" } } }
   },
   "operations": {
     "sendIdentityEvent": { "action": "send", "channel": { "$ref": "#/channels/identityEvents" } },
@@ -30,7 +31,8 @@
     "sendKnowledgeObjectEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeObjectEvents" } },
     "consumeKnowledgeIngestionJob": { "action": "receive", "channel": { "$ref": "#/channels/knowledgeIngestionJobs" } },
     "sendKnowledgeIngestionResult": { "action": "send", "channel": { "$ref": "#/channels/knowledgeIngestionEvents" } },
-    "sendKnowledgeGovernanceEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeGovernanceEvents" } }
+    "sendKnowledgeGovernanceEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeGovernanceEvents" } },
+    "sendContentSafetyEvent": { "action": "send", "channel": { "$ref": "#/channels/contentSafetyEvents" } }
   },
   "components": { "messages": {
     "IdentityEvent": { "name": "IdentityEventV1", "title": "Evento de identidade sem dados de autenticação", "payload": { "$ref": "../../json-schema/v1/identity-event.schema.json" } },
@@ -43,6 +45,7 @@
     "KnowledgeObjectEvent": { "name": "KnowledgeObjectLifecycleEventV1", "title": "Lifecycle de objeto sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-object-lifecycle-event.schema.json" } },
     "KnowledgeIngestionJob": { "name": "KnowledgeIngestionJobV1", "title": "Job governado para versão exata do original", "payload": { "$ref": "../../json-schema/v1/knowledge-ingestion-job.schema.json" } },
     "KnowledgeIngestionResult": { "name": "KnowledgeIngestionResultV1", "title": "Estado de ingestão sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-ingestion-result.schema.json" } },
-    "KnowledgeGovernanceEvent": { "name": "KnowledgeGovernanceEventV1", "title": "Vigência e aprovação sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-governance-event.schema.json" } }
+    "KnowledgeGovernanceEvent": { "name": "KnowledgeGovernanceEventV1", "title": "Vigência e aprovação sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-governance-event.schema.json" } },
+    "ContentSafetyEvent": { "name": "ContentSafetyEventV1", "title": "Decisão safety sem conteúdo", "payload": { "$ref": "../../json-schema/v1/content-safety-event.schema.json" } }
   } }
 }

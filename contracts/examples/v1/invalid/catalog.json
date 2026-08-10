@@ -1,4 +1,7 @@
 {
+  "content-safety-assessment.schema.json":{"reason":"content can never become trusted","payload":{"schema_version":"1.0.0","trust_origin":"TRUSTED"}},
+  "content-safety-review-command.schema.json":{"reason":"automatic release is forbidden","payload":{"schema_version":"1.0.0","decision":"AUTO_RELEASE"}},
+  "content-safety-event.schema.json":{"reason":"detected content cannot enter event","payload":{"schema_version":"1.0.0","excerpt":"forbidden"}},
   "knowledge-version-governance.schema.json":{"reason":"unknown state fails closed","payload":{"schema_version":"1.0.0","state":"AUTO_APPROVED"}},
   "knowledge-review-command.schema.json":{"reason":"reason is mandatory and bounded","payload":{"schema_version":"1.0.0","reason":"ok"}},
   "knowledge-conflict-resolution.schema.json":{"reason":"content cannot be merged","payload":{"schema_version":"1.0.0","resolution":"MERGE"}},
