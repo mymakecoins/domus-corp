@@ -163,7 +163,6 @@ def validate(instance, schema, base: Path, at: str = "$"):
             raise ContractViolation(f"{at}: below minimum")
         if "maximum" in schema and instance > schema["maximum"]:
             raise ContractViolation(f"{at}: above maximum")
-            raise ContractViolation(f"{at}: above maximum")
 
 
 def walk_refs(value, base: Path):
