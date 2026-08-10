@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { ManageMcpCatalogService } from "../../../application/mcp/manage-mcp-catalog.js";
+import type { McpProxyService } from "../../../application/mcp/mcp-proxy-service.js";
 import type { McpServerEntry, McpRiskLevel } from "../../../domain/mcp/mcp-catalog.js";
 
 export type McpActor = Readonly<{
@@ -13,6 +14,7 @@ export type McpActor = Readonly<{
 export type McpRouteServices = Readonly<{
   authorize(request: FastifyRequest): Promise<McpActor>;
   catalog: ManageMcpCatalogService;
+  proxyService?: McpProxyService;
 }>;
 
 const authorityKeys = new Set(["tenantId", "tenant_id", "status", "enabled"]);
@@ -81,6 +83,36 @@ export function presentMcpServer(
 
 export function mapping(error: unknown): { code: string; status: number } {
   const message = String(error instanceof Error ? error.message : error);
+  const codePrefix = message.split(":")[0] ?? "";
+
+  if (
+    codePrefix === "MCP_SERVER_NOT_APPROVED" ||
+    codePrefix === "MCP_WORKSPACE_FORBIDDEN" ||
+    codePrefix === "MCP_POLICY_DENIED" ||
+    codePrefix === "CREDENTIAL_REVOKED" ||
+    codePrefix === "CREDENTIAL_EXPIRED" ||
+    codePrefix === "CREDENTIAL_TENANT_MISMATCH" ||
+    codePrefix.startsWith("CREDENTIAL_INSUFFICIENT_SCOPES")
+  ) {
+    return { code: codePrefix, status: 403 };
+  }
+
+  if (
+    codePrefix === "MCP_SERVER_NOT_FOUND" ||
+    codePrefix === "MCP_TOOL_NOT_FOUND" ||
+    codePrefix === "CREDENTIAL_NOT_FOUND"
+  ) {
+    return { code: codePrefix, status: 404 };
+  }
+
+  if (message.includes("MCP_UPSTREAM_ERROR:504") || message.includes("504 Gateway Timeout") || message.includes("TIMEOUT")) {
+    return { code: "MCP_GATEWAY_TIMEOUT", status: 504 };
+  }
+
+  if (message.startsWith("MCP_UPSTREAM_ERROR") || message.startsWith("MCP_EXECUTION_FAILED")) {
+    return { code: "MCP_BAD_GATEWAY", status: 502 };
+  }
+
   if (message.includes("DEPENDENCY_UNAVAILABLE")) {
     return { code: "MCP_DEPENDENCY_UNAVAILABLE", status: 503 };
   }
@@ -215,5 +247,72 @@ export function registerMcpRoutes(
         const revoked = await catalog.revokeServer(actor.tenantId, request.params.serverId, reason);
         return presentMcpServer(revoked, reqId, actor.workspaceId);
       })
+  );
+
+  app.post("/v1/mcp/tools/execute", async (request, reply) =>
+    handled(reply, async () => {
+      const reqId = requestId(request);
+      const body = safeBody(request.body);
+      const actor = await services.authorize(request);
+
+      const serverId = String(body.server_id ?? body.serverId ?? "");
+      const toolId = String(body.tool_id ?? body.toolId ?? "");
+
+      if (!serverId || !toolId) {
+        throw new Error("MCP_INVALID");
+      }
+
+      const workspaceId =
+        actor.workspaceId ||
+        (typeof body.workspace_id === "string"
+          ? body.workspace_id
+          : typeof body.workspaceId === "string"
+          ? body.workspaceId
+          : undefined);
+
+      if (!workspaceId) {
+        throw new Error("MCP_WORKSPACE_FORBIDDEN");
+      }
+
+      const proxyService = services.proxyService ?? (services as any).proxy;
+      if (!proxyService) {
+        throw new Error("MCP_DEPENDENCY_UNAVAILABLE");
+      }
+
+      const parameters = (
+        body.parameters && typeof body.parameters === "object" && !Array.isArray(body.parameters)
+          ? body.parameters
+          : {}
+      ) as Record<string, unknown>;
+
+      const requiredScopes = Array.isArray(body.required_scopes)
+        ? body.required_scopes.map(String)
+        : Array.isArray(body.requiredScopes)
+        ? body.requiredScopes.map(String)
+        : undefined;
+
+      const output = await proxyService.executeTool({
+        tenantId: actor.tenantId,
+        workspaceId,
+        userId: actor.userId,
+        serverId,
+        toolId,
+        parameters,
+        requiredScopes
+      });
+
+      return {
+        schema_version: "1.0.0",
+        request_id: reqId,
+        server_id: output.serverId,
+        serverId: output.serverId,
+        tool_id: output.toolId,
+        toolId: output.toolId,
+        status: output.status,
+        result: output.result,
+        executed_at: output.executedAt,
+        executedAt: output.executedAt
+      };
+    })
   );
 }
