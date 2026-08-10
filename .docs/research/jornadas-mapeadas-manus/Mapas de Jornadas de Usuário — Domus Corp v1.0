@@ -1,0 +1,395 @@
+# Mapas de Jornadas de Usuário — Domus Corp v1.0
+
+**Produto:** Domus Corp — Plataforma de Inteligência Corporativa com IA  
+**Liderança:** UX/UI, com validação de Produto, Requisitos, Arquitetura, DBA, QA e Engenharia  
+**Base:** PRD, ADR-001, backlog v1.0, design system e plano de testes de acessibilidade  
+**Status:** baseline de jornadas para design detalhado, prototipagem e implementação
+
+## 1. Objetivo dos mapas
+
+Este documento transforma a visão do Domus Corp em jornadas executáveis. Cada mapa descreve o que o usuário tenta realizar, o que a plataforma precisa fazer, o que deve ser visível na interface, quais decisões aparecem no percurso e como o sistema deve reagir quando evidência, autorização, orçamento, frescor ou disponibilidade não forem suficientes.
+
+As jornadas foram lideradas pela perspectiva de **UX/UI** e submetidas à validação cruzada das perspectivas de **Gerência de Projeto, Requisitos, Arquitetura, DBA, QA e Engenharia**. A consolidação preserva as cinco jornadas de inteligência do PRD — **Perguntar, Compreender, Monitorar, Decidir e Agir** — e acrescenta jornadas habilitadoras necessárias para que a v1.0 seja operável: curadoria de conhecimento, administração de governança, onboarding/memória pessoal e memória de decisões de reuniões.[1] [2] [3]
+
+> **Princípio de experiência:** o Domus deve reduzir o esforço cognitivo de buscar, compreender e agir sem reduzir a visibilidade de evidência, incerteza, alçada ou consequência.
+
+## 2. Personas e papéis
+
+| Persona | Objetivo principal | Necessidade de confiança | Risco que a jornada deve controlar |
+|---|---|---|---|
+| **Colaborador / Analista** | Obter uma resposta ou iniciar uma tarefa com rapidez | Saber se a resposta é oficial, parcial, inferida ou inconclusiva | Aceitar uma resposta sem evidência ou executar ação fora da alçada |
+| **Gestor de Workspace** | Compreender o funcionamento da área, monitorar sinais e decidir | Ver impacto, premissas, owners, frescor e limites | Tomar decisão com briefing ruidoso, fonte obsoleta ou conflito oculto |
+| **Owner de Conhecimento** | Curar fontes, versões, claims e processos | Preservar linhagem e saber o que exige revisão | Publicar fonte não validada, sobrescrever histórico ou deixar gap sem owner |
+| **Administrador / Compliance** | Governar identidade, policy, budget, modelos, conectores e retenção | Provar quem pode fazer o quê, quanto custa e o que ocorreu | Permitir egress indevido, atravessamento de tenant ou ação sem auditoria |
+| **Aprovador de Ação** | Autorizar ações de maior impacto | Revisar intenção, destino, parâmetros, risco e alçada | Aprovar mecanicamente ou autorizar escopo diferente do pretendido |
+| **Operador de Plataforma** | Manter disponibilidade, contratos, backups e incidentes | Detectar falhas, pausar ações e recuperar serviço | Reexecutar uma operação inconclusiva, perder evidência ou mascarar incidente |
+
+## 3. Jornada macro do Domus
+
+A jornada futura do produto segue um ciclo de **entender → verificar → decidir → agir → aprender**. A governança é aplicada antes da recuperação, geração ou execução; a interface torna o resultado compreensível; e o feedback volta para o Knowledge Fabric sem sobrescrever a fonte original.
+
+```mermaid
+flowchart LR
+    A[Usuário identifica dúvida, sinal ou objetivo] --> B[Identidade, workspace, intenção e EffectivePolicy]
+    B --> C{Operação autorizada e dentro do budget?}
+    C -- Não --> C1[Bloqueada: motivo seguro + próxima ação]
+    C -- Sim --> D[Retrieval e contexto autorizado]
+    D --> E{Evidência suficiente e vigente?}
+    E -- Sim --> F[Resposta fundamentada]
+    E -- Parcial --> F1[Resposta parcial + lacunas]
+    E -- Conflito --> F2[Fontes divergentes + owners]
+    E -- Não --> F3[Sem evidência / inconclusiva]
+    F --> G[Explorar evidência, compreender ou comparar]
+    F1 --> G
+    F2 --> G
+    F3 --> G
+    G --> H{Usuário precisa agir?}
+    H -- Não --> I[Feedback, histórico e melhoria do conhecimento]
+    H -- Sim --> J[ActionReviewDialog]
+    J --> K{Confirmação, alçada, budget e risco válidos?}
+    K -- Não --> K1[Bloqueada ou pendente de aprovação]
+    K -- Sim --> L[Action Gateway + idempotência + conector]
+    L --> M{Resultado confirmado?}
+    M -- Sim --> N[Recibo auditável + feedback]
+    M -- Não --> O[Inconclusiva + auditoria manual; sem retry cego]
+    N --> I
+    O --> I
+```
+
+A cadeia técnica que sustenta os mapas é igualmente obrigatória: o frontend conversa com as APIs governadas; o Model Gateway TypeScript controla egress, policy, budget e credenciais; os workers Python executam Knowledge e Intelligence por contratos; e o Action Gateway é a única fronteira para escrita externa.[2] [3]
+
+## 4. Catálogo de jornadas
+
+| ID | Jornada | PRD | Persona primária | Marco | Prioridade |
+|---|---|---|---|---|---:|
+| **J-UX-01** | Perguntar e investigar conhecimento | Perguntar | Colaborador / Analista | M1–M3 | P0 |
+| **J-UX-02** | Compreender processo e governança | Compreender | Gestor / Analista | M2–M3 | P0 |
+| **J-UX-03** | Monitorar sinais e briefings | Monitorar | Gestor / Diretoria | M3 | P1 |
+| **J-UX-04** | Decidir por análise comparativa | Decidir | Gestor / Analista Estratégico | M3 | P1 |
+| **J-UX-05** | Agir com ação conectada e governada | Agir | Colaborador / Aprovador | M4 | P0 |
+| **J-UX-06** | Curar e versionar conhecimento | Fluxo habilitador | Owner de Conhecimento | M2–M3 | P0/P1 |
+| **J-UX-07** | Administrar identidade, policy, budget e conectores | Governança de IA | Administrador / Compliance | M0–M4 | P0 |
+| **J-UX-08** | Fazer onboarding e administrar memória pessoal | Fluxo habilitador | Colaborador | M0–M2 | P0 |
+| **J-UX-09** | Transformar reunião em memória de decisão | Fluxo habilitador | Gestor / Participantes / Owner | M3–M4 | P1 |
+
+As jornadas J-UX-01 a J-UX-05 representam o valor principal percebido pelo usuário. J-UX-06 a J-UX-09 são necessárias para que o valor seja confiável, governável e sustentável; elas não devem ser tratadas como telas administrativas desconectadas das experiências de inteligência.
+
+## 5. J-UX-01 — Perguntar e investigar conhecimento
+
+### 5.1. Intenção e resultado
+
+O colaborador quer descobrir a regra atual para um caso, confirmar uma informação ou localizar a fonte oficial sem procurar manualmente em múltiplos repositórios. O resultado esperado é uma resposta contextualizada, com citações, vigência, owner e estado semântico, ou uma declaração clara de que não há evidência suficiente.
+
+| Elemento | Definição |
+|---|---|
+| Gatilho | Dúvida, exceção operacional ou necessidade de confirmação |
+| Pré-condições | Sessão válida, tenant/workspace resolvido, `EffectivePolicy` disponível e cliente sem credenciais de provider |
+| Componentes | Chat, `StreamingIndicator`, `AiResponseCard`, `AiSemanticBadge`, `CitationPill`, `EvidenceSheet`, feedback |
+| Dependências | V1-101, V1-103, V1-206, V1-207, V1-301, V1-409, V1-411, V1-501, V1-502 |
+| Resultado de sucesso | Resposta autorizada, evidência vigente, estado correto e histórico dentro da retenção |
+
+### 5.2. Mapa da jornada
+
+| Etapa | Objetivo do usuário | Comportamento do sistema | Interface e evidência | Decisão/saída |
+|---:|---|---|---|---|
+| 1 | Formular a dúvida | Mantém contexto pessoal permitido separado do conhecimento normativo | Campo de pergunta, contexto/workspace visível e opção de cancelar | Pergunta enviada ou refinada |
+| 2 | Saber se a consulta pode prosseguir | Valida identidade, workspace, classificação, policy e budget antes do retrieval | Estado de processamento sem revelar regra interna sensível | Prossegue ou fica `Bloqueada` |
+| 3 | Aguardar sem perder contexto | Recupera somente fontes autorizadas e constrói contexto por contrato | `StreamingIndicator`, `aria-live` controlado e cancelamento | `Processando`/`Streaming` |
+| 4 | Entender a resposta | Gera saída estruturada pelo Intelligence Plane via Model Gateway | `AiResponseCard` com texto, `AiSemanticBadge`, limitações e próximas ações | Um dos oito estados semânticos |
+| 5 | Verificar a origem | Retorna fonte, versão, seção, owner e vigência compatíveis com RLS | `CitationPill` abre `EvidenceSheet` com progressive disclosure | Usuário confirma, compara ou abre gap |
+| 6 | Registrar resultado | Persiste histórico e feedback dentro de escopo e retenção | Feedback, copiar com citação, refinar pergunta ou propor ação | Melhoria futura sem promover memória pessoal automaticamente |
+
+### 5.3. Ramificações e exceções
+
+| Condição | Estado/interface | Comportamento obrigatório |
+|---|---|---|
+| Evidência suficiente, vigente e autorizada | `Fundamentada` | Mostrar citações e permitir inspeção; não afirmar mais do que o trecho suporta |
+| Evidência parcial | `Parcial` | Exibir lacunas e ação de revisar fonte; não completar a lacuna por invenção |
+| Fontes autorizadas divergentes | `Conflitante` | Mostrar versões/owners lado a lado; não escolher regra silenciosamente |
+| Interpretação sem regra normativa equivalente | `Inferida` | Separar premissas de fato oficial e oferecer revisão |
+| Nenhuma fonte elegível | `Sem evidência` | Explicar a ausência, sugerir refinar ou abrir gap; não produzir falsa resposta |
+| Fonte fora de vigência/SLA | `Obsoleta` | Alertar antes da interpretação e encaminhar owner |
+| Policy, ACL, budget ou privacidade negados | `Bloqueada` | Omitir conteúdo/metadados e mostrar motivo seguro + próxima ação |
+| Timeout, provider ou reconciliação sem confirmação | `Inconclusiva` ou `Falha` técnica | Não afirmar sucesso; oferecer retry seguro ou investigação manual |
+
+### 5.4. Critérios de sucesso
+
+A jornada só é bem-sucedida quando o usuário consegue explicar, ao final, **o que o sistema respondeu, de onde veio, quão vigente é, quais são os limites e qual ação pode executar em seguida**. O teste de UX deve verificar que o usuário não confunde `Inferida`, `Parcial`, `Conflitante` ou `Obsoleta` com `Fundamentada`.
+
+## 6. J-UX-02 — Compreender processo e governança
+
+### 6.1. Intenção e resultado
+
+O gestor ou analista quer entender como um processo funciona, quem decide, quais documentos normativos sustentam cada etapa e quais exceções são conhecidas. O resultado é uma síntese navegável, não uma narrativa opaca: papéis, passos, regras, owners, documentos, claims, lacunas e conflitos devem ser inspecionáveis.
+
+| Elemento | Definição |
+|---|---|
+| Gatilho | Dúvida sobre processo, política, responsabilidade ou exceção |
+| Pré-condições | Fontes aprovadas, entidades/claims indexados, acesso ao domínio e owner conhecido |
+| Componentes | Busca exploratória, `InsightCard`, `EvidenceSheet`, tabs de versão, badges de frescor e tabela de etapas |
+| Dependências | V1-207, V1-401, V1-405, V1-408, V1-411, V1-501, V1-502 |
+| Resultado de sucesso | Processo compreendido com papéis, evidências, exceções e próximos passos claros |
+
+### 6.2. Mapa da jornada
+
+| Etapa | Objetivo do usuário | Comportamento do sistema | Interface e evidência | Decisão/saída |
+|---:|---|---|---|---|
+| 1 | Escolher processo/tema | Busca temas, entidades e fontes dentro do escopo | Command, filtros e resultados alfabéticos quando não houver critério de prioridade | Tema selecionado |
+| 2 | Ver o mapa do processo | Monta síntese a partir de claims e relações autorizadas | Visão por etapas, papéis, decisões e documentos | Processo exibido |
+| 3 | Entender exceções | Identifica conflitos, gaps e exceções nas fontes | Alertas e badges sem depender apenas de cor | Exceções reconhecidas |
+| 4 | Inspecionar regra | Abre a fonte e a evidência correspondente | `EvidenceSheet` com versão, owner e vigência | Regra confirmada ou questionada |
+| 5 | Escolher próximo passo | Sugere revisar fonte, pedir esclarecimento, abrir gap ou propor ação | `EmptyStateWithNextAction`/`ActionReviewDialog` quando aplicável | Processo compreendido ou encaminhado |
+
+### 6.3. Exceções
+
+Documento desatualizado resulta em `Obsoleta`; claims divergentes resultam em `Conflitante`; ausência de owner gera um gap de governança; conteúdo fora do escopo é omitido sem placeholder revelador; e parsing suspeito ou falha de segurança mantém a fonte em quarentena, sem permitir que entre no processo de recuperação.
+
+## 7. J-UX-03 — Monitorar sinais e briefings
+
+### 7.1. Intenção e resultado
+
+O gestor ou a diretoria querem saber o que mudou, o que exige atenção e quais sinais operacionais merecem investigação. O Domus deve reduzir ruído e separar **observado**, **inferido** e **recomendado**, sem transformar uma anomalia em fato confirmado.
+
+| Elemento | Definição |
+|---|---|
+| Gatilho | Abertura de briefing, mudança relevante, alerta ou assinatura de área |
+| Pré-condições | Escopo de monitoramento, fontes e limiares configurados; dados com frescor conhecido |
+| Componentes | `InsightCard`, `SourceFreshnessBadge`, filtros, EvidenceSheet, feedback e preferências de notificação |
+| Dependências | V1-501, V1-502, V1-504, V1-508, V1-509, V1-510 |
+| Resultado de sucesso | Briefing priorizado, rastreável e compreendido sem fadiga de alertas |
+
+### 7.2. Mapa da jornada
+
+| Etapa | Objetivo do usuário | Comportamento do sistema | Interface e evidência | Decisão/saída |
+|---:|---|---|---|---|
+| 1 | Abrir o briefing | Seleciona mudanças do escopo do gestor e aplica limiares | Cards por impacto/urgência, estado de frescor e timestamp | Lista priorizada |
+| 2 | Entender o sinal | Correlaciona fontes, eventos e histórico permitido | `InsightCard` separa fato, inferência e recomendação | Sinal compreendido |
+| 3 | Verificar evidência | Abre fontes e premissas | `EvidenceSheet`, claims, vigência e owners | Sinal confirmado, questionado ou inconclusivo |
+| 4 | Registrar feedback | Aceita, rejeita, silencia ou encaminha | Feedback explicável; alertas de segurança não podem ser silenciados | Quality Loop atualizado |
+| 5 | Decidir se deve agir | Encaminha para comparação, owner ou Action Review | Ação é proposta, não executada implicitamente | Jornada J-UX-04 ou J-UX-05 |
+
+### 7.3. Exceções
+
+Fonte atrasada gera alerta de frescor; sinal sem evidência histórica é `Inconclusiva` ou `Parcial`; limiar não calibrado deve ser indicado como limitação; notificação não crítica pode ser silenciada; alerta de segurança e bloqueio não podem ser escondidos por preferência do usuário.
+
+## 8. J-UX-04 — Decidir por análise comparativa
+
+### 8.1. Intenção e resultado
+
+O analista ou gestor quer comparar alternativas, cenários ou diretrizes antes de assumir uma decisão. O resultado deve apresentar premissas, custos, riscos, evidências, incertezas e recomendação separadamente, permitindo que a pessoa discorde do modelo sem perder a trilha de raciocínio.
+
+| Elemento | Definição |
+|---|---|
+| Gatilho | Necessidade de escolher entre alternativas ou entender impactos |
+| Pré-condições | Alternativas identificadas, fontes comparáveis ou lacunas explicitadas |
+| Componentes | Formulário de comparação, tabela, `InsightCard`, badges de estado, EvidenceSheet e feedback |
+| Dependências | V1-501, V1-502, V1-504, V1-508, V1-510 |
+| Resultado de sucesso | Comparação auditável com recomendação limitada pelas evidências |
+
+### 8.2. Mapa da jornada
+
+| Etapa | Objetivo do usuário | Comportamento do sistema | Interface e evidência | Decisão/saída |
+|---:|---|---|---|---|
+| 1 | Definir alternativas e critérios | Valida escopo, dados disponíveis e objetivos | Formulário com labels, ajuda e critérios explícitos | Cenário de comparação |
+| 2 | Recuperar premissas | Busca fontes autorizadas e versões compatíveis | Tabela de premissas e badges de vigência | Base comparável ou gap |
+| 3 | Comparar | Calcula/sintetiza custos, riscos, impactos e restrições | Tabela com colunas descritivas, não apenas cor | Alternativas ordenadas por critério declarado |
+| 4 | Interpretar recomendação | Marca fato, cálculo, inferência e recomendação | `InsightCard` + EvidenceSheet | Recomendação aceita, questionada ou inconclusiva |
+| 5 | Encaminhar decisão | Salva síntese/feedback ou propõe ação governada | Link para Action Review quando houver escrita externa | Decisão registrada ou J-UX-05 |
+
+### 8.3. Exceções
+
+Fontes incomparáveis, níveis de vigência assimétricos, custos sem base, premissas conflitantes e falta de dados devem resultar em `Parcial`, `Conflitante`, `Inferida` ou `Inconclusiva`, e não em uma classificação artificial de vencedor.
+
+## 9. J-UX-05 — Agir com ação conectada e governada
+
+### 9.1. Intenção e resultado
+
+O colaborador deseja transformar uma recomendação em uma ação em sistema externo, como criar uma tarefa ou atualizar um registro. O objetivo da jornada não é automatizar a decisão humana, mas tornar a execução **escopada, revisável, autorizada, idempotente e auditável**.
+
+| Elemento | Definição |
+|---|---|
+| Gatilho | Usuário escolhe “Propor ação” em resposta, insight ou comparação |
+| Pré-condições | Intenção estruturada, conector autorizado, policy e budget disponíveis |
+| Componentes | `ActionReviewDialog`, `PolicyDecisionBanner`, `BudgetMeter`, tabela de parâmetros, confirmação e recibo |
+| Dependências | V1-103, V1-601, V1-602, V1-603, V1-604, V1-605, V1-606 |
+| Resultado de sucesso | Ação executada uma vez, com `tx_id`/idempotency key e recibo auditável |
+
+### 9.2. Mapa da jornada
+
+| Etapa | Objetivo do usuário | Comportamento do sistema | Interface e evidência | Decisão/saída |
+|---:|---|---|---|---|
+| 1 | Propor ação | Converte recomendação em `ActionRequest` sem executar | CTA “Propor ação”, nunca “Executar” implícito | Ação proposta |
+| 2 | Verificar permissão e impacto | Revalida identidade, workspace, policy, budget, risco e alçada server-side | `PolicyDecisionBanner`, `BudgetMeter` e estado de aprovação | Permitida, condicionada, pendente ou `Bloqueada` |
+| 3 | Revisar intenção | Exibe destino, parâmetros redigidos, dados afetados, impacto e risco | `ActionReviewDialog` com foco preso corretamente e leitura por teclado | Usuário confirma, edita, envia para aprovador ou cancela |
+| 4 | Executar | Action Gateway usa credencial server-side, MCP escopado e idempotency key UUIDv4 | Estado de execução e não auto-submit | Chamada enviada uma vez |
+| 5 | Reconciliar | Aguarda recibo, trata timeout e reconciliação | Status `Concluída`, `Falha`, `Bloqueada` ou `Inconclusiva`; `tx_id` visível | Recibo e auditoria |
+| 6 | Aprender sem repetir | Registra feedback/resultado sem reexecutar automaticamente | Link de auditoria e próxima ação segura | Quality Loop/incident review |
+
+### 9.3. Exceções críticas
+
+Ação sem confirmação não chega ao sistema externo. Policy indisponível, budget insuficiente, revogação de alçada ou classificação incompatível resultam em `Bloqueada`. Timeout do conector resulta em `Inconclusiva`, bloqueia reenvio cego e oferece investigação manual do recibo. A deleção exige confirmação explícita de intenção e escopo; ações em lote não podem contornar o `ActionReviewDialog`.
+
+## 10. J-UX-06 — Curar e versionar conhecimento
+
+### 10.1. Intenção e resultado
+
+O owner de conhecimento precisa transformar fontes em ativos confiáveis sem destruir o histórico. A jornada combina triagem, validação, classificação, versionamento, aprovação, publicação e monitoramento de frescor.
+
+| Elemento | Definição |
+|---|---|
+| Gatilho | Nova fonte, revisão de SLA, conflito recorrente, feedback negativo ou gap |
+| Pré-condições | Owner autorizado, domínio definido, política de classificação e pipeline disponível |
+| Componentes | `KnowledgeAssetRow`, `SourceFreshnessBadge`, tabelas `compact`/`default`, filtros, Dialog de aprovação, EvidenceSheet |
+| Dependências | V1-401, V1-405, V1-408, V1-409, V1-410, V1-411, V1-412, V1-701, V1-702 |
+| Resultado de sucesso | Nova versão/claim aprovada, histórico imutável, índice reprocessado e owner notificado |
+
+### 10.2. Mapa da jornada
+
+| Etapa | Objetivo do owner | Comportamento do sistema | Interface e evidência | Decisão/saída |
+|---:|---|---|---|---|
+| 1 | Encontrar o que exige atenção | Prioriza frescor, conflitos, gaps, owner ausente e feedback | Tabela compacta com filtros estáveis e ordenação declarada | Fila de curadoria |
+| 2 | Inspecionar ativo | Mostra origem, versão, classificação, claims, relações e uso | `EvidenceSheet` e `SourceFreshnessBadge` | Ativo elegível para revisão |
+| 3 | Submeter revisão | Faz upload/edição controlada, valida schema, DLP e malware | Formulário com erros associados e progresso | Nova versão em processamento/quarentena |
+| 4 | Resolver conflitos | Compara claims e decide owner/validade sem apagar fonte | Comparação lado a lado, estado `Conflitante`/`Obsoleta` | Conflito resolvido ou escalado |
+| 5 | Aprovar/publicar | Exige aprovação conforme risco; cria versão imutável | Dialog de confirmação, policy e auditoria | Publicada, rejeitada, arquivada ou quarentenada |
+| 6 | Verificar consequência | Reindexa, atualiza vigência e monitora qualidade | Métricas de retrieval, freshness e feedback | Conhecimento disponível ou incident review |
+
+### 10.3. Exceções
+
+Falha de parsing, malware, classificação incompatível ou DLP mantém o ativo em quarentena. Ausência de owner impede publicação normativa. O pipeline deve fazer rollback atômico de alterações parciais. A fonte original não é sobrescrita nem apagada quando já fundamentou respostas.
+
+## 11. J-UX-07 — Administrar identidade, policy, budget e conectores
+
+### 11.1. Intenção e resultado
+
+O administrador ou responsável por compliance quer configurar o espaço de operação, definir alçadas e controlar o catálogo de modelos, ferramentas, conectores, budget, retenção e auditoria. É a jornada que torna as demais possíveis sem transformar a interface em um conjunto de exceções manuais.
+
+| Etapa | Objetivo | Comportamento do sistema | Interface | Saída |
+|---:|---|---|---|---|
+| 1 | Autenticar e selecionar escopo | Resolve tenant, workspace, papel e dispositivo | Shell admin e breadcrumb de escopo | Contexto explícito |
+| 2 | Configurar policy | Simula composição global/tenant/workspace/papel | Editor com diff antes/depois, motivos e impacto | Draft de policy |
+| 3 | Publicar/rollback | Exige aprovação proporcional e mantém histórico | Dialog de aprovação e rollback | `EffectivePolicy` versionada |
+| 4 | Configurar modelos/conectores | Publica catálogo com risco, owner, capabilities e estado | Tabelas, filtros e badges; itens alfabéticos salvo critério declarado | Catálogo efetivo |
+| 5 | Monitorar budget/auditoria | Inspeciona uso, reservas, bloqueios e eventos | Dashboard, `BudgetMeter`, trilha de auditoria | Ajuste ou investigação |
+| 6 | Revogar/pausar | Revoga dispositivo, modelo, MCP ou ação | Kill switch e confirmação de impacto | Bloqueio imediato e auditado |
+
+### 11.2. Exceções e gates
+
+Policy ausente, conflitante, inválida ou em timeout é `Bloqueada`/fail-closed. Mudança de alto risco exige aprovação independente. Budget atingido bloqueia a chamada antes do provider. Revogação invalida novas requisições e sessões dentro do SLA. Nenhuma credencial aparece no frontend.
+
+## 12. J-UX-08 — Onboarding, consentimento e memória pessoal
+
+### 12.1. Intenção e resultado
+
+O colaborador quer configurar identidade, preferências e contexto pessoal sem transferir automaticamente sua memória para o conhecimento corporativo. A jornada deve explicar o que é local, o que será enviado, a retenção e a exclusão.
+
+| Etapa | Objetivo do usuário | Comportamento do sistema | Interface e decisão |
+|---:|---|---|---|
+| 1 | Entrar | Autentica via IdP e registra dispositivo | OIDC/PKCE, nome, tenant, workspace e papel |
+| 2 | Entender o contexto | Explica memória local, corporativa, histórico e telemetria | Consentimento granular, linguagem clara e opção de pausar |
+| 3 | Escolher preferências | Salva somente o que foi confirmado | Checkboxes/controls com labels, retenção e escopo |
+| 4 | Usar memória local | Persiste contexto em SQLite local separado do Knowledge Fabric | Indicador de origem/localidade e exclusão |
+| 5 | Solicitar publicação | Se o usuário quiser compartilhar, cria proposta de ativo | Classificação, owner, aprovação e nenhuma publicação automática |
+| 6 | Excluir/exportar | Aplica retenção e exclusão local permitida | Confirmação explícita e recibo de operação |
+
+### 12.2. Exceções
+
+Dispositivo revogado, sessão expirada ou consentimento ausente impedem sincronização. Dados marcados como locais não podem entrar no prompt corporativo automaticamente. Exclusão local não apaga a auditoria mínima nem o conhecimento normativo já aprovado.
+
+## 13. J-UX-09 — Transformar reunião em memória de decisão
+
+Esta jornada é **P1** e depende de consentimento, retenção, transcrição e aprovação. Ela existe para completar o ciclo de memória institucional, mas não deve ser liberada antes de os controles de privacidade e curadoria estarem maduros.
+
+| Etapa | Objetivo | Comportamento do sistema | Estado/saída |
+|---:|---|---|---|
+| 1 | Configurar reunião | Define participantes, consentimento, finalidade e retenção | Reunião autorizada ou bloqueada |
+| 2 | Processar transcrição | Faz transcrição por worker Python, com acesso e egress governados | `Processando`, progresso e cancelamento |
+| 3 | Extrair decisões | Identifica decisões, tarefas, claims, participantes, timestamps e confiança | Draft separado de conhecimento oficial |
+| 4 | Revisar conteúdo | Participantes/owner corrigem, removem ou classificam itens | `Parcial`, `Inferida`, `Conflitante` ou revisão |
+| 5 | Publicar seletivamente | Aprovação cria ativos versionados com owner e retenção | Conhecimento de equipe/normativo ou descarte |
+| 6 | Auditar | Mantém origem na gravação/transcrição e decisão de publicação | Trilha de proveniência e retenção |
+
+Sem consentimento ou com retenção incompatível, a reunião não é processada. Uma decisão extraída pela IA nunca vira regra corporativa sem revisão e aprovação.
+
+## 14. Mapa de estados críticos
+
+Os estados semânticos são estados epistemológicos e não devem ser confundidos com estados de processamento ou de infraestrutura. A interface consome o catálogo tipado; não interpreta o texto da resposta para decidir qual badge mostrar.[4] [5]
+
+| Tipo | Estado | O usuário deve entender | Próxima ação segura |
+|---|---|---|---|
+| Epistemológico | Fundamentada | Há evidência vigente e autorizada suficiente | Inspecionar citação quando desejar |
+| Epistemológico | Parcial | Há suporte, mas existem lacunas | Revisar fonte/refinar pergunta |
+| Epistemológico | Conflitante | Fontes autorizadas divergem | Consultar owners/comparar versões |
+| Epistemológico | Inferida | É interpretação, não regra oficial | Ver premissas/revisar fonte |
+| Epistemológico | Sem evidência | Não há base suficiente para afirmar | Refinar/abrir gap |
+| Epistemológico | Obsoleta | A fonte está fora da vigência/SLA | Revisar owner/fonte |
+| Epistemológico | Bloqueada | Policy, budget, escopo ou segurança impediu | Consultar admin/solicitar alçada |
+| Epistemológico | Inconclusiva | O resultado não foi confirmado | Investigar/repetir com segurança |
+| Processamento | Processando/Streaming | O sistema ainda está trabalhando | Aguardar/cancelar |
+| Processamento | Concluída | A resposta terminou | Ler estado semântico e agir conforme permitido |
+| Processamento | Cancelada | O usuário/sistema interrompeu | Recomeçar conscientemente |
+| Processamento | Falha | Houve erro técnico | Retry seguro/abrir suporte |
+
+## 15. Mapa de dependências de experiência
+
+| Jornada | Contratos indispensáveis | Gate que bloqueia a jornada |
+|---|---|---|
+| J-UX-01 | Sessão, `EffectivePolicy`, retrieval/RLS, streaming, estados semânticos, evidência | Sem policy, sem fonte autorizada, estado desconhecido ou vazamento de RLS |
+| J-UX-02 | Claims, relações, versões, owners, frescor, EvidenceSheet | Fonte sem owner, conflito oculto, histórico sobrescrito |
+| J-UX-03 | Sinais, limiares, fontes, feedback, estados e notificações | Briefing sem evidência, alerta ruidoso ou segurança silenciada |
+| J-UX-04 | Alternativas, premissas, custos, riscos, comparabilidade, estados | Recomendação sem premissas ou fonte comparável |
+| J-UX-05 | Policy, budget, approval chain, ActionRequest, MCP, idempotência, recibo | Ação sem confirmação, alçada, budget, idempotency key ou gateway |
+| J-UX-06 | Ingestão, DLP/malware, versionamento, RLS, reindexação e auditoria | Quarentena bypassada, update destrutivo ou publicação sem owner |
+| J-UX-07 | IAM, RLS, catálogo, policy simulator, Vault, budget e auditoria | Egress direto, policy não monotônica ou revogação lenta |
+| J-UX-08 | OIDC/PKCE, SQLite local, consentimento, retenção e exclusão | Mistura de memória, coleta sem consentimento ou segredo no cliente |
+| J-UX-09 | Consentimento, transcrição, extração, classificação, aprovação e retenção | Publicação automática de decisão ou transcrição sem consentimento |
+
+A fronteira mais importante é a seguinte: **a interface nunca autoriza por conta própria**. Ela mostra o estado retornado pelos contratos e encaminha a intenção; backend, policy, RLS, budget e gateways fazem a decisão efetiva.
+
+## 16. Acessibilidade e confiança em todos os mapas
+
+Todas as jornadas devem funcionar por teclado, leitor de tela e zoom de 200%, em `light`/`dark` e `default`/`compact`, conforme o plano de testes de acessibilidade. O significado de um estado nunca pode depender apenas de cor, hover, posição ou movimento. `aria-live="polite"` deve ser usado para status de streaming e mudanças não urgentes; notificações críticas devem ser tratadas com parcimônia para não interromper o usuário.[6]
+
+Citações, evidências, Action Review, policy, budget e bloqueios precisam de componentes compostos próprios. Conteúdo omitido por RLS não pode reaparecer em tooltip, `aria-label`, DOM oculto, analytics ou logs do navegador. A proibição de Indigo/Violeta em Buttons permanece um guardrail de CI e não uma decisão a ser resolvida em cada tela.
+
+## 17. Critérios de aceite dos mapas
+
+1. **Dado** que uma jornada é implementada, **quando** o time a revisa contra o PRD e o backlog, **então** encontra ator, gatilho, pré-condições, fluxo, decisões, exceções, dependências e saída mensurável.
+2. **Dado** que uma resposta de IA aparece, **quando** a interface a renderiza, **então** usa exatamente um estado semântico tipado, com label, ícone, descrição, tom e próxima ação compatíveis.
+3. **Dado** que o usuário abre uma evidência, **quando** RLS não autoriza o conteúdo, **então** o frontend não revela trecho, título, existência, tamanho ou metadado protegido.
+4. **Dado** que uma ação externa é proposta, **quando** o usuário tenta prosseguir, **então** `ActionReviewDialog` aparece antes da execução e exige confirmação/alçada de acordo com o risco.
+5. **Dado** que um conector retorna timeout, **quando** a transação não é confirmada, **então** a jornada termina em `Inconclusiva`, com `tx_id`/auditoria e sem retry cego.
+6. **Dado** que um owner corrige uma fonte, **quando** a versão é publicada, **então** a fonte anterior permanece imutável e a nova versão preserva a cadeia de evidências.
+7. **Dado** que um usuário utiliza teclado, leitor de tela, zoom ou reduced motion, **quando** percorre qualquer jornada crítica, **então** foco, ordem, status e próxima ação permanecem compreensíveis.
+8. **Dado** que uma jornada depende de TypeScript e Python, **quando** o payload é consumido pelo frontend, **então** o contrato OpenAPI/JSON Schema/AsyncAPI está versionado e nenhum worker Python faz egress direto de provider.
+
+## 18. Rastreabilidade com o backlog
+
+| Mapa | Issues principais |
+|---|---|
+| J-UX-01 | V1-101, V1-103, V1-206, V1-207, V1-301, V1-409, V1-411, V1-501, V1-502 |
+| J-UX-02 | V1-401, V1-405, V1-408, V1-411, V1-501, V1-510 |
+| J-UX-03 | V1-501, V1-502, V1-504, V1-508, V1-509, V1-510 |
+| J-UX-04 | V1-501, V1-502, V1-504, V1-508, V1-510 |
+| J-UX-05 | V1-103, V1-601, V1-602, V1-603, V1-604, V1-605, V1-606 |
+| J-UX-06 | V1-401, V1-405, V1-408, V1-409, V1-410, V1-411, V1-412, V1-701, V1-702 |
+| J-UX-07 | V1-101, V1-102, V1-103, V1-104, V1-105, V1-301, V1-302, V1-303, V1-304, V1-305, V1-306, V1-307, V1-308, V1-601 |
+| J-UX-08 | V1-101, V1-201, V1-202, V1-203, V1-204, V1-701 |
+| J-UX-09 | V1-501, V1-503, V1-504, V1-507, V1-508, V1-509, V1-610, V1-701, V1-702 |
+| Transversal | V1-002, V1-003, V1-005, V1-205, V1-807, V1-808 |
+
+## 19. Próximos artefatos de UX
+
+A partir destes mapas, o próximo nível de detalhamento deve produzir, nesta ordem: fluxos de tarefa de baixa fidelidade; wireframes dos estados normais e de exceção; protótipos navegáveis de J-UX-01, J-UX-05 e J-UX-06; especificação de conteúdo para badges, bloqueios e próximas ações; testes de compreensão e acessibilidade; e só então telas finais e analytics.
+
+A primeira fatia recomendada é **J-UX-01 → J-UX-05**, porque demonstra a cadeia completa de valor: pergunta, evidência, interpretação, decisão e ação governada. J-UX-06 deve ser construída em paralelo para garantir que as fontes que alimentam a demonstração sejam realmente curáveis e versionadas.
+
+## Referências
+
+[1]: ./PRD_DomusCorp.md "PRD — Domus Corp v1.0"  
+[2]: ./ADR_001_ArquiteturaDomusCorp.md "ADR-001 — Arquitetura do Domus Corp"  
+[3]: ./Backlog_V1_DomusCorp.md "Backlog Mestre de Issues — Domus Corp v1.0"  
+[4]: ./DESIGN_SYSTEM_DOMUS_CORP.md "Design System — Domus Corp v1.0"  
+[5]: ./domus-design-tokens.ts "Tokens tipados e estados semânticos do Domus Corp"  
+[6]: ./PLANO_TESTES_ACESSIBILIDADE_ESTADOS_IA.md "Plano de testes de acessibilidade e estados semânticos de IA"  
+[7]: ./domus_journey_cross_validation.json "Validação cruzada das jornadas pelas sete perspectivas"
