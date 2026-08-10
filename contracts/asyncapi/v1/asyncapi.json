@@ -1,6 +1,6 @@
 {
   "asyncapi": "3.0.0",
-  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.5.0" },
+  "info": { "title": "Domus cross-runtime events and jobs", "version": "1.6.0" },
   "defaultContentType": "application/json",
   "channels": {
     "identityEvents": { "address": "domus.v1.identity.events", "messages": { "identityEvent": { "$ref": "#/components/messages/IdentityEvent" } } },
@@ -12,7 +12,9 @@
     "sourceEvents": { "address": "domus.v1.source.events", "messages": { "sourceEvent": { "$ref": "#/components/messages/SourceLifecycleEvent" } } },
     "connectorJobs": { "address": "domus.v1.connector.jobs", "messages": { "connectorJob": { "$ref": "#/components/messages/ConnectorSyncJob" } } },
     "connectorEvents": { "address": "domus.v1.connector.events", "messages": { "connectorEvent": { "$ref": "#/components/messages/ConnectorSyncEvent" } } },
-    "knowledgeObjectEvents": { "address": "domus.v1.knowledge.objects", "messages": { "knowledgeObjectEvent": { "$ref": "#/components/messages/KnowledgeObjectEvent" } } }
+    "knowledgeObjectEvents": { "address": "domus.v1.knowledge.objects", "messages": { "knowledgeObjectEvent": { "$ref": "#/components/messages/KnowledgeObjectEvent" } } },
+    "knowledgeIngestionJobs": { "address": "domus.v1.knowledge.ingestion.jobs", "messages": { "ingestionJob": { "$ref": "#/components/messages/KnowledgeIngestionJob" } } },
+    "knowledgeIngestionEvents": { "address": "domus.v1.knowledge.ingestion.events", "messages": { "ingestionResult": { "$ref": "#/components/messages/KnowledgeIngestionResult" } } }
   },
   "operations": {
     "sendIdentityEvent": { "action": "send", "channel": { "$ref": "#/channels/identityEvents" } },
@@ -24,7 +26,9 @@
     "sendSourceEvent": { "action": "send", "channel": { "$ref": "#/channels/sourceEvents" } },
     "consumeConnectorJob": { "action": "receive", "channel": { "$ref": "#/channels/connectorJobs" } },
     "sendConnectorEvent": { "action": "send", "channel": { "$ref": "#/channels/connectorEvents" } },
-    "sendKnowledgeObjectEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeObjectEvents" } }
+    "sendKnowledgeObjectEvent": { "action": "send", "channel": { "$ref": "#/channels/knowledgeObjectEvents" } },
+    "consumeKnowledgeIngestionJob": { "action": "receive", "channel": { "$ref": "#/channels/knowledgeIngestionJobs" } },
+    "sendKnowledgeIngestionResult": { "action": "send", "channel": { "$ref": "#/channels/knowledgeIngestionEvents" } }
   },
   "components": { "messages": {
     "IdentityEvent": { "name": "IdentityEventV1", "title": "Evento de identidade sem dados de autenticação", "payload": { "$ref": "../../json-schema/v1/identity-event.schema.json" } },
@@ -34,6 +38,8 @@
     "SourceLifecycleEvent": { "name": "SourceLifecycleEventV1", "title": "Evento governado de ciclo de vida da fonte", "payload": { "$ref": "../../json-schema/v1/source-lifecycle-event.schema.json" } },
     "ConnectorSyncJob": { "name": "ConnectorSyncJobV1", "title": "Job de sync com fencing", "payload": { "$ref": "../../json-schema/v1/connector-sync-job.schema.json" } },
     "ConnectorSyncEvent": { "name": "ConnectorSyncEventV1", "title": "Resultado sanitizado de sync", "payload": { "$ref": "../../json-schema/v1/connector-sync-event.schema.json" } },
-    "KnowledgeObjectEvent": { "name": "KnowledgeObjectLifecycleEventV1", "title": "Lifecycle de objeto sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-object-lifecycle-event.schema.json" } }
+    "KnowledgeObjectEvent": { "name": "KnowledgeObjectLifecycleEventV1", "title": "Lifecycle de objeto sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-object-lifecycle-event.schema.json" } },
+    "KnowledgeIngestionJob": { "name": "KnowledgeIngestionJobV1", "title": "Job governado para versão exata do original", "payload": { "$ref": "../../json-schema/v1/knowledge-ingestion-job.schema.json" } },
+    "KnowledgeIngestionResult": { "name": "KnowledgeIngestionResultV1", "title": "Estado de ingestão sem conteúdo", "payload": { "$ref": "../../json-schema/v1/knowledge-ingestion-result.schema.json" } }
   } }
 }

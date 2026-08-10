@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.12.0] — 2026-08-09
+
+- Adição de job/resultado de ingestão e manifesto de artefato normalizado.
+- Conteúdo, nomes, caminhos, credenciais e ACL completa permanecem fora dos eventos.
+
 ## [2.11.0] — 2026-08-09
 
 - Adição de admissão, recibo, lifecycle e restore de objetos de conhecimento.

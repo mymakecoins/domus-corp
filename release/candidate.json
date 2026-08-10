@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-403",
-  "version": "0.22.0",
+  "issue": "V1-404",
+  "version": "0.23.0",
   "classification": "high-p0",
-  "summary": "Armazenamento imutável de originais com checksum, quarentena, lifecycle e restore.",
-  "impact": "Adiciona domínio e adapter S3/MinIO injetável, metadata RLS e contratos sem habilitar dados corporativos.",
-  "risks": ["KMS, malware engine, Object Lock, backup e parâmetros externos exigem homologação antes da promoção."],
+  "summary": "Pipeline determinístico de ingestão, parsing e normalização no Knowledge Plane.",
+  "impact": "Adiciona parsers P0, artefatos derivados, jobs com fencing, RLS e contratos sem conteúdo.",
+  "risks": ["Broker, sandbox, sizing, parsers e parâmetros externos exigem homologação antes da promoção."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-403.md", "docs/evidence/V1-403-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-404.md", "docs/evidence/V1-404-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Rollback do schema preserva objetos no storage; remoção exige reconciliação explícita pelo checksum e versão exata."
+    "dataCompatibility": "Rollback remove metadata da V1-404; originais permanecem e derivados são reconstruíveis."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.11.0"
+  "contractsVersion": "2.12.0"
 }

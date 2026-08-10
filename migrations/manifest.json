@@ -81,6 +81,9 @@
     },
     {
       "version":"000013","issue":"V1-403","description":"Metadados imutáveis de originais e lifecycle de objetos","impact":"Adiciona assets/version lineage, RLS, auditoria e outbox sem conteúdo ou URLs assinadas","risk":"high","owner":"Backend Python / DBA / DevOps","requiredReviewers":["DBA","Security","DevOps"],"rollback":"migrations/000013_v1_403_knowledge_objects.down.sql"
+    },
+    {
+      "version":"000014","issue":"V1-404","description":"Pipeline determinístico de ingestão, parsing e normalização","impact":"Adiciona jobs idempotentes, fencing, lineage de derivados e outbox sem conteúdo","risk":"high","owner":"Backend Python / Knowledge Engineering","requiredReviewers":["DBA","Security","Backend Python"],"rollback":"migrations/000014_v1_404_ingestion_pipeline.down.sql"
     }
   ]
 }

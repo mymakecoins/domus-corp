@@ -5,6 +5,7 @@ description = "Domus Corp knowledge and intelligence Python workspace"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "fastapi==0.141.1",
+  "pypdf==5.9.0",
   "uvicorn[standard]==0.35.0",
 ]
 
