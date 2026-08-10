@@ -18,6 +18,7 @@ import type {EffectivePolicy} from "./domain/policy/policy-engine.js";
 import {registerGatewayRoutes, type GatewayRouteServices} from "./interfaces/http/gateway/routes.js";
 import {registerSourceRoutes,type SourceRouteServices} from "./interfaces/http/source/routes.js";
 import {registerConnectorRoutes,type ConnectorRouteServices}from"./interfaces/http/source/connector-routes.js";
+import {registerMcpRoutes, type McpRouteServices} from "./interfaces/http/mcp/routes.js";
 
 type IdentityServices = Readonly<{
   establishSession(command: EstablishSessionCommand): Promise<AuthenticatedSession>;
@@ -36,7 +37,7 @@ type IdentityServices = Readonly<{
 
 const unavailableGateway:GatewayRouteServices={async authorize(){throw new Error('GATEWAY_DEPENDENCY_UNAVAILABLE');},async execute(){throw new Error('GATEWAY_DEPENDENCY_UNAVAILABLE');},countInputTokens(){return 0;},scopeKeys(){return [];}};
 
-export function buildApp(identityServices?: IdentityServices,gatewayServices:GatewayRouteServices=unavailableGateway,sourceServices?:SourceRouteServices,connectorServices?:ConnectorRouteServices): FastifyInstance {
+export function buildApp(identityServices?: IdentityServices,gatewayServices:GatewayRouteServices=unavailableGateway,sourceServices?:SourceRouteServices,connectorServices?:ConnectorRouteServices,mcpServices?:McpRouteServices): FastifyInstance {
   const config = loadConfig();
   const app = Fastify({ logger: true });
 
@@ -48,6 +49,7 @@ export function buildApp(identityServices?: IdentityServices,gatewayServices:Gat
   registerGatewayRoutes(app,gatewayServices);
   if(sourceServices)registerSourceRoutes(app,sourceServices);
   if(connectorServices)registerConnectorRoutes(app,connectorServices);
+  if(mcpServices)registerMcpRoutes(app,mcpServices);
 
   if (identityServices) {
     registerIdentityRoutes(app, identityServices);
