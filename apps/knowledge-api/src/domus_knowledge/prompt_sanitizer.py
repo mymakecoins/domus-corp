@@ -1,6 +1,8 @@
 """Module for prompt templates and sanitization of untrusted RAG content."""
 
+import re
 from typing import Any
+
 
 
 def sanitize_untrusted_text(text: str) -> str:
@@ -59,3 +61,17 @@ def build_sanitized_messages(
         {"role": "system", "content": system_instruction},
         {"role": "user", "content": user_content},
     ]
+
+
+class PromptSanitizer:
+    """Sanitizer for RAG prompts and queries, redacting PII and injection tags."""
+
+    def sanitize(self, text: str) -> str:
+        if not text:
+            return ""
+        # Redact CPF
+        sanitized = re.sub(r"\b\d{3}\.\d{3}\.\d{3}-\d{2}\b", "[CPF REDACTED]", text)
+        # Redact Email
+        sanitized = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[EMAIL REDACTED]", sanitized)
+        return sanitize_untrusted_text(sanitized)
+
