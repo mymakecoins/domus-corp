@@ -92,7 +92,9 @@ export function mapping(error: unknown): { code: string; status: number } {
     codePrefix === "CREDENTIAL_REVOKED" ||
     codePrefix === "CREDENTIAL_EXPIRED" ||
     codePrefix === "CREDENTIAL_TENANT_MISMATCH" ||
-    codePrefix.startsWith("CREDENTIAL_INSUFFICIENT_SCOPES")
+    codePrefix.startsWith("CREDENTIAL_INSUFFICIENT_SCOPES") ||
+    codePrefix === "MCP_PATH_FORBIDDEN" ||
+    codePrefix === "MCP_APPROVAL_REQUIRED"
   ) {
     return { code: codePrefix, status: 403 };
   }
@@ -291,6 +293,26 @@ export function registerMcpRoutes(
         ? body.requiredScopes.map(String)
         : undefined;
 
+      const confirmationToken =
+        typeof body.confirmation_token === "string"
+          ? body.confirmation_token
+          : typeof body.confirmationToken === "string"
+          ? body.confirmationToken
+          : undefined;
+
+      const approvalId =
+        typeof body.approval_id === "string"
+          ? body.approval_id
+          : typeof body.approvalId === "string"
+          ? body.approvalId
+          : undefined;
+
+      const allowedPrefixes = Array.isArray(body.allowed_prefixes)
+        ? body.allowed_prefixes.map(String)
+        : Array.isArray(body.allowedPrefixes)
+        ? body.allowedPrefixes.map(String)
+        : undefined;
+
       const output = await proxyService.executeTool({
         tenantId: actor.tenantId,
         workspaceId,
@@ -298,7 +320,10 @@ export function registerMcpRoutes(
         serverId,
         toolId,
         parameters,
-        requiredScopes
+        requiredScopes,
+        confirmationToken,
+        approvalId,
+        allowedPrefixes
       });
 
       return {

@@ -101,8 +101,8 @@ test("executeTool forwards authorized request with OAuth token and redacts outpu
   });
 
   assert.equal(dispatchedHeaders["Authorization"], "Bearer ya29.secret-access-token");
-  assert.equal((response.result as any).result, "Found document");
-  assert.equal((response.result as any).echoToken, "[REDACTED_OAUTH_TOKEN]");
+  assert.ok((response.result as any).framedOutput.includes('<untrusted_content tool_id="drive_search" risk="LOW">'));
+  assert.ok((response.result as any).framedOutput.includes('[REDACTED_OAUTH_TOKEN]'));
 });
 
 test("executeTool rejects unapproved server (PENDING_SECURITY_APPROVAL) with MCP_SERVER_NOT_APPROVED", async () => {
@@ -251,3 +251,146 @@ test("executeTool rejects revoked token immediately with CREDENTIAL_REVOKED", as
     /CREDENTIAL_REVOKED/
   );
 });
+
+test("executeTool rejects path traversal attempt with MCP_PATH_FORBIDDEN", async () => {
+  const service = new McpProxyService({
+    getServer: async () => mockApprovedServer,
+    getEffectivePolicy: async () => mockEffectivePolicy,
+    getScopedToken: async () => mockActiveToken,
+  });
+
+  await assert.rejects(
+    service.executeTool({
+      tenantId,
+      workspaceId,
+      userId,
+      serverId,
+      toolId: "drive_search",
+      parameters: { filePath: "../../etc/passwd" },
+      allowedPrefixes: ["/workspace/docs"],
+    }),
+    /MCP_PATH_FORBIDDEN/
+  );
+});
+
+test("executeTool rejects HIGH risk tool without confirmation with MCP_APPROVAL_REQUIRED", async () => {
+  const highRiskServer: McpServerEntry = {
+    ...mockApprovedServer,
+    tools: [
+      {
+        toolId: "delete_file",
+        name: "Delete File",
+        description: "Delete file from drive",
+        riskLevel: "HIGH" as any,
+        parametersSchema: {},
+      },
+    ],
+  };
+
+  const service = new McpProxyService({
+    getServer: async () => highRiskServer,
+    getEffectivePolicy: async () => ({ ...mockEffectivePolicy, allowedTools: ["delete_file"] }),
+    getScopedToken: async () => mockActiveToken,
+  });
+
+  await assert.rejects(
+    service.executeTool({
+      tenantId,
+      workspaceId,
+      userId,
+      serverId,
+      toolId: "delete_file",
+      parameters: {},
+    }),
+    /MCP_APPROVAL_REQUIRED/
+  );
+});
+
+test("executeTool succeeds for HIGH risk tool when confirmation token is provided and frames output", async () => {
+  const highRiskServer: McpServerEntry = {
+    ...mockApprovedServer,
+    tools: [
+      {
+        toolId: "delete_file",
+        name: "Delete File",
+        description: "Delete file from drive",
+        riskLevel: "HIGH" as any,
+        parametersSchema: {},
+      },
+    ],
+  };
+
+  const mockFetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ deleted: true }),
+  });
+
+  const service = new McpProxyService({
+    getServer: async () => highRiskServer,
+    getEffectivePolicy: async () => ({ ...mockEffectivePolicy, allowedTools: ["delete_file"] }),
+    getScopedToken: async () => mockActiveToken,
+    fetchImpl: mockFetch as any,
+  });
+
+  const response = await service.executeTool({
+    tenantId,
+    workspaceId,
+    userId,
+    serverId,
+    toolId: "delete_file",
+    parameters: {},
+    confirmationToken: "token-123",
+  });
+
+  assert.equal(response.status, "SUCCESS");
+  const result = response.result as any;
+  assert.ok(result.framedOutput.includes('<untrusted_content tool_id="delete_file" risk="HIGH">'));
+  assert.ok(result.framedOutput.includes('"deleted":true'));
+});
+
+test("executeTool handles timeout sandboxing and aborts when timeout is exceeded", async () => {
+  const mockFetch = async (url: string, init: any) => {
+    return new Promise((_, reject) => {
+      init.signal.addEventListener("abort", () => {
+        const err = new Error("The operation was aborted");
+        err.name = "AbortError";
+        reject(err);
+      });
+    });
+  };
+
+  const timeoutServer: McpServerEntry = {
+    ...mockApprovedServer,
+    tools: [
+      {
+        toolId: "slow_tool",
+        name: "Slow Tool",
+        description: "Takes long time",
+        riskLevel: "low",
+        timeoutMs: 10,
+        parametersSchema: {},
+      },
+    ],
+  };
+
+  const service = new McpProxyService({
+    getServer: async () => timeoutServer,
+    getEffectivePolicy: async () => ({ ...mockEffectivePolicy, allowedTools: ["slow_tool"] }),
+    getScopedToken: async () => mockActiveToken,
+    fetchImpl: mockFetch as any,
+  });
+
+  await assert.rejects(
+    service.executeTool({
+      tenantId,
+      workspaceId,
+      userId,
+      serverId,
+      toolId: "slow_tool",
+      parameters: {},
+    }),
+    /MCP_UPSTREAM_ERROR:504/
+  );
+});
+

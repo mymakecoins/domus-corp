@@ -2,6 +2,8 @@ import { McpServerEntry } from "../../domain/mcp/mcp-catalog.js";
 import { EffectivePolicy } from "../../domain/policy/policy-engine.js";
 import { ScopedOAuthToken, resolveScopedToken } from "../../domain/credentials/scoped-credential-vault.js";
 import { redactObject, redactText } from "../../domain/security/token-redactor.js";
+import { ToolGuardrailService, createToolGuardrailService } from "./tool-guardrail-service.js";
+import { ToolRiskLevel } from "../../domain/security/risk-approval-guard.js";
 
 export type McpToolExecutionInput = Readonly<{
   tenantId: string;
@@ -11,6 +13,9 @@ export type McpToolExecutionInput = Readonly<{
   toolId: string;
   parameters: Record<string, unknown>;
   requiredScopes?: readonly string[];
+  confirmationToken?: string;
+  approvalId?: string;
+  allowedPrefixes?: readonly string[];
 }>;
 
 export type McpToolExecutionOutput = Readonly<{
@@ -25,6 +30,7 @@ export type McpProxyServiceDependencies = Readonly<{
   getServer: (tenantId: string, serverId: string) => Promise<McpServerEntry | null>;
   getEffectivePolicy: (tenantId: string, workspaceId: string, userId: string) => Promise<EffectivePolicy>;
   getScopedToken: (tenantId: string, workspaceId: string, userId: string, providerKey: string) => Promise<ScopedOAuthToken | null>;
+  toolGuardrailService?: ToolGuardrailService;
   fetchImpl?: typeof fetch;
   now?: () => string;
 }>;
@@ -33,6 +39,7 @@ export class McpProxyService {
   private readonly getServer: McpProxyServiceDependencies["getServer"];
   private readonly getEffectivePolicy: McpProxyServiceDependencies["getEffectivePolicy"];
   private readonly getScopedToken: McpProxyServiceDependencies["getScopedToken"];
+  private readonly toolGuardrailService: ToolGuardrailService;
   private readonly fetchImpl: typeof fetch;
   private readonly now: () => string;
 
@@ -40,6 +47,7 @@ export class McpProxyService {
     this.getServer = deps.getServer;
     this.getEffectivePolicy = deps.getEffectivePolicy;
     this.getScopedToken = deps.getScopedToken;
+    this.toolGuardrailService = deps.toolGuardrailService ?? createToolGuardrailService();
     this.fetchImpl = deps.fetchImpl ?? globalThis.fetch;
     this.now = deps.now ?? (() => new Date().toISOString());
   }
@@ -80,7 +88,23 @@ export class McpProxyService {
       requiredScopes: input.requiredScopes ?? [],
     });
 
+    const rawRisk = toolDef.riskLevel ? String(toolDef.riskLevel).toUpperCase() : "LOW";
+    const normalizedRiskLevel: ToolRiskLevel =
+      rawRisk === "IRREVERSIBLE" ? "CRITICAL" : (rawRisk as ToolRiskLevel);
+
+    this.toolGuardrailService.validatePreExecution({
+      toolId: input.toolId,
+      riskLevel: normalizedRiskLevel,
+      parameters: input.parameters,
+      allowedPrefixes: input.allowedPrefixes,
+      confirmationToken: input.confirmationToken,
+      approvalId: input.approvalId,
+    });
+
     const endpoint = `${server.endpointUrl}/tools/${encodeURIComponent(input.toolId)}/execute`;
+    const timeoutMs = toolDef.timeoutMs ?? 5000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const response = await this.fetchImpl(endpoint, {
@@ -90,6 +114,7 @@ export class McpProxyService {
           Authorization: `Bearer ${resolvedToken.accessToken}`,
         },
         body: JSON.stringify(input.parameters),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -98,20 +123,30 @@ export class McpProxyService {
 
       const rawJson = await response.json();
       const redactedResult = redactObject(rawJson, [resolvedToken.accessToken]);
+      const framedResult = this.toolGuardrailService.processPostExecution(
+        redactedResult,
+        input.toolId,
+        normalizedRiskLevel
+      );
 
       return Object.freeze({
         serverId: input.serverId,
         toolId: input.toolId,
         status: "SUCCESS",
-        result: redactedResult,
+        result: framedResult,
         executedAt: this.now(),
       });
     } catch (err: any) {
       if (err.message && err.message.startsWith("MCP_")) {
         throw err;
       }
+      if (err.name === "AbortError" || err.message?.includes("aborted")) {
+        throw new Error("MCP_UPSTREAM_ERROR:504");
+      }
       const safeMessage = redactText(err.message || "Execution failed", [resolvedToken.accessToken]);
       throw new Error(`MCP_EXECUTION_FAILED:${safeMessage}`);
+    } finally {
+      clearTimeout(timer);
     }
   }
 }

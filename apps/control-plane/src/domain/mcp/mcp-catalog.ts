@@ -5,8 +5,9 @@ export type McpToolDefinition = Readonly<{
   toolId: string;
   name: string;
   description: string;
-  riskLevel: McpRiskLevel;
   parametersSchema: Record<string, unknown>;
+  riskLevel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | McpRiskLevel;
+  timeoutMs?: number;
 }>;
 
 export type McpServerEntry = Readonly<{

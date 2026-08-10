@@ -312,7 +312,8 @@ test("POST /v1/mcp/tools/execute executes tool and redacts OAuth token in respon
   assert.equal(response.statusCode, 200);
   const body = response.json();
   assert.equal(body.status, "SUCCESS");
-  assert.equal(body.result.secret, "[REDACTED_OAUTH_TOKEN]");
+  assert.ok(body.result.framedOutput.includes('<untrusted_content tool_id="t1" risk="LOW">'));
+  assert.ok(body.result.framedOutput.includes('[REDACTED_OAUTH_TOKEN]'));
 });
 
 test("POST /v1/mcp/tools/execute fails closed with 403 Forbidden for MCP_SERVER_NOT_APPROVED", async () => {
@@ -465,3 +466,78 @@ test("POST /v1/mcp/tools/execute handles upstream timeout with 504 Gateway Timeo
   assert.equal(response.statusCode, 504);
   assert.deepEqual(response.json(), { code: "MCP_GATEWAY_TIMEOUT" });
 });
+
+test("POST /v1/mcp/tools/execute maps MCP_PATH_FORBIDDEN to 403 Forbidden", async () => {
+  const proxyService = new McpProxyService({
+    getServer: async () => ({
+      serverId: "44444444-4444-4444-8444-444444444444", tenantId: actor.tenantId, name: "S1", description: "D", ownerUserId: actor.userId,
+      endpointUrl: "https://mcp.internal/t", tools: [{ toolId: "t1", name: "T1", description: "D", riskLevel: "low", parametersSchema: {} }],
+      enabled: true, status: "APPROVED", allowedWorkspaces: [actor.workspaceId], createdAt: "2026-08-10T12:00:00.000Z", updatedAt: "2026-08-10T12:00:00.000Z"
+    }),
+    getEffectivePolicy: async () => ({
+      tenantId: actor.tenantId, workspaceId: actor.workspaceId, userId: actor.userId, deviceId: "d1", requestId: "r1", policyVersion: "v1",
+      allowedSources: [], allowedAssets: [], allowedModels: [], allowedTools: ["t1"], allowedActions: [], allowedClassifications: [],
+      retentionRules: {}, freshnessRules: {}, insightRules: { allowed: true }, budgetScope: { scopeId: actor.workspaceId, currency: "USD", limitMinor: 100, remainingMinor: 100 },
+      decision: "ALLOW", denyReasons: [], provenance: [], evaluatedAt: "2026-08-10T12:00:00.000Z", expiresAt: "2026-08-10T13:00:00.000Z"
+    }),
+    getScopedToken: async () => ({
+      tokenId: "tok-1", tenantId: actor.tenantId, workspaceId: actor.workspaceId, userId: actor.userId, providerKey: "s1",
+      accessToken: "ya29.secret-access-token", scopes: [], expiresAt: "2099-01-01T00:00:00.000Z", status: "ACTIVE"
+    })
+  });
+
+  const services = createServices({ proxyService });
+  const app = Fastify();
+  registerMcpRoutes(app, services);
+
+  const response = await app.inject({
+    method: "POST",
+    url: "/v1/mcp/tools/execute",
+    payload: {
+      server_id: "44444444-4444-4444-8444-444444444444",
+      tool_id: "t1",
+      parameters: { filePath: "../../etc/passwd" },
+      allowed_prefixes: ["/workspace/docs"]
+    }
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.deepEqual(response.json(), { code: "MCP_PATH_FORBIDDEN" });
+});
+
+test("POST /v1/mcp/tools/execute maps MCP_APPROVAL_REQUIRED to 403 Forbidden", async () => {
+  const proxyService = new McpProxyService({
+    getServer: async () => ({
+      serverId: "44444444-4444-4444-8444-444444444444", tenantId: actor.tenantId, name: "S1", description: "D", ownerUserId: actor.userId,
+      endpointUrl: "https://mcp.internal/t", tools: [{ toolId: "t1", name: "T1", description: "D", riskLevel: "HIGH", parametersSchema: {} }],
+      enabled: true, status: "APPROVED", allowedWorkspaces: [actor.workspaceId], createdAt: "2026-08-10T12:00:00.000Z", updatedAt: "2026-08-10T12:00:00.000Z"
+    }),
+    getEffectivePolicy: async () => ({
+      tenantId: actor.tenantId, workspaceId: actor.workspaceId, userId: actor.userId, deviceId: "d1", requestId: "r1", policyVersion: "v1",
+      allowedSources: [], allowedAssets: [], allowedModels: [], allowedTools: ["t1"], allowedActions: [], allowedClassifications: [],
+      retentionRules: {}, freshnessRules: {}, insightRules: { allowed: true }, budgetScope: { scopeId: actor.workspaceId, currency: "USD", limitMinor: 100, remainingMinor: 100 },
+      decision: "ALLOW", denyReasons: [], provenance: [], evaluatedAt: "2026-08-10T12:00:00.000Z", expiresAt: "2026-08-10T13:00:00.000Z"
+    }),
+    getScopedToken: async () => ({
+      tokenId: "tok-1", tenantId: actor.tenantId, workspaceId: actor.workspaceId, userId: actor.userId, providerKey: "s1",
+      accessToken: "ya29.secret-access-token", scopes: [], expiresAt: "2099-01-01T00:00:00.000Z", status: "ACTIVE"
+    })
+  });
+
+  const services = createServices({ proxyService });
+  const app = Fastify();
+  registerMcpRoutes(app, services);
+
+  const response = await app.inject({
+    method: "POST",
+    url: "/v1/mcp/tools/execute",
+    payload: {
+      server_id: "44444444-4444-4444-8444-444444444444",
+      tool_id: "t1"
+    }
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.deepEqual(response.json(), { code: "MCP_APPROVAL_REQUIRED" });
+});
+
