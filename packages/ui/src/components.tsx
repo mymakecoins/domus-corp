@@ -248,4 +248,64 @@ export function KnowledgeAssetRow({ name, owner, status }: { name: string; owner
 export function StreamingIndicator({ label = 'Gerando resposta' }: { label?: string }) { return <div role="status" aria-live="polite" className="domus-streaming"><Activity aria-hidden="true" /><span>{label}</span></div>; }
 export function EmptyStateWithNextAction({ title, description, action }: { title: string; description: string; action: React.ReactNode }) { return <Card><CardHeader><CardTitle>{title}</CardTitle></CardHeader><CardContent><p>{description}</p>{action}</CardContent></Card>; }
 
+export type InformationType = 'fact' | 'inference' | 'recommendation';
+
+export function SeparationBadge({ type }: { type: InformationType }) {
+  const config = {
+    fact: { label: 'Dado Observado (Fato)', tone: 'info' as const },
+    inference: { label: 'Interpretação (Inferência)', tone: 'warning' as const },
+    recommendation: { label: 'Ação Sugerida (Recomendação)', tone: 'success' as const },
+  }[type];
+
+  return <Badge tone={config.tone}>{config.label}</Badge>;
+}
+
+export interface ExecutiveBriefingCardProps {
+  title: string;
+  role: string;
+  timeWindow: string;
+  summary: string;
+  changesCount: number;
+  gapsCount: number;
+  insightsCount: number;
+  onExpand?: () => void;
+}
+
+export function ExecutiveBriefingCard({
+  title,
+  role,
+  timeWindow,
+  summary,
+  changesCount,
+  gapsCount,
+  insightsCount,
+  onExpand,
+}: ExecutiveBriefingCardProps) {
+  return (
+    <Card className="executive-briefing-card">
+      <CardHeader>
+        <div className="briefing-meta">
+          <Badge tone="neutral">{role}</Badge>
+          <Badge tone="neutral">Janela: {timeWindow}</Badge>
+        </div>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="briefing-summary">{summary}</p>
+        <div className="briefing-counters">
+          <span className="counter-tag">{changesCount} mudanças</span>
+          <span className="counter-tag">{gapsCount} gaps</span>
+          <span className="counter-tag">{insightsCount} insights</span>
+        </div>
+        {onExpand && (
+          <Button variant="outline" size="sm" onClick={onExpand}>
+            Visualizar Briefing Completo
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export { buttonVariants };
+
