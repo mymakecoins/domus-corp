@@ -4,10 +4,10 @@ import { Slot } from '@radix-ui/react-slot';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Activity, ChevronDown, ExternalLink, ShieldX, X } from 'lucide-react';
+import { Activity, ChevronDown, ClockAlert, ExternalLink, GitCompareArrows, ShieldCheck, ShieldX, X } from 'lucide-react';
 import React from 'react';
 
-import { AI_SEMANTIC_STATES, assertButtonClassesAllowed, normalizeSelectOptions, type AiSemanticState, type AiTone, type SelectOption } from './tokens.js';
+import { AI_SEMANTIC_STATES, assertButtonClassesAllowed, normalizeSelectOptions, type AiSemanticState, type AiTone, type CitationItem, type EvidenceSource, type FreshnessStatus, type SelectOption } from './tokens.js';
 import { cn } from './utils.js';
 
 const buttonVariants = cva('domus-button', {
@@ -99,12 +99,50 @@ export function Select({ options, placeholder = 'Selecione', order, 'aria-label'
 export const Skeleton = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div aria-hidden="true" className={cn('domus-skeleton', className)} {...props} />;
 
 export function AiSemanticBadge({ state }: { state: AiSemanticState }) { const meta = AI_SEMANTIC_STATES[state]; const Icon = meta.icon; return <Badge tone={meta.tone} title={meta.description}><Icon aria-hidden="true" /><span>{meta.label}</span><span className="sr-only">. {meta.description}</span></Badge>; }
-export function CitationPill({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) { return <Button variant="link" onClick={onClick}><ExternalLink aria-hidden="true" />{children}</Button>; }
+
+export interface CitationPillProps {
+  refCode?: string;
+  label?: string;
+  status?: FreshnessStatus;
+  children?: React.ReactNode;
+  onClick?: () => void;
+}
+
+export function CitationPill({ refCode, label, status, children, onClick }: CitationPillProps) {
+  const displayLabel = label ?? (typeof children === 'string' ? children : refCode ?? 'Citação');
+  const accessibleText = `Ver evidência ${refCode ? `${refCode}: ` : ''}${displayLabel}`;
+  return (
+    <Button variant="link" onClick={onClick} aria-label={accessibleText} className="domus-citation-pill">
+      <ExternalLink aria-hidden="true" />
+      {refCode && <span className="citation-code">{refCode}</span>}
+      <span>{displayLabel}</span>
+      {status && status !== 'vigente' && <span className={`citation-dot dot-${status}`} aria-hidden="true" />}
+    </Button>
+  );
+}
+
 export function AiResponseCard({ state, children, citations }: { state: AiSemanticState; children: React.ReactNode; citations?: React.ReactNode }) { return <Card><CardHeader><AiSemanticBadge state={state} /></CardHeader><CardContent>{children}<div className="domus-actions">{citations}</div></CardContent></Card>; }
-export function EvidenceSheet({ trigger, title, children }: { trigger: React.ReactNode; title: string; children: React.ReactNode }) { return <Sheet><SheetTrigger asChild>{trigger}</SheetTrigger><SheetContent><SheetTitle>{title}</SheetTitle><SheetDescription>Detalhes da evidência autorizada.</SheetDescription>{children}</SheetContent></Sheet>; }
-export function SourceFreshnessBadge({ stale = false }: { stale?: boolean }) { return <Badge tone={stale ? 'warning' : 'success'}>{stale ? <ClockAlertIcon /> : <ShieldCheckIcon />}{stale ? 'Revisão necessária' : 'Fonte vigente'}</Badge>; }
-const ClockAlertIcon = () => <span aria-hidden="true">◷</span>;
-const ShieldCheckIcon = () => <span aria-hidden="true">✓</span>;
+
+export function EvidenceSheet({ trigger, title, children }: { trigger?: React.ReactNode; title?: string; children?: React.ReactNode }) { return <Sheet><SheetTrigger asChild>{trigger}</SheetTrigger><SheetContent><SheetTitle>{title ?? 'Detalhes da evidência'}</SheetTitle><SheetDescription>Detalhes da evidência autorizada.</SheetDescription>{children}</SheetContent></Sheet>; }
+
+export interface SourceFreshnessBadgeProps {
+  status?: FreshnessStatus;
+  stale?: boolean;
+}
+
+export function SourceFreshnessBadge({ status, stale }: SourceFreshnessBadgeProps) {
+  const resolvedStatus: FreshnessStatus = status ?? (stale ? 'obsoleta' : 'vigente');
+  if (resolvedStatus === 'obsoleta') {
+    return <Badge tone="warning"><ClockAlert aria-hidden="true" /><span>Revisão necessária</span></Badge>;
+  }
+  if (resolvedStatus === 'conflitante') {
+    return <Badge tone="warning"><GitCompareArrows aria-hidden="true" /><span>Fontes divergentes</span></Badge>;
+  }
+  if (resolvedStatus === 'restrita') {
+    return <Badge tone="error"><ShieldX aria-hidden="true" /><span>Acesso restrito</span></Badge>;
+  }
+  return <Badge tone="success"><ShieldCheck aria-hidden="true" /><span>Fonte vigente</span></Badge>;
+}
 export function ActionReviewDialog({ trigger, title = 'Revisar ação', children, onConfirm }: { trigger: React.ReactNode; title?: string; children: React.ReactNode; onConfirm?: () => void }) { return <Dialog><DialogTrigger asChild>{trigger}</DialogTrigger><DialogContent><DialogTitle>{title}</DialogTitle><DialogDescription>Confirme intenção, destino, parâmetros e impacto antes de executar.</DialogDescription>{children}<Button onClick={onConfirm}>Confirmar ação</Button></DialogContent></Dialog>; }
 export function PolicyDecisionBanner({ decision, children }: { decision: 'allowed' | 'denied' | 'conditioned' | 'blocked'; children: React.ReactNode }) { const blocked = decision === 'denied' || decision === 'blocked'; return <Alert><ShieldX aria-hidden="true" /><AlertTitle>{blocked ? 'Operação bloqueada' : decision === 'conditioned' ? 'Operação condicionada' : 'Operação permitida'}</AlertTitle><AlertDescription>{children}</AlertDescription></Alert>; }
 export function BudgetMeter({ used, limit }: { used: number; limit: number }) { const safeLimit = Math.max(0, limit); const value = safeLimit === 0 ? 0 : Math.min(100, Math.max(0, used / safeLimit * 100)); return <div className="domus-meter"><label>Consumo do orçamento</label><progress value={value} max={100}>{value}%</progress><span>{used} de {limit}</span></div>; }

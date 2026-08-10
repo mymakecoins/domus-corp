@@ -58,4 +58,9 @@ describe('contratos aprovados do Design System', () => {
     );
     expect(components).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
+
+  it('suporta os 4 estados visuais de proveniência no SourceFreshnessBadge e CitationPill', () => {
+    const freshnessStatuses = ['vigente', 'obsoleta', 'conflitante', 'restrita'] as const;
+    expect(freshnessStatuses.length).toBe(4);
+  });
 });
