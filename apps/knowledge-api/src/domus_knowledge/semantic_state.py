@@ -96,3 +96,106 @@ class SemanticStateCatalog:
     @classmethod
     def get_metadata(cls, state: SemanticState) -> SemanticStateMetadata:
         return cls._METADATA[state]
+
+
+class SemanticEvaluationResult(BaseModel):
+    state: SemanticState
+    metadata: SemanticStateMetadata
+    conflicting_sources: list[dict[str, str]] = Field(default_factory=list)
+    outdated_sources: list[dict[str, str]] = Field(default_factory=list)
+    reasoning_notes: Optional[str] = None
+
+
+class SemanticStateEvaluator:
+    """Evaluates context evidences and model output to assign one of the 8 semantic states."""
+
+    def evaluate(
+        self,
+        query: str,
+        evidences: list[dict[str, Any]],
+        model_output: str,
+        access_denied: bool = False,
+        is_reasoning: bool = False,
+        is_recommendation: bool = False,
+        has_partial_coverage: bool = False,
+    ) -> SemanticEvaluationResult:
+        # 1. Blocked check
+        if access_denied:
+            state = SemanticState.BLOCKED
+            return SemanticEvaluationResult(
+                state=state,
+                metadata=SemanticStateCatalog.get_metadata(state),
+            )
+
+        # 2. No evidence check
+        if not evidences:
+            state = SemanticState.NO_EVIDENCE
+            return SemanticEvaluationResult(
+                state=state,
+                metadata=SemanticStateCatalog.get_metadata(state),
+            )
+
+        # 3. Conflicting sources check
+        conflicting = [
+            {
+                "source_id": str(e.get("source_id", "unknown")),
+                "conflict_with": str(e.get("conflict_source_id", "")),
+            }
+            for e in evidences
+            if e.get("has_conflict")
+        ]
+        if conflicting:
+            state = SemanticState.CONFLICTING
+            return SemanticEvaluationResult(
+                state=state,
+                metadata=SemanticStateCatalog.get_metadata(state),
+                conflicting_sources=conflicting,
+                reasoning_notes="Fontes fornecem fatos divergentes.",
+            )
+
+        # 4. Outdated sources check
+        outdated = [
+            {
+                "source_id": str(e.get("source_id", "unknown")),
+                "valid_until": str(e.get("valid_until", "")),
+            }
+            for e in evidences
+            if e.get("is_outdated")
+        ]
+        if outdated:
+            state = SemanticState.OUTDATED
+            return SemanticEvaluationResult(
+                state=state,
+                metadata=SemanticStateCatalog.get_metadata(state),
+                outdated_sources=outdated,
+                reasoning_notes="Respostas baseadas em documento fora da vigência.",
+            )
+
+        # 5. Partial coverage check
+        if has_partial_coverage:
+            state = SemanticState.PARTIAL
+            return SemanticEvaluationResult(
+                state=state,
+                metadata=SemanticStateCatalog.get_metadata(state),
+            )
+
+        # 6. Reasoning / Recommendation check
+        if is_recommendation:
+            state = SemanticState.RECOMMENDATION
+            return SemanticEvaluationResult(
+                state=state,
+                metadata=SemanticStateCatalog.get_metadata(state),
+            )
+        if is_reasoning:
+            state = SemanticState.INFERRED
+            return SemanticEvaluationResult(
+                state=state,
+                metadata=SemanticStateCatalog.get_metadata(state),
+            )
+
+        # 7. Default: Grounded
+        state = SemanticState.GROUNDED
+        return SemanticEvaluationResult(
+            state=state,
+            metadata=SemanticStateCatalog.get_metadata(state),
+        )
