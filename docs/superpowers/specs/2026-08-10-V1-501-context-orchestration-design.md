@@ -1,54 +1,54 @@
-# Design Specification: V1-501 — Context Orchestrator & TS Model Gateway Client
+# Especificação de Design: V1-501 — Orquestrador de Contexto e Cliente do Model Gateway TS
 
-## Executive Summary
+## Resumo Executivo
 
-This specification defines the implementation of issue **V1-501** within `apps/knowledge-api`. It establishes the Python Context Orchestration layer, Prompt Sanitization engine, and Fail-Closed TypeScript Model Gateway HTTP Client for Wave 5 (E5: Intelligence Plane).
+Esta especificação define a implementação da issue **V1-501** no serviço `apps/knowledge-api`. Ela estabelece a camada de Orquestração de Contexto em Python, o motor de Sanitização de Prompts e o Cliente HTTP Fail-Closed para o Model Gateway TypeScript no âmbito da Onda 5 (E5: Plano de Inteligência).
 
 ---
 
-## 1. System Architecture & Module Boundaries
+## 1. Arquitetura do Sistema e Fronteiras de Módulos
 
-The implementation extends `apps/knowledge-api/src/domus_knowledge` with three new focused modules:
+A implementação expande o pacote `apps/knowledge-api/src/domus_knowledge` com três novos submódulos focados:
 
 ```
 apps/knowledge-api/src/domus_knowledge/
-├── prompt_sanitizer.py       # Prompt templates & untrusted content sanitization
-├── context_orchestrator.py   # Context assembly, ACL metadata enforcement, budget limits
-├── model_gateway_client.py   # Fail-closed HTTP client for Control-Plane TS Model Gateway
-└── main.py                   # FastAPI routing for intelligence endpoints
+├── prompt_sanitizer.py       # Templates de prompt e sanitização de conteúdo não confiável
+├── context_orchestrator.py   # Montagem de contexto, aplicação de ACL e limites de orçamento
+├── model_gateway_client.py   # Cliente HTTP fail-closed para o Model Gateway TS do Control-Plane
+└── main.py                   # Rotas FastAPI para os endpoints de inteligência
 ```
 
-### Inviolable Architectural Constraints
-1. **No External Provider Egress**: The Python runtime must NEVER hold direct LLM provider credentials (OpenAI, Anthropic, Gemini, etc.) and must NEVER make direct outbound HTTP requests to external AI providers.
-2. **Mandatory Routing via TS Model Gateway**: All model inferences must route strictly through Control-Plane (`http://control-plane...` or configured `CONTROL_PLANE_URL`).
-3. **Fail-Closed Guarantee**: If Control-Plane is unreachable, times out, or returns a policy/budget rejection, the client fails immediately with `ModelGatewayError` without falling back to external providers.
-4. **Prompt Injection Boundary**: All retrieved evidence chunks must be sanitized and enclosed within explicit `<untrusted_content>` tags, escaping any nested closing tags.
+### Restrições Arquiteturais Invioláveis
+1. **Sem Egress para Provedores Externos**: O runtime Python **JAMAIS** deve conter credenciais diretas de provedores de LLM (OpenAI, Anthropic, Gemini, etc.) e **JAMAIS** deve realizar requisições HTTP diretas para APIs externas de IA.
+2. **Roteamento Obrigatório pelo Model Gateway TS**: Todas as inferências de modelos devem trafegar estritamente pelo Control-Plane (`http://control-plane...` ou `CONTROL_PLANE_URL` configurado).
+3. **Garantia de Fail-Closed**: Se o Control-Plane estiver inacessível, sofrer timeout ou retornar rejeição por política/orçamento, o cliente falha imediatamente lançando `ModelGatewayError`, sem executar fallback para provedores externos.
+4. **Fronteira contra Prompt Injection**: Todo trecho de evidência recuperado deve ser sanitizado e envelopado dentro de tags explícitas `<untrusted_content>`, escapando quaisquer tags de fechamento internas.
 
 ---
 
-## 2. Component Design
+## 2. Design dos Componentes
 
-### 2.1 Prompt Sanitizer (`prompt_sanitizer.py`)
-- **Sanitizes Content**: Replaces any closing `</untrusted_content>` or malicious XML/tag injection sequences inside retrieved text.
-- **Encloses Evidence**: Wraps each evidence chunk in:
+### 2.1 Sanitizador de Prompts (`prompt_sanitizer.py`)
+- **Sanitização de Conteúdo**: Substitui/escapa sequências de fechamento `</untrusted_content>` ou tentativas de injeção XML/tags dentro dos textos recuperados.
+- **Envelopamento de Evidências**: Envolve cada trecho de evidência no formato:
   ```xml
   <untrusted_content source_id="{source_id}" version_id="{version_id}" chunk_id="{chunk_id}" owner="{owner}">
-  {sanitized_text}
+  {texto_sanitizado}
   </untrusted_content>
   ```
-- **Builds Messages**: Assembles system instructions (non-overridable rules) and user prompt containing the enclosed evidence chunks.
+- **Construção de Mensagens**: Monta as instruções do sistema (regras invioláveis) e o prompt do usuário contendo os blocos de evidências delimitados.
 
-### 2.2 Context Orchestrator (`context_orchestrator.py`)
-- **Input**: User query/intent, tenant/user context, and retrieved evidence items (`RetrievalPage` / `Citation`).
-- **Processing**:
-  - Filters out any un-authorized items.
-  - Formats provenance metadata per chunk.
-  - Evaluates token budget limits and policy versioning.
-- **Output**: `OrchestratedContextResult` containing structured system/user prompt messages and token allocation estimates.
+### 2.2 Orquestrador de Contexto (`context_orchestrator.py`)
+- **Entrada**: Intenção/pergunta do usuário, contexto do usuário/tenant e itens de evidência recuperados (`RetrievalPage` / `Citation`).
+- **Processamento**:
+  - Filtra itens não autorizados por ACL/RLS.
+  - Formata metadados de proveniência para cada trecho.
+  - Avalia limites de orçamento de tokens e versionamento de política (`policy_version`).
+- **Saída**: Objeto `OrchestratedContextResult` contendo as mensagens estruturadas de prompt (System e User) e estimativas de alocação de tokens.
 
-### 2.3 Fail-Closed Model Gateway Client (`model_gateway_client.py`)
-- **Transport**: `httpx.AsyncClient` communicating with `/v1/model/responses` (unary) and `/v1/model/responses/stream` (SSE).
-- **Request Schema** (v2.17.0 alignment):
+### 2.3 Cliente HTTP Fail-Closed do Model Gateway (`model_gateway_client.py`)
+- **Transporte**: `httpx.AsyncClient` comunicando com `/v1/model/responses` (unário) e `/v1/model/responses/stream` (SSE).
+- **Schema da Requisição** (alinhado com a versão 2.17.0 dos contratos):
   ```json
   {
     "schema_version": "1.0.0",
@@ -59,27 +59,27 @@ apps/knowledge-api/src/domus_knowledge/
     "maximum_output_tokens": 1024
   }
   ```
-- **Error Handling**: Raises `ModelGatewayError` on connection failure, non-200 responses, or SSE format violations.
+- **Tratamento de Erros**: Lança `ModelGatewayError` em caso de falha de conexão, respostas não-200 ou violações no formato do stream SSE.
 
-### 2.4 API Routes (`main.py`)
-- `POST /v1/intelligence/orchestrate`: Orchestrates context and invokes unary Model Gateway response.
-- `POST /v1/intelligence/orchestrate/stream`: Orchestrates context and streams SSE response.
-
----
-
-## 3. Test Strategy & Double Verification
-
-1. **Unit Tests**:
-   - `test_prompt_sanitizer.py`: Tests tag escaping, XML injection defenses, and message assembly.
-   - `test_context_orchestrator.py`: Tests ACL filtering enforcement and provenance metadata binding.
-   - `test_model_gateway_client.py`: Tests contract serialization, SSE stream parsing, and fail-closed exception raising on server errors.
-2. **Integration Tests**:
-   - `test_intelligence_endpoints.py`: End-to-end FastAPI endpoint tests using `httpx.MockTransport` (zero external network traffic).
+### 2.4 Rotas da API (`main.py` / `intelligence_routes.py`)
+- `POST /v1/intelligence/orchestrate`: Orquestra o contexto e executa chamada unária ao Model Gateway.
+- `POST /v1/intelligence/orchestrate/stream`: Orquestra o contexto e transmite a resposta em formato streaming SSE.
 
 ---
 
-## 4. Spec Self-Review
-- **Placeholders**: None.
-- **Internal Consistency**: Aligns 100% with ADR-001, JSON Schema v2.17.0, and Wave 5 readiness requirements.
-- **Scope Check**: Single implementation plan focused purely on V1-501.
-- **Ambiguity Check**: Fail-closed rules, payload schemas, and module locations are explicitly defined.
+## 3. Estratégia de Testes e Verificação com Doubles Locais
+
+1. **Testes Unitários**:
+   - `test_prompt_sanitizer.py`: Valida escape de tags, defesas contra injeções XML e montagem correta das mensagens.
+   - `test_context_orchestrator.py`: Valida aplicação dos filtros de ACL/RLS e vinculação de metadados de proveniência.
+   - `test_model_gateway_client.py`: Valida serialização dos contratos, parsing de SSE streaming e disparo de exceções fail-closed em erros do servidor.
+2. **Testes de Integração**:
+   - `test_intelligence_endpoints.py`: Testes ponta a ponta dos endpoints FastAPI usando `httpx.MockTransport` (garantindo zero tráfego para a rede externa).
+
+---
+
+## 4. Auto-Revisão da Especificação
+- **Placeholders**: Nenhum.
+- **Consistência Interna**: Alinhado 100% com ADR-001, JSON Schema v2.17.0 e os requisitos de prontidão da Onda 5.
+- **Escopo**: Focado exclusivamente na execução da issue V1-501.
+- **Ambiguidade**: Regras de fail-closed, schemas de payload e caminhos de módulos estão explicitamente definidos.
