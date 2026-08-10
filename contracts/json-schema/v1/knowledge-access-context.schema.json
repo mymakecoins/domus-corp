@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://domus.corp/schemas/v1/knowledge-access-context.schema.json",
+  "title": "KnowledgeAccessContext",
+  "type": "object",
+  "required": [
+    "tenant_id",
+    "workspace_id",
+    "user_id",
+    "allowed_sources",
+    "allowed_classifications",
+    "classification",
+    "policy_version",
+    "request_id",
+    "trace_id",
+    "expires_at"
+  ],
+  "properties": {
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "workspace_id": { "type": "string", "format": "uuid" },
+    "user_id": { "type": "string" },
+    "allowed_sources": { "type": "array", "items": { "type": "string" } },
+    "allowed_assets": { "type": "array", "items": { "type": "string" } },
+    "allowed_classifications": { "type": "array", "items": { "type": "string" } },
+    "classification": { "type": "string" },
+    "policy_version": { "type": "string" },
+    "request_id": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "purpose": { "type": "string" },
+    "expires_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

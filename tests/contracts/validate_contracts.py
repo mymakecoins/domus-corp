@@ -50,6 +50,8 @@ EXPECTED = {
     "knowledge-entity.schema.json", "knowledge-relation.schema.json",
     "claim-review-command.schema.json", "claim-conflict-resolution.schema.json",
     "knowledge-graph-event.schema.json",
+    "knowledge-access-context.schema.json", "knowledge-chunk-v1.schema.json",
+    "knowledge-embedding-v1.schema.json", "knowledge-retrieval-result.schema.json",
 }
 
 IDENTITY_SCHEMAS = {
@@ -110,10 +112,14 @@ def validate(instance, schema, base: Path, at: str = "$"):
         "integer": lambda x: isinstance(x, int) and not isinstance(x, bool),
         "number": lambda x: isinstance(x, (int, float)) and not isinstance(x, bool),
         "boolean": lambda x: isinstance(x, bool),
+        "null": lambda x: x is None,
     }
-    if kind in checks and not checks[kind](instance):
-        raise ContractViolation(f"{at}: expected {kind}")
-    if kind == "object":
+    kinds = kind if isinstance(kind, list) else ([kind] if kind else [])
+    if kinds:
+        if not any(k in checks and checks[k](instance) for k in kinds):
+            raise ContractViolation(f"{at}: expected {kind}")
+
+    if isinstance(instance, dict):
         properties = schema.get("properties", {})
         missing = set(schema.get("required", [])) - set(instance)
         if missing:
@@ -128,14 +134,14 @@ def validate(instance, schema, base: Path, at: str = "$"):
         for name, child in properties.items():
             if name in instance:
                 validate(instance[name], child, base, f"{at}.{name}")
-    elif kind == "array":
+    elif isinstance(instance, list) and not isinstance(instance, (str, bytes)):
         if len(instance) < schema.get("minItems", 0):
             raise ContractViolation(f"{at}: too few items")
         if schema.get("uniqueItems") and len({json.dumps(x, sort_keys=True) for x in instance}) != len(instance):
             raise ContractViolation(f"{at}: duplicate items")
         for index, item in enumerate(instance):
             validate(item, schema.get("items", {}), base, f"{at}[{index}]")
-    elif kind == "string":
+    elif isinstance(instance, str):
         if len(instance) < schema.get("minLength", 0):
             raise ContractViolation(f"{at}: string is too short")
         if "maxLength" in schema and len(instance) > schema["maxLength"]:
@@ -152,10 +158,11 @@ def validate(instance, schema, base: Path, at: str = "$"):
                 datetime.fromisoformat(instance.replace("Z", "+00:00"))
             except ValueError as exc:
                 raise ContractViolation(f"{at}: invalid date-time") from exc
-    elif kind in ("integer", "number"):
+    elif isinstance(instance, (int, float)) and not isinstance(instance, bool):
         if "minimum" in schema and instance < schema["minimum"]:
             raise ContractViolation(f"{at}: below minimum")
         if "maximum" in schema and instance > schema["maximum"]:
+            raise ContractViolation(f"{at}: above maximum")
             raise ContractViolation(f"{at}: above maximum")
 
 

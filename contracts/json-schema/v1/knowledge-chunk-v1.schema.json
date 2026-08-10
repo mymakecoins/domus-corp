@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://domus.corp/schemas/v1/knowledge-chunk-v1.schema.json",
+  "title": "KnowledgeChunkV1",
+  "type": "object",
+  "required": [
+    "chunk_id",
+    "tenant_id",
+    "workspace_id",
+    "asset_id",
+    "version_id",
+    "source_id",
+    "ordinal",
+    "checksum",
+    "classification",
+    "policy_version",
+    "chunking_version"
+  ],
+  "properties": {
+    "chunk_id": { "type": "string" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "workspace_id": { "type": "string", "format": "uuid" },
+    "asset_id": { "type": "string", "format": "uuid" },
+    "version_id": { "type": "string", "format": "uuid" },
+    "source_id": { "type": "string" },
+    "ordinal": { "type": "integer", "minimum": 0, "maximum": 199 },
+    "start_offset": { "type": "integer", "minimum": 0 },
+    "end_offset": { "type": "integer", "minimum": 1 },
+    "checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "classification": { "type": "string" },
+    "policy_version": { "type": "string" },
+    "chunking_version": { "type": "string" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "additionalProperties": false
+}

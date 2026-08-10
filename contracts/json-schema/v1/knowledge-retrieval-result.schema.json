@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://domus.corp/schemas/v1/knowledge-retrieval-result.schema.json",
+  "title": "KnowledgeRetrievalResult",
+  "type": "object",
+  "required": [
+    "chunk_id",
+    "asset_id",
+    "version_id",
+    "source_id",
+    "locator",
+    "score",
+    "checksum",
+    "freshness"
+  ],
+  "properties": {
+    "chunk_id": { "type": "string" },
+    "asset_id": { "type": "string" },
+    "version_id": { "type": "string" },
+    "source_id": { "type": "string" },
+    "locator": { "type": "string" },
+    "score": { "type": "number" },
+    "evidence_ids": { "type": "array", "items": { "type": "string" } },
+    "checksum": { "type": "string" },
+    "freshness": { "type": "string" }
+  },
+  "additionalProperties": false
+}
