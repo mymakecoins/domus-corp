@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KnowledgeGap",
+  "type": "object",
+  "required": ["tenant_id", "workspace_ids", "topic", "sample_queries"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string" },
+    "workspace_ids": { "type": "array", "items": { "type": "string" } },
+    "topic": { "type": "string" },
+    "sample_queries": { "type": "array", "items": { "type": "string" } },
+    "frequency": { "type": "integer" },
+    "impact_score": { "type": "number" },
+    "candidate_sources": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["open", "in_review", "resolved", "ignored"] },
+    "assigned_owner": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

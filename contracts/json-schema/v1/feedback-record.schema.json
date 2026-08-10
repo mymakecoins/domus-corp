@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FeedbackRecord",
+  "type": "object",
+  "required": ["tenant_id", "workspace_id", "user_id", "target_id", "target_type", "feedback_type"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string" },
+    "workspace_id": { "type": "string" },
+    "user_id": { "type": "string" },
+    "target_id": { "type": "string" },
+    "target_type": { "type": "string", "enum": ["response", "evidence", "claim", "process", "policy"] },
+    "feedback_type": { "type": "string", "enum": ["error", "missing_source", "outdated", "low_utility", "policy_issue"] },
+    "rating": { "type": "integer" },
+    "comment": { "type": "string" },
+    "evidence_version": { "type": "string" },
+    "status": { "type": "string", "enum": ["pending", "under_review", "resolved", "dismissed"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

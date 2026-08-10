@@ -52,6 +52,8 @@ EXPECTED = {
     "knowledge-graph-event.schema.json",
     "knowledge-access-context.schema.json", "knowledge-chunk-v1.schema.json",
     "knowledge-embedding-v1.schema.json", "knowledge-retrieval-result.schema.json",
+    "feedback-record.schema.json", "quality-loop-suggestion.schema.json",
+    "knowledge-gap.schema.json",
 }
 
 IDENTITY_SCHEMAS = {

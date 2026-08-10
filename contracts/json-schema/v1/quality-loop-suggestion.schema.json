@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QualityLoopSuggestion",
+  "type": "object",
+  "required": ["tenant_id", "target_type", "target_id", "suggested_action", "recommended_owner"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string" },
+    "target_type": { "type": "string" },
+    "target_id": { "type": "string" },
+    "suggested_action": { "type": "string" },
+    "recommended_owner": { "type": "string" },
+    "frequency_count": { "type": "integer" },
+    "impact_score": { "type": "number" },
+    "status": { "type": "string", "enum": ["open", "in_review", "resolved", "dismissed"] },
+    "before_state": { "type": "object" },
+    "after_state": { "type": "object" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}
