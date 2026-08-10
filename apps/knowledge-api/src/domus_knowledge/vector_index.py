@@ -19,6 +19,7 @@ class Chunk:
     workspace_id: str
     asset_id: str
     version_id: str
+    source_id: str
     ordinal: int
     start_offset: int
     end_offset: int
@@ -26,6 +27,7 @@ class Chunk:
     classification: str
     policy_version: str
     chunking_version: str = "1"
+    valid_until: str | None = None
 
 
 @dataclass(frozen=True)
@@ -50,10 +52,12 @@ def derive_chunks(
     workspace_id: str,
     asset_id: str,
     version_id: str,
+    source_id: str = "src_1",
     text: str,
     classification: str,
     policy_version: str,
     max_chars: int = 2048,
+    valid_until: str | None = None,
 ) -> tuple[Chunk, ...]:
     if not text or max_chars < 1 or max_chars > 8192:
         raise VectorIndexError("CHUNK_INPUT_INVALID")
@@ -72,12 +76,14 @@ def derive_chunks(
                 workspace_id,
                 asset_id,
                 version_id,
+                source_id,
                 ordinal,
                 start,
                 start + len(part),
                 checksum,
                 classification,
                 policy_version,
+                valid_until=valid_until,
             )
         )
     return tuple(out)
