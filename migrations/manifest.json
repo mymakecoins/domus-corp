@@ -102,6 +102,9 @@
     },
     {
       "version":"000020","issue":"V1-410","description":"Chunks e embeddings versionados para índice vetorial","impact":"Adiciona lineage, checksums, dimensões bounded e RLS sem persistir conteúdo ou vetores","risk":"high","owner":"Knowledge Engineering / Security / DBA","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000020_v1_410_vector_index.down.sql"
+    },
+    {
+      "version":"000021","issue":"V1-411","description":"Busca híbrida bounded e retrieval citável","impact":"Adiciona auditoria de consultas sem conteúdo e garante escopo antes do ranking","risk":"high","owner":"Knowledge Engineering / Security / DBA","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000021_v1_411_retrieval_audit.down.sql"
     }
   ]
 }

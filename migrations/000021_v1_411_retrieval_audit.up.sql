@@ -1,0 +1,6 @@
+BEGIN;
+CREATE TABLE knowledge_retrieval_audit(tenant_id uuid NOT NULL,workspace_id uuid NOT NULL,event_id uuid NOT NULL,request_id uuid NOT NULL,user_id uuid NOT NULL,policy_version text NOT NULL,candidate_count integer NOT NULL CHECK(candidate_count BETWEEN 0 AND 200),returned_count integer NOT NULL CHECK(returned_count BETWEEN 0 AND 50),cursor_hash text,occurred_at timestamptz NOT NULL,PRIMARY KEY(tenant_id,workspace_id,event_id));
+REVOKE ALL ON knowledge_retrieval_audit FROM PUBLIC; GRANT INSERT,SELECT ON knowledge_retrieval_audit TO domus_knowledge_runtime;
+ALTER TABLE knowledge_retrieval_audit ENABLE ROW LEVEL SECURITY; ALTER TABLE knowledge_retrieval_audit FORCE ROW LEVEL SECURITY;
+CREATE POLICY retrieval_audit_scope ON knowledge_retrieval_audit TO domus_knowledge_runtime USING(tenant_id=domus_security.current_uuid('app.current_tenant_id') AND workspace_id=domus_security.current_uuid('app.current_workspace_id')) WITH CHECK(tenant_id=domus_security.current_uuid('app.current_tenant_id') AND workspace_id=domus_security.current_uuid('app.current_workspace_id'));
+INSERT INTO schema_migrations(version,description) VALUES(21,'V1-411 bounded hybrid retrieval audit') ON CONFLICT(version) DO NOTHING; COMMIT;
