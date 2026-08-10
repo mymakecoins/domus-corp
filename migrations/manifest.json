@@ -96,6 +96,9 @@
     },
     {
       "version":"000018","issue":"V1-408","description":"Knowledge Graph Lite com claims e evidências","impact":"Adiciona lineage, fatos/inferências, entidades/relações bounded e outbox sem conteúdo","risk":"high","owner":"Backend Python / DBA / Knowledge","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000018_v1_408_knowledge_graph.down.sql"
+    },
+    {
+      "version":"000019","issue":"V1-409","description":"Contexto seguro e auditoria de autorização pré-retrieval","impact":"Adiciona RLS e registro de decisão sem conteúdo, com filtros bounded antes de Qdrant","risk":"high","owner":"Security / Backend Python / DBA","requiredReviewers":["DBA","Security","Privacy"],"rollback":"migrations/000019_v1_409_access_control.down.sql"
     }
   ]
 }
