@@ -1,13 +1,29 @@
 """Minimal, governed entry point for the Knowledge runtime."""
 
-from typing import Any
+import uuid
+from typing import Any, Optional
 
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
 from domus_knowledge.access_control import build_authorized_filter, derive_access_context
 from domus_knowledge.config import load_config
+from domus_knowledge.context_orchestrator import ContextOrchestrator
+from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
 from domus_knowledge.retrieval import hybrid_search
+
+
+class OrchestrateRequest(BaseModel):
+    query: str = Field(..., description="Pergunta ou intenção do usuário.")
+    user_roles: list[str] = Field(default_factory=lambda: ["user"], description="Papéis/escopos do usuário.")
+    evidences: list[dict[str, Any]] = Field(default_factory=list, description="Lista de trechos recuperados.")
+    max_tokens: int = Field(1024, description="Limite máximo de tokens de saída.")
+    idempotency_key: Optional[str] = Field(None, description="Chave de idempotência.")
+
+
+orchestrator = ContextOrchestrator()
+gateway_client = ModelGatewayClient()
 
 
 def create_app() -> FastAPI:
@@ -25,6 +41,30 @@ def create_app() -> FastAPI:
     @app.get("/healthz")
     def healthz() -> dict[str, str]:
         return {"status": "OK"}
+
+    @app.post("/v1/intelligence/orchestrate")
+    async def orchestrate_and_execute(req: OrchestrateRequest) -> dict[str, Any]:
+        idempotency_key = req.idempotency_key or str(uuid.uuid4())
+
+        orchestration = orchestrator.orchestrate(
+            query=req.query,
+            user_roles=req.user_roles,
+            evidences=req.evidences,
+            max_tokens=req.max_tokens,
+        )
+
+        try:
+            result = await gateway_client.execute(
+                idempotency_key=idempotency_key,
+                messages=orchestration.messages,
+                max_tokens=orchestration.maximum_output_tokens,
+            )
+            return {
+                "orchestration": orchestration.model_dump(),
+                "gateway_result": result,
+            }
+        except ModelGatewayError as err:
+            raise HTTPException(status_code=502, detail=str(err))
 
     @app.post("/api/v1/knowledge/access-check", response_model=None)
     async def access_check(request: Request) -> Response | dict[str, Any]:
