@@ -167,7 +167,7 @@ export function EvidenceSheet({ open, onOpenChange, trigger, title, citation, on
                   <EvidenceDetailCard evidence={citation.primaryEvidence} onInspectSource={onInspectSource} />
                 </TabsContent>
                 <TabsContent value="conflict">
-                  <EvidenceDetailCard evidence={citation.conflictingEvidences[0]} onInspectSource={onInspectSource} />
+                  <EvidenceDetailCard evidence={citation.conflictingEvidences[0]!} onInspectSource={onInspectSource} />
                 </TabsContent>
               </Tabs>
             ) : (
