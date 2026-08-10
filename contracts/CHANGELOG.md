@@ -2,6 +2,11 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.16.0] — 2026-08-10
+
+- Adição de evidências, claims, entidades, relações, revisão, conflito e eventos Graph Lite.
+- Statements, excerpts, aliases e justificativas permanecem fora dos eventos.
+
 ## [2.15.0] — 2026-08-10
 
 - Adição de taxonomia versionada, publicação, assignments e reprocessamento.

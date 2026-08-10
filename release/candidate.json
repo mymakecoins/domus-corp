@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-407",
-  "version": "0.26.0",
+  "issue": "V1-408",
+  "version": "0.27.0",
   "classification": "high-p0",
-  "summary": "Taxonomia corporativa versionada, assignments e reprocessamento governado.",
-  "impact": "Adiciona publicação segregada, classificação monotônica e eventos sem definições.",
-  "risks": ["Vocabulário real, owners, regras e operação externa exigem aprovação antes da promoção."],
+  "summary": "Knowledge Graph Lite com claims, evidências, entidades e relações bounded.",
+  "impact": "Adiciona lineage investigável e publicação humana sem liberar exploração pré-ACL.",
+  "risks": ["Extratores, ontologia, alçadas e parâmetros externos exigem homologação antes da promoção."],
   "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-407.md", "docs/evidence/V1-407-verificacao.md"],
+  "evidence": [".ai/context-packs/V1-408.md", "docs/evidence/V1-408-verificacao.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Rollback remove taxonomia V1-407; assets e versões permanecem preservados."
+    "dataCompatibility": "Rollback remove Graph Lite V1-408; assets, versões e taxonomia permanecem preservados."
   },
   "rings": ["internal"],
   "findings": [],
-  "contractsVersion": "2.15.0"
+  "contractsVersion": "2.16.0"
 }

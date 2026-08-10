@@ -1,0 +1,1 @@
+BEGIN;DROP TABLE IF EXISTS knowledge_graph_outbox;DROP TABLE IF EXISTS knowledge_relation;DROP TABLE IF EXISTS knowledge_claim_evidence;DROP TABLE IF EXISTS knowledge_claim;DROP TABLE IF EXISTS knowledge_entity;DROP TABLE IF EXISTS knowledge_evidence;DELETE FROM schema_migrations WHERE version=18;COMMIT;

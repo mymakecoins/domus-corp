@@ -1,4 +1,11 @@
 {
+  "knowledge-evidence-v2.schema.json":{"reason":"excerpt content is forbidden","payload":{"schema_version":"1.0.0","excerpt":"forbidden"}},
+  "knowledge-claim-v2.schema.json":{"reason":"claim requires evidence","payload":{"schema_version":"1.0.0","evidence_ids":[]}},
+  "knowledge-entity.schema.json":{"reason":"aliases are bounded metadata","payload":{"schema_version":"1.0.0","alias_count":51}},
+  "knowledge-relation.schema.json":{"reason":"unknown state fails closed","payload":{"schema_version":"1.0.0","state":"AUTO_CONFIRMED"}},
+  "claim-review-command.schema.json":{"reason":"reason is mandatory","payload":{"schema_version":"1.0.0","reason":"short"}},
+  "claim-conflict-resolution.schema.json":{"reason":"claims cannot merge silently","payload":{"schema_version":"1.0.0","resolution":"MERGE"}},
+  "knowledge-graph-event.schema.json":{"reason":"statement stays outside events","payload":{"schema_version":"1.0.0","statement":"forbidden"}},
   "taxonomy-version.schema.json":{"reason":"only bounded states are accepted","payload":{"schema_version":"1.0.0","state":"AUTO_PUBLISHED"}},
   "taxonomy-publication-command.schema.json":{"reason":"reason is mandatory","payload":{"schema_version":"1.0.0","reason":"short"}},
   "asset-taxonomy-assignment.schema.json":{"reason":"model cannot confirm","payload":{"schema_version":"1.0.0","method":"MODEL","state":"CONFIRMED"}},

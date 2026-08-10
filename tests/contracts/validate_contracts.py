@@ -46,6 +46,10 @@ EXPECTED = {
     "taxonomy-version.schema.json", "taxonomy-publication-command.schema.json",
     "asset-taxonomy-assignment.schema.json", "taxonomy-reprocessing-plan.schema.json",
     "taxonomy-event.schema.json",
+    "knowledge-evidence-v2.schema.json", "knowledge-claim-v2.schema.json",
+    "knowledge-entity.schema.json", "knowledge-relation.schema.json",
+    "claim-review-command.schema.json", "claim-conflict-resolution.schema.json",
+    "knowledge-graph-event.schema.json",
 }
 
 IDENTITY_SCHEMAS = {
@@ -227,7 +231,7 @@ def main() -> int:
     asyncapi = load(asyncapi_path)
     if openapi.get("openapi") != "3.1.0" or openapi.get("info", {}).get("version") != "1.0.0":
         raise ContractViolation("OpenAPI metadata mismatch")
-    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.9.0":
+    if asyncapi.get("asyncapi") != "3.0.0" or asyncapi.get("info", {}).get("version") != "1.10.0":
         raise ContractViolation("AsyncAPI metadata mismatch")
     walk_refs(openapi, openapi_path)
     walk_refs(asyncapi, asyncapi_path)

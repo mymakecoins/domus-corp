@@ -93,6 +93,9 @@
     },
     {
       "version":"000017","issue":"V1-407","description":"Taxonomia versionada, assignments e reprocessamento","impact":"Adiciona termos, classificação monotônica e eventos sem conteúdo","risk":"high","owner":"Product / Knowledge Owners","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000017_v1_407_taxonomy.down.sql"
+    },
+    {
+      "version":"000018","issue":"V1-408","description":"Knowledge Graph Lite com claims e evidências","impact":"Adiciona lineage, fatos/inferências, entidades/relações bounded e outbox sem conteúdo","risk":"high","owner":"Backend Python / DBA / Knowledge","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000018_v1_408_knowledge_graph.down.sql"
     }
   ]
 }
