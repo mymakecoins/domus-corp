@@ -25,25 +25,25 @@ export function redactText(input: string, tokensToScrub: readonly string[] = [])
   return result;
 }
 
-export function redactObject<T>(obj: T, customSensitiveKeys: readonly string[] = []): T {
+export function redactObject<T>(obj: T, tokensToScrub: readonly string[] = []): T {
   if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => redactObject(item, customSensitiveKeys)) as unknown as T;
+    return obj.map((item) => redactObject(item, tokensToScrub)) as unknown as T;
   }
 
-  const sensitive = new Set([...SENSITIVE_KEYS, ...customSensitiveKeys.map((k) => k.toLowerCase())]);
+  const sensitive = new Set([...SENSITIVE_KEYS, ...tokensToScrub.map((k) => k.toLowerCase())]);
   const copy: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
     if (sensitive.has(key.toLowerCase())) {
       copy[key] = "[REDACTED_OAUTH_TOKEN]";
     } else if (value !== null && typeof value === "object") {
-      copy[key] = redactObject(value, customSensitiveKeys);
+      copy[key] = redactObject(value, tokensToScrub);
     } else if (typeof value === "string") {
-      copy[key] = redactText(value);
+      copy[key] = redactText(value, tokensToScrub);
     } else {
       copy[key] = value;
     }
