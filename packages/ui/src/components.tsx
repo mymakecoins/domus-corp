@@ -123,7 +123,104 @@ export function CitationPill({ refCode, label, status, children, onClick }: Cita
 
 export function AiResponseCard({ state, children, citations }: { state: AiSemanticState; children: React.ReactNode; citations?: React.ReactNode }) { return <Card><CardHeader><AiSemanticBadge state={state} /></CardHeader><CardContent>{children}<div className="domus-actions">{citations}</div></CardContent></Card>; }
 
-export function EvidenceSheet({ trigger, title, children }: { trigger?: React.ReactNode; title?: string; children?: React.ReactNode }) { return <Sheet><SheetTrigger asChild>{trigger}</SheetTrigger><SheetContent><SheetTitle>{title ?? 'Detalhes da evidência'}</SheetTitle><SheetDescription>Detalhes da evidência autorizada.</SheetDescription>{children}</SheetContent></Sheet>; }
+export interface EvidenceSheetProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
+  title?: string;
+  citation?: CitationItem;
+  onInspectSource?: (sourceId: string) => void;
+  children?: React.ReactNode;
+}
+
+export function EvidenceSheet({ open, onOpenChange, trigger, title, citation, onInspectSource, children }: EvidenceSheetProps) {
+  const contentTitle = title ?? (citation ? `${citation.refCode ?? ''} ${citation.label}`.trim() : 'Detalhes da evidência');
+  const isRestricted = citation?.status === 'restrita' || citation?.primaryEvidence?.accessRestricted || citation?.primaryEvidence?.freshnessStatus === 'restrita';
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
+      <SheetContent className="domus-evidence-sheet">
+        <SheetTitle>{contentTitle}</SheetTitle>
+        <SheetDescription>Inspeção de proveniência, versão e alçada de autorização.</SheetDescription>
+
+        {isRestricted ? (
+          <PolicyDecisionBanner decision="denied">
+            Acesso Restrito: Os metadados e o trecho desta evidência requerem alçada de autorização superior. Conteúdo protegido por RLS/Policy.
+          </PolicyDecisionBanner>
+        ) : citation?.primaryEvidence ? (
+          <div className="evidence-body">
+            <header className="evidence-header">
+              <SourceFreshnessBadge status={citation.status ?? citation.primaryEvidence.freshnessStatus} />
+              {citation.primaryEvidence.classification && (
+                <Badge tone="neutral">{citation.primaryEvidence.classification}</Badge>
+              )}
+            </header>
+
+            {citation.status === 'conflitante' && citation.conflictingEvidences && citation.conflictingEvidences.length > 0 ? (
+              <Tabs defaultValue="primary" className="evidence-tabs">
+                <TabsList aria-label="Fontes em conflito">
+                  <TabsTrigger value="primary">Fonte A (Principal)</TabsTrigger>
+                  <TabsTrigger value="conflict">Fonte B (Divergente)</TabsTrigger>
+                </TabsList>
+                <TabsContent value="primary">
+                  <EvidenceDetailCard evidence={citation.primaryEvidence} onInspectSource={onInspectSource} />
+                </TabsContent>
+                <TabsContent value="conflict">
+                  <EvidenceDetailCard evidence={citation.conflictingEvidences[0]} onInspectSource={onInspectSource} />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <EvidenceDetailCard evidence={citation.primaryEvidence} onInspectSource={onInspectSource} />
+            )}
+          </div>
+        ) : (
+          children
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function EvidenceDetailCard({ evidence, onInspectSource }: { evidence: EvidenceSource; onInspectSource?: (id: string) => void }) {
+  return (
+    <Card className="evidence-detail-card">
+      <CardHeader>
+        <CardTitle>{evidence.documentTitle}</CardTitle>
+        <p className="evidence-subtitle">
+          Versão {evidence.versionId} • {evidence.sectionLocator}
+        </p>
+      </CardHeader>
+      <CardContent>
+        {evidence.excerpt && (
+          <blockquote className="domus-excerpt" title="Trecho factual recuperado">
+            "{evidence.excerpt}"
+          </blockquote>
+        )}
+        <dl className="evidence-metadata">
+          <div>
+            <dt>Responsável (Owner):</dt>
+            <dd>{evidence.owner ?? 'Não informado'}</dd>
+          </div>
+          {evidence.validityPeriod && (
+            <div>
+              <dt>Vigência:</dt>
+              <dd>
+                {evidence.validityPeriod.start ?? 'N/A'} até {evidence.validityPeriod.end ?? 'N/A'}
+              </dd>
+            </div>
+          )}
+        </dl>
+        {onInspectSource && (
+          <Button variant="outline" size="sm" onClick={() => onInspectSource(evidence.id)}>
+            <ExternalLink aria-hidden="true" />
+            Inspecionar no Knowledge Fabric
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export interface SourceFreshnessBadgeProps {
   status?: FreshnessStatus;
