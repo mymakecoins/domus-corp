@@ -28,7 +28,8 @@ export function frameUntrustedContent(
   }
 
   const injectionDetected = warnings.length > 0;
-  const framedOutput = `<untrusted_content tool_id="${toolId}" risk="${riskLevel}">\n${rawString}\n</untrusted_content>`;
+  const safePayload = rawString.replaceAll("</untrusted_content>", "&lt;/untrusted_content&gt;");
+  const framedOutput = `<untrusted_content tool_id="${toolId}" risk="${riskLevel}">\n${safePayload}\n</untrusted_content>`;
 
   return Object.freeze({
     framedOutput,

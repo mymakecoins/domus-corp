@@ -25,4 +25,17 @@ describe("RiskApprovalGuard", () => {
     const resCrit = validateRiskApproval("CRITICAL", undefined, "appr-456");
     assert.equal(resCrit.allowed, true);
   });
+
+  it("normalizes lowercase and mixed case risk levels", () => {
+    const resHighLower = validateRiskApproval("high");
+    assert.equal(resHighLower.allowed, false);
+    assert.equal(resHighLower.reason, "APPROVAL_REQUIRED");
+
+    const resCritLower = validateRiskApproval("critical");
+    assert.equal(resCritLower.allowed, false);
+    assert.equal(resCritLower.reason, "APPROVAL_REQUIRED");
+
+    const resHighWithToken = validateRiskApproval("high", "token-123");
+    assert.equal(resHighWithToken.allowed, true);
+  });
 });

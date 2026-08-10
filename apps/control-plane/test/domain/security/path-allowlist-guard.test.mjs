@@ -21,13 +21,15 @@ describe("PathAllowlistGuard", () => {
   });
 
   it("blocks system paths", () => {
-    const res = validatePathAllowlist("/etc/passwd", ["/workspace/docs"]);
-    assert.equal(res.allowed, false);
-    assert.equal(res.reason, "SYSTEM_PATH_FORBIDDEN");
+    for (const sysPath of ["/etc/passwd", "/tmp/file", "/root/secret", "/usr/bin", "/opt/app", "/dev/null", "C:\\System32\\config", "C:\\Users\\admin"]) {
+      const res = validatePathAllowlist(sysPath, ["/workspace/docs"]);
+      assert.equal(res.allowed, false);
+      assert.equal(res.reason, "SYSTEM_PATH_FORBIDDEN");
+    }
   });
 
   it("blocks paths outside allowlist", () => {
-    const res = validatePathAllowlist("/opt/data/file.txt", ["/workspace/docs"]);
+    const res = validatePathAllowlist("/srv/data/file.txt", ["/workspace/docs"]);
     assert.equal(res.allowed, false);
     assert.equal(res.reason, "PATH_OUTSIDE_ALLOWLIST");
   });

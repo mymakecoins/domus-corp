@@ -5,7 +5,20 @@ export type PathValidationResult = Readonly<{
   reason?: string;
 }>;
 
-const FORBIDDEN_SYSTEM_PREFIXES = ["/etc", "/var", "/proc", "/sys", "C:\\Windows"];
+const FORBIDDEN_SYSTEM_PREFIXES = [
+  "/etc",
+  "/var",
+  "/proc",
+  "/sys",
+  "/root",
+  "/tmp",
+  "/usr",
+  "/opt",
+  "/dev",
+  "C:\\Windows",
+  "C:\\System32",
+  "C:\\Users",
+];
 
 export function validatePathAllowlist(
   inputPath: string,
