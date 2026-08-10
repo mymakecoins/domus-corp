@@ -22,6 +22,30 @@ export type AiSemanticState =
 
 export type AiTone = 'success' | 'warning' | 'info' | 'muted' | 'error';
 
+export type FreshnessStatus = 'vigente' | 'obsoleta' | 'conflitante' | 'restrita';
+
+export interface EvidenceSource {
+  id: string;
+  documentTitle: string;
+  versionId: string;
+  sectionLocator: string;
+  excerpt?: string;
+  owner?: string;
+  validityPeriod?: { start?: string; end?: string };
+  freshnessStatus: FreshnessStatus;
+  classification?: string;
+  accessRestricted?: boolean;
+}
+
+export interface CitationItem {
+  id: string;
+  refCode: string;
+  label: string;
+  status?: FreshnessStatus;
+  primaryEvidence?: EvidenceSource;
+  conflictingEvidences?: EvidenceSource[];
+}
+
 export interface AiSemanticStateMetadata {
   label: string;
   description: string;
