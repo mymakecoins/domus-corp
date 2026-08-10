@@ -11,7 +11,9 @@ from pydantic import BaseModel, Field
 from domus_knowledge.access_control import build_authorized_filter, derive_access_context
 from domus_knowledge.config import load_config
 from domus_knowledge.context_orchestrator import ContextOrchestrator
+from domus_knowledge.decision_support import ComparisonResult, DecisionSupportEngine, SynthesisResult
 from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
+from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse
 from domus_knowledge.retrieval import hybrid_search
 
 
@@ -21,6 +23,11 @@ class OrchestrateRequest(BaseModel):
     evidences: list[dict[str, Any]] = Field(default_factory=list, description="Lista de trechos recuperados.")
     max_tokens: int = Field(1024, description="Limite máximo de tokens de saída.")
     idempotency_key: Optional[str] = Field(None, description="Chave de idempotência.")
+
+
+class CompareRequest(OrchestrateRequest):
+    alternatives: Optional[list[str]] = Field(None, description="Lista opcional de alternativas para comparação.")
+
 
 
 orchestrator = ContextOrchestrator()
@@ -115,6 +122,46 @@ def create_app() -> FastAPI:
                 yield f"event: error\ndata: {err}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+    process_engine = ProcessAssistantEngine(gateway_client=gateway_client)
+    decision_engine = DecisionSupportEngine(gateway_client=gateway_client)
+
+    @app.post("/v1/intelligence/process", response_model=ProcessAssistantResponse)
+    async def process_assistant_endpoint(req: OrchestrateRequest) -> ProcessAssistantResponse:
+        try:
+            return await process_engine.process_query(
+                query=req.query,
+                user_roles=req.user_roles,
+                evidences=req.evidences,
+                max_tokens=req.max_tokens,
+            )
+        except ModelGatewayError as err:
+            raise HTTPException(status_code=502, detail=str(err))
+
+    @app.post("/v1/intelligence/synthesis", response_model=SynthesisResult)
+    async def synthesis_endpoint(req: OrchestrateRequest) -> SynthesisResult:
+        try:
+            return await decision_engine.synthesize(
+                query=req.query,
+                user_roles=req.user_roles,
+                evidences=req.evidences,
+                max_tokens=req.max_tokens,
+            )
+        except ModelGatewayError as err:
+            raise HTTPException(status_code=502, detail=str(err))
+
+    @app.post("/v1/intelligence/compare", response_model=ComparisonResult)
+    async def compare_endpoint(req: CompareRequest) -> ComparisonResult:
+        try:
+            return await decision_engine.compare(
+                query=req.query,
+                user_roles=req.user_roles,
+                evidences=req.evidences,
+                alternatives=req.alternatives,
+                max_tokens=req.max_tokens,
+            )
+        except ModelGatewayError as err:
+            raise HTTPException(status_code=502, detail=str(err))
 
     @app.post("/api/v1/knowledge/access-check", response_model=None)
     async def access_check(request: Request) -> Response | dict[str, Any]:
