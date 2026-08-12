@@ -2,6 +2,7 @@ import { McpProxyService, McpToolExecutionInput, McpToolExecutionOutput } from "
 
 export interface ActionConnector {
   execute(input: any): Promise<unknown>;
+  checkStatus?(idempotencyKey: string): Promise<{ executed: boolean; result?: unknown; error?: string }>;
 }
 
 export class HttpActionConnector implements ActionConnector {

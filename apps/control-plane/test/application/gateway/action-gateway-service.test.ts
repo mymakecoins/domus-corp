@@ -1,8 +1,8 @@
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { ActionGatewayService } from "../../../dist/application/gateway/action-gateway-service.js";
-import { KillSwitchGuard } from "../../../dist/domain/gateway/kill-switch.js";
-import { IdempotencyService } from "../../../dist/domain/gateway/idempotency.js";
+import { ActionGatewayService } from "../../../src/application/gateway/action-gateway-service.js";
+import { KillSwitchGuard } from "../../../src/domain/gateway/kill-switch.js";
+import { IdempotencyService } from "../../../src/domain/gateway/idempotency.js";
 
 describe("ActionGatewayService", () => {
   let killSwitch: KillSwitchGuard;
@@ -162,5 +162,120 @@ describe("ActionGatewayService", () => {
 
     assert.equal(receipt.status, "FAILED");
     assert.equal(receipt.error, "CONNECTOR_TIMEOUT");
+  });
+
+  it("returns INCONCLUSIVE receipt when post-dispatch timeout occurs without status check", async () => {
+    let attemptCount = 0;
+    const timeoutConnector = {
+      execute: async () => {
+        attemptCount++;
+        const err = new Error("POST_DISPATCH_TIMEOUT");
+        (err as any).isTimeoutPostDispatch = true;
+        throw err;
+      },
+    };
+
+    const timeoutGateway = new ActionGatewayService({
+      killSwitch,
+      idempotency,
+      getPolicy: mockPolicyEngine.evaluatePolicy,
+      defaultConnector: timeoutConnector as any,
+      maxRetries: 2,
+      retryBackoffMs: 1,
+    });
+
+    const receipt = await timeoutGateway.executeAction({
+      actionId: "act-timeout",
+      tenantId: "t-1",
+      workspaceId: "w-1",
+      userId: "u-1",
+      actionType: "post_message",
+      target: "slack",
+      parameters: {},
+      riskLevel: "LOW",
+      idempotencyKey: "key-timeout-1",
+    });
+
+    assert.equal(receipt.status, "INCONCLUSIVE");
+    assert.equal(receipt.attemptNumber, 1);
+    assert.equal(attemptCount, 1); // Does not retry blindly post-dispatch timeout
+  });
+
+  it("retries transient pre-dispatch errors up to maxRetries", async () => {
+    let attemptCount = 0;
+    const retryConnector = {
+      execute: async () => {
+        attemptCount++;
+        if (attemptCount < 3) {
+          const err = new Error("NETWORK_TRANSIENT_503");
+          (err as any).isTransient = true;
+          throw err;
+        }
+        return { ok: true };
+      },
+    };
+
+    const retryGateway = new ActionGatewayService({
+      killSwitch,
+      idempotency,
+      getPolicy: mockPolicyEngine.evaluatePolicy,
+      defaultConnector: retryConnector as any,
+      maxRetries: 3,
+      retryBackoffMs: 1,
+    });
+
+    const receipt = await retryGateway.executeAction({
+      actionId: "act-retry",
+      tenantId: "t-1",
+      workspaceId: "w-1",
+      userId: "u-1",
+      actionType: "send_email",
+      target: "gmail",
+      parameters: {},
+      riskLevel: "LOW",
+      idempotencyKey: "key-retry-1",
+    });
+
+    assert.equal(receipt.status, "SUCCESS");
+    assert.equal(receipt.attemptNumber, 3);
+    assert.equal(attemptCount, 3);
+  });
+
+  it("queries connector checkStatus on post-dispatch timeout if supported", async () => {
+    const statusCheckingConnector = {
+      execute: async () => {
+        const err = new Error("POST_DISPATCH_TIMEOUT");
+        (err as any).isTimeoutPostDispatch = true;
+        throw err;
+      },
+      checkStatus: async (key: string) => {
+        assert.equal(key, "key-status-check-1");
+        return { executed: true, result: { messageId: "msg-999" } };
+      },
+    };
+
+    const gateway = new ActionGatewayService({
+      killSwitch,
+      idempotency,
+      getPolicy: mockPolicyEngine.evaluatePolicy,
+      defaultConnector: statusCheckingConnector as any,
+      maxRetries: 2,
+      retryBackoffMs: 1,
+    });
+
+    const receipt = await gateway.executeAction({
+      actionId: "act-check-status",
+      tenantId: "t-1",
+      workspaceId: "w-1",
+      userId: "u-1",
+      actionType: "send_notification",
+      target: "teams",
+      parameters: {},
+      riskLevel: "LOW",
+      idempotencyKey: "key-status-check-1",
+    });
+
+    assert.equal(receipt.status, "SUCCESS");
+    assert.deepEqual(receipt.result, { messageId: "msg-999" });
   });
 });
