@@ -11,15 +11,15 @@ export class KillSwitchGuard {
   }
 
   activateWorkspace(tenantId: string, workspaceId: string): void {
-    this.activeWorkspaces.add(`${tenantId}:${workspaceId}`);
+    this.activeWorkspaces.add(`${tenantId}::${workspaceId}`);
   }
 
   deactivateWorkspace(tenantId: string, workspaceId: string): void {
-    this.activeWorkspaces.delete(`${tenantId}:${workspaceId}`);
+    this.activeWorkspaces.delete(`${tenantId}::${workspaceId}`);
   }
 
   isKilled(tenantId: string, workspaceId: string): boolean {
     if (this.globalActive) return true;
-    return this.activeWorkspaces.has(`${tenantId}:${workspaceId}`);
+    return this.activeWorkspaces.has(`${tenantId}::${workspaceId}`);
   }
 }

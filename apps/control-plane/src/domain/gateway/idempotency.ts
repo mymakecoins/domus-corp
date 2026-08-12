@@ -8,6 +8,6 @@ export class IdempotencyService {
   }
 
   saveReceipt(idempotencyKey: string, receipt: ActionReceipt): void {
-    this.receipts.set(idempotencyKey, receipt);
+    this.receipts.set(idempotencyKey, Object.freeze(receipt));
   }
 }
