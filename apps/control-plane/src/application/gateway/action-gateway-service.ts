@@ -59,17 +59,21 @@ export class ActionGatewayService {
 
     const request = createActionRequest(input);
 
-    if (this.toolGuardrailService) {
-      this.toolGuardrailService.validatePreExecution({
-        toolId: request.target,
-        riskLevel: request.riskLevel,
-        parameters: request.parameters,
-        confirmationToken: request.confirmationToken,
-        approvalId: request.approvalId,
-      });
-    }
-
     try {
+      if (this.toolGuardrailService) {
+        this.toolGuardrailService.validatePreExecution({
+          toolId: request.target,
+          riskLevel: request.riskLevel,
+          parameters: request.parameters,
+          confirmationToken: request.confirmationToken,
+          approvalId: request.approvalId,
+        });
+      } else if (request.status === "PENDING_APPROVAL") {
+        if (!request.confirmationToken && !request.approvalId) {
+          throw new Error("MCP_APPROVAL_REQUIRED");
+        }
+      }
+
       const rawResult = await this.defaultConnector.execute(request.parameters);
       const receipt = createActionReceipt({
         actionId: request.actionId,
