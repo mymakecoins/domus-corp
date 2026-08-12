@@ -4,6 +4,9 @@ import React from 'react';
 import { describe, expect, it } from 'vitest';
 import {
   AI_SEMANTIC_STATES,
+  ActionConfirmationGate,
+  ActionReceiptView,
+  ActionReviewDialog,
   AiSemanticBadge,
   Button,
   CitationPill,
@@ -11,10 +14,32 @@ import {
   Select,
   SourceFreshnessBadge,
   StreamingIndicator,
+  type ActionReceiptPayload,
+  type ActionRequestPayload,
   type FreshnessStatus,
 } from '../src/index.js';
 
 describe('acessibilidade da fundação e proveniência', () => {
+  const sampleReceipt: ActionReceiptPayload = {
+    receiptId: 'rcpt-a11y-1',
+    correlationId: 'corr-a11y-1',
+    status: 'SUCCESS',
+    semanticState: 'fundamentada',
+    executedAt: '2026-08-12T12:00:00Z',
+    summary: 'Operação de acessibilidade testada com sucesso.',
+  };
+
+  const sampleRequest: ActionRequestPayload = {
+    id: 'req-a11y-1',
+    intent: 'Atualizar regras de segurança do firewall',
+    targetSystem: 'firewall-core',
+    riskLevel: 'HIGH',
+    redactedParams: { ruleId: 'RULE-101' },
+    affectedScope: ['infra', 'firewall'],
+    policyDecision: 'allowed',
+    policyReason: 'Ação aprovada por policy.',
+  };
+
   it.each(['light', 'dark'] as const)('não tem violações axe críticas no tema %s', async (theme) => {
     const freshnessStatuses: FreshnessStatus[] = ['vigente', 'obsoleta', 'conflitante', 'restrita'];
     const { container } = render(
@@ -30,9 +55,28 @@ describe('acessibilidade da fundação e proveniência', () => {
         ))}
         <CitationPill refCode="[1]" label="Política de Segurança" status="vigente" />
         <StreamingIndicator />
+        <ActionConfirmationGate riskLevel="HIGH" onConfirm={() => {}} />
+        <ActionReceiptView receipt={sampleReceipt} />
       </main>,
     );
     const result = await axe.run(container, {
+      runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'],
+      rules: { 'color-contrast': { enabled: false } },
+    });
+    expect(result.violations).toEqual([]);
+  });
+
+  it.each(['light', 'dark'] as const)('não tem violações axe no ActionReviewDialog aberto no tema %s', async (theme) => {
+    render(
+      <div data-theme={theme}>
+        <ActionReviewDialog
+          open={true}
+          actionRequest={sampleRequest}
+          onConfirm={() => sampleReceipt}
+        />
+      </div>,
+    );
+    const result = await axe.run(document.body, {
       runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'],
       rules: { 'color-contrast': { enabled: false } },
     });
@@ -83,3 +127,4 @@ describe('acessibilidade da fundação e proveniência', () => {
     expect(result.violations).toEqual([]);
   });
 });
+

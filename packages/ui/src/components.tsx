@@ -411,7 +411,7 @@ export interface ActionConfirmationGateProps {
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   isDestructive?: boolean;
   confirmationTerm?: string;
-  onConfirm: () => void;
+  onConfirm: (confirmToken?: string) => void;
   isLoading?: boolean;
   children?: React.ReactNode;
   className?: string;
@@ -441,6 +441,10 @@ export function ActionConfirmationGate({
 
   const isButtonDisabled = isLoading || !canExecute;
   const buttonVariant = isDestructive ? 'destructive' : 'default';
+
+  const handleButtonClick = () => {
+    onConfirm(riskLevel === 'CRITICAL' ? typedTerm : undefined);
+  };
 
   return (
     <div className={cn('domus-action-confirmation-gate', className)}>
@@ -482,7 +486,7 @@ export function ActionConfirmationGate({
         <Button
           variant={buttonVariant}
           disabled={isButtonDisabled}
-          onClick={onConfirm}
+          onClick={handleButtonClick}
         >
           {isLoading ? 'Executando...' : 'Confirmar e Executar'}
         </Button>
