@@ -678,6 +678,46 @@ def create_app() -> FastAPI:
         except KeyError:
             raise HTTPException(status_code=404, detail="Query result not found")
 
+    @app.post("/api/v1/evals/benchmark")
+    async def run_evals_benchmark_endpoint(payload: dict[str, Any]) -> dict[str, Any]:
+        from domus_knowledge.evals_framework import EvalBenchmarkRunner, EvaluationDataset
+        dataset = EvaluationDataset(
+            dataset_id=payload.get("dataset_id", "ds-unknown"),
+            version=payload.get("dataset_version", "1.0.0"),
+            items=payload.get("items", []),
+        )
+        responses = payload.get("responses", [])
+        model_ver = payload.get("model_version", "default")
+        prompt_ver = payload.get("prompt_version", "default")
+
+        runner = EvalBenchmarkRunner()
+        report = runner.run_benchmark(
+            dataset=dataset,
+            responses=responses,
+            model_version=model_ver,
+            prompt_version=prompt_ver,
+        )
+        return report.model_dump()
+
+    @app.post("/api/v1/evals/compare")
+    async def compare_evals_regression_endpoint(payload: dict[str, Any]) -> dict[str, Any]:
+        from domus_knowledge.evals_framework import RegressionAnalyzer
+        analyzer = RegressionAnalyzer()
+        baseline_ver = payload.get("baseline_version", "v1.0")
+        cand_ver = payload.get("candidate_version", "v1.1")
+        baseline = payload.get("baseline", {})
+        candidate = payload.get("candidate", {})
+        threshold = payload.get("threshold_delta", 0.05)
+
+        comp = analyzer.compare_runs(
+            baseline_version=baseline_ver,
+            candidate_version=cand_ver,
+            baseline=baseline,
+            candidate=candidate,
+            threshold_delta=threshold,
+        )
+        return comp.model_dump()
+
     app.include_router(meetings_router)
 
     return app
