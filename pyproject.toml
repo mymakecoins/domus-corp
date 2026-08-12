@@ -20,13 +20,13 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"
-testpaths = ["apps/knowledge-api/tests"]
-pythonpath = ["apps/knowledge-api/src"]
+testpaths = ["apps/knowledge-api/tests", "tests/knowledge_api", "tests"]
+pythonpath = ["apps/knowledge-api/src", "apps/knowledge-api"]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-src = ["apps/knowledge-api/src", "apps/knowledge-api/tests"]
+src = ["apps/knowledge-api/src", "apps/knowledge-api/app", "apps/knowledge-api/tests", "tests/knowledge_api"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
@@ -34,7 +34,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["apps/knowledge-api/src", "apps/knowledge-api/tests"]
+files = ["apps/knowledge-api/src", "apps/knowledge-api/app", "apps/knowledge-api/tests", "tests/knowledge_api"]
 
 [build-system]
 requires = ["hatchling==1.27.0"]

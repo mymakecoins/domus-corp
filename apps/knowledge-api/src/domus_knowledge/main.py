@@ -20,6 +20,7 @@ from domus_knowledge.operational_insights import InsightFeedback, OperationalIns
 from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse
 from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, QualityLoopSuggestion
 from domus_knowledge.retrieval import hybrid_search
+from app.routers.meetings import router as meetings_router
 
 
 class OrchestrateRequest(BaseModel):
@@ -432,6 +433,8 @@ def create_app() -> FastAPI:
             feedback_type=req.feedback_type,
             comment=req.comment,
         )
+
+    app.include_router(meetings_router)
 
     return app
 
