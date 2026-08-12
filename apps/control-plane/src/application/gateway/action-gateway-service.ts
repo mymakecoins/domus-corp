@@ -133,7 +133,16 @@ export class ActionGatewayService {
     while (attempt < this.maxRetries) {
       attempt++;
       try {
-        const rawResult = await this.defaultConnector.execute(request.parameters);
+        const rawResult = await this.defaultConnector.execute({
+          ...request.parameters,
+          target: request.target,
+          actionType: request.actionType,
+          tenantId: request.tenantId,
+          workspaceId: request.workspaceId,
+          userId: request.userId,
+          idempotencyKey: request.idempotencyKey,
+          parameters: request.parameters,
+        });
         const receipt = createActionReceipt({
           actionId: request.actionId,
           idempotencyKey: request.idempotencyKey,

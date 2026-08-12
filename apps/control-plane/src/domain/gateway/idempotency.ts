@@ -61,3 +61,6 @@ export class IdempotencyService {
     await this.storage.clearInFlight(idempotencyKey);
   }
 }
+
+export { IdempotencyService as InMemoryIdempotencyService };
+
