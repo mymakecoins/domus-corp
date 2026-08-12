@@ -7,7 +7,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Activity, ChevronDown, ClockAlert, ExternalLink, GitCompareArrows, ShieldCheck, ShieldX, X } from 'lucide-react';
 import React from 'react';
 
-import { AI_SEMANTIC_STATES, assertButtonClassesAllowed, normalizeSelectOptions, type AiSemanticState, type AiTone, type CitationItem, type EvidenceSource, type FreshnessStatus, type SelectOption } from './tokens.js';
+import { AI_SEMANTIC_STATES, assertButtonClassesAllowed, normalizeSelectOptions, type ActionReceiptPayload, type AiSemanticState, type AiTone, type CitationItem, type EvidenceSource, type FreshnessStatus, type SelectOption } from './tokens.js';
 import { cn } from './utils.js';
 
 const buttonVariants = cva('domus-button', {
@@ -241,8 +241,218 @@ export function SourceFreshnessBadge({ status, stale }: SourceFreshnessBadgeProp
   return <Badge tone="success"><ShieldCheck aria-hidden="true" /><span>Fonte vigente</span></Badge>;
 }
 export function ActionReviewDialog({ trigger, title = 'Revisar ação', children, onConfirm }: { trigger: React.ReactNode; title?: string; children: React.ReactNode; onConfirm?: () => void }) { return <Dialog><DialogTrigger asChild>{trigger}</DialogTrigger><DialogContent><DialogTitle>{title}</DialogTitle><DialogDescription>Confirme intenção, destino, parâmetros e impacto antes de executar.</DialogDescription>{children}<Button onClick={onConfirm}>Confirmar ação</Button></DialogContent></Dialog>; }
-export function PolicyDecisionBanner({ decision, children }: { decision: 'allowed' | 'denied' | 'conditioned' | 'blocked'; children: React.ReactNode }) { const blocked = decision === 'denied' || decision === 'blocked'; return <Alert><ShieldX aria-hidden="true" /><AlertTitle>{blocked ? 'Operação bloqueada' : decision === 'conditioned' ? 'Operação condicionada' : 'Operação permitida'}</AlertTitle><AlertDescription>{children}</AlertDescription></Alert>; }
-export function BudgetMeter({ used, limit }: { used: number; limit: number }) { const safeLimit = Math.max(0, limit); const value = safeLimit === 0 ? 0 : Math.min(100, Math.max(0, used / safeLimit * 100)); return <div className="domus-meter"><label>Consumo do orçamento</label><progress value={value} max={100}>{value}%</progress><span>{used} de {limit}</span></div>; }
+
+export interface ActionConfirmationGateProps {
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  isDestructive?: boolean;
+  confirmationTerm?: string;
+  onConfirm: () => void;
+  isLoading?: boolean;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+export function ActionConfirmationGate({
+  riskLevel,
+  isDestructive = false,
+  confirmationTerm = 'CONFIRMAR',
+  onConfirm,
+  isLoading = false,
+  children,
+  className,
+}: ActionConfirmationGateProps) {
+  const [isChecked, setIsChecked] = React.useState(false);
+  const [typedTerm, setTypedTerm] = React.useState('');
+
+  const expectedTerm = confirmationTerm.trim();
+  const isTermMatching = typedTerm.trim().toLowerCase() === expectedTerm.toLowerCase();
+
+  let canExecute = true;
+  if (riskLevel === 'HIGH') {
+    canExecute = isChecked;
+  } else if (riskLevel === 'CRITICAL') {
+    canExecute = isTermMatching;
+  }
+
+  const isButtonDisabled = isLoading || !canExecute;
+  const buttonVariant = isDestructive ? 'destructive' : 'default';
+
+  return (
+    <div className={cn('domus-action-confirmation-gate', className)}>
+      {children}
+
+      {riskLevel === 'HIGH' && (
+        <div className="domus-gate-field my-3">
+          <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => setIsChecked(e.target.checked)}
+              disabled={isLoading}
+              className="domus-checkbox"
+            />
+            <span>Estou ciente e me responsabilizo pela execução desta ação de alto risco.</span>
+          </label>
+        </div>
+      )}
+
+      {riskLevel === 'CRITICAL' && (
+        <div className="domus-gate-field my-3 space-y-1">
+          <label htmlFor="gate-critical-term-input" className="block text-sm font-medium">
+            Digite <strong className="font-mono">{expectedTerm}</strong> para confirmar a execução:
+          </label>
+          <input
+            id="gate-critical-term-input"
+            type="text"
+            value={typedTerm}
+            onChange={(e) => setTypedTerm(e.target.value)}
+            placeholder={expectedTerm}
+            disabled={isLoading}
+            className="domus-input w-full p-2 border rounded text-sm"
+          />
+        </div>
+      )}
+
+      <div className="domus-gate-actions mt-4 flex justify-end">
+        <Button
+          variant={buttonVariant}
+          disabled={isButtonDisabled}
+          onClick={onConfirm}
+        >
+          {isLoading ? 'Executando...' : 'Confirmar e Executar'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+const receiptStatusToneMap: Record<ActionReceiptPayload['status'], AiTone> = {
+  SUCCESS: 'success',
+  FAILED: 'error',
+  KILLED: 'error',
+  INCONCLUSIVE: 'warning',
+};
+
+const receiptStatusLabelMap: Record<ActionReceiptPayload['status'], string> = {
+  SUCCESS: 'Sucesso',
+  FAILED: 'Falha',
+  KILLED: 'Interrompido',
+  INCONCLUSIVE: 'Inconclusivo',
+};
+
+export interface ActionReceiptViewProps {
+  receipt: ActionReceiptPayload;
+  className?: string;
+}
+
+export function ActionReceiptView({ receipt, className }: ActionReceiptViewProps) {
+  const statusTone = receiptStatusToneMap[receipt.status] ?? 'neutral';
+  const statusLabel = receiptStatusLabelMap[receipt.status] ?? receipt.status;
+
+  return (
+    <Card className={cn('domus-action-receipt-view', className)}>
+      <CardHeader>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge tone={statusTone}>{statusLabel}</Badge>
+          <AiSemanticBadge state={receipt.semanticState} />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="domus-receipt-summary font-semibold text-base">{receipt.summary}</p>
+        
+        <dl className="domus-receipt-details grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+          <div>
+            <dt className="font-medium text-muted">ID do Recibo:</dt>
+            <dd className="font-mono text-xs break-all">{receipt.receiptId}</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-muted">ID de Correlação:</dt>
+            <dd className="font-mono text-xs break-all">{receipt.correlationId}</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-muted">Executado em:</dt>
+            <dd className="text-xs">{receipt.executedAt}</dd>
+          </div>
+        </dl>
+
+        {receipt.auditUrl && (
+          <div className="domus-receipt-audit pt-2">
+            <a
+              href={receipt.auditUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="domus-link inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              <ExternalLink aria-hidden="true" className="w-4 h-4" />
+              <span>Ver Trilha de Auditoria</span>
+            </a>
+          </div>
+        )}
+
+        {receipt.nextAction && (
+          <div className="domus-receipt-next-action pt-2 flex justify-end">
+            <Button variant="outline" size="sm" onClick={receipt.nextAction.onClick}>
+              {receipt.nextAction.label}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export interface PolicyDecisionBannerProps {
+  decision: 'allowed' | 'denied' | 'conditioned' | 'blocked';
+  title?: string;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+export function PolicyDecisionBanner({ decision, title, children, className }: PolicyDecisionBannerProps) {
+  const isBlocked = decision === 'denied' || decision === 'blocked';
+  const isConditioned = decision === 'conditioned';
+  
+  const Icon = isBlocked ? ShieldX : isConditioned ? ClockAlert : ShieldCheck;
+  const defaultTitle = isBlocked ? 'Operação bloqueada' : isConditioned ? 'Operação condicionada' : 'Operação permitida';
+  const displayTitle = title ?? defaultTitle;
+
+  return (
+    <Alert className={cn('domus-policy-banner', isBlocked && 'banner-blocked', isConditioned && 'banner-conditioned', className)}>
+      <Icon aria-hidden="true" />
+      <AlertTitle>{displayTitle}</AlertTitle>
+      {children && <AlertDescription>{children}</AlertDescription>}
+    </Alert>
+  );
+}
+
+export interface BudgetMeterProps {
+  used: number;
+  limit: number;
+  label?: string;
+  className?: string;
+}
+
+export function BudgetMeter({ used, limit, label = 'Consumo do orçamento', className }: BudgetMeterProps) {
+  const safeLimit = Math.max(0, limit);
+  const ratio = safeLimit === 0 ? (used > 0 ? 1 : 0) : used / safeLimit;
+  const percentage = Math.min(100, Math.max(0, Math.round(ratio * 100)));
+  const isWarning = ratio >= 0.8;
+
+  return (
+    <div className={cn('domus-meter', isWarning && 'meter-warning', className)}>
+      <label className="domus-meter-label block text-sm font-medium mb-1">{label}</label>
+      <div className="domus-meter-bar flex items-center gap-2">
+        <progress value={percentage} max={100} className="w-full">
+          {percentage}%
+        </progress>
+        <span className="domus-meter-value text-sm font-mono whitespace-nowrap">
+          {used} de {limit} ({percentage}%)
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function InsightCard({ title, state, children }: { title: string; state: AiSemanticState; children: React.ReactNode }) { return <Card><CardHeader><CardTitle>{title}</CardTitle><AiSemanticBadge state={state} /></CardHeader><CardContent>{children}</CardContent></Card>; }
 export function KnowledgeAssetRow({ name, owner, status }: { name: string; owner: string; status: React.ReactNode }) { return <TableRow><TableCell>{name}</TableCell><TableCell>{owner}</TableCell><TableCell>{status}</TableCell></TableRow>; }
 export function StreamingIndicator({ label = 'Gerando resposta' }: { label?: string }) { return <div role="status" aria-live="polite" className="domus-streaming"><Activity aria-hidden="true" /><span>{label}</span></div>; }

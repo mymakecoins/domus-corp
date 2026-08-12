@@ -24,6 +24,17 @@ export type AiTone = 'success' | 'warning' | 'info' | 'muted' | 'error';
 
 export type FreshnessStatus = 'vigente' | 'obsoleta' | 'conflitante' | 'restrita';
 
+export interface ActionReceiptPayload {
+  receiptId: string;
+  correlationId: string;
+  status: 'SUCCESS' | 'FAILED' | 'INCONCLUSIVE' | 'KILLED';
+  semanticState: AiSemanticState;
+  executedAt: string;
+  summary: string;
+  auditUrl?: string;
+  nextAction?: { id: string; label: string; onClick?: () => void };
+}
+
 export interface EvidenceSource {
   id: string;
   documentTitle: string;
