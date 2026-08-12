@@ -24,6 +24,8 @@ __pycache__/
 !.env.example
 .local/
 *.log
+cold_archive_storage/
+isolated_backup_storage/
 
 # Editors and operating systems
 .DS_Store

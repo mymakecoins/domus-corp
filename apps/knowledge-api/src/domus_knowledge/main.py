@@ -12,6 +12,16 @@ from domus_knowledge.access_control import build_authorized_filter, derive_acces
 from domus_knowledge.briefings import BriefingEngine, BriefingPreferences, BriefingRecord
 from domus_knowledge.change_detection import ChangeImpactDetector, ChangeRecord
 from domus_knowledge.config import load_config
+from datetime import UTC, datetime, timedelta
+from domus_knowledge.history_retention import (
+    ArchivedHistoryQueryEngine,
+    ArchivedQueryRequest,
+    AutoPartitionManager,
+    DataClass,
+    DataRetentionMatrix,
+    HistoryArchiveEngine,
+    RetentionPolicy,
+)
 from domus_knowledge.context_orchestrator import ContextOrchestrator
 from domus_knowledge.decision_support import ComparisonResult, DecisionSupportEngine, SynthesisResult
 from domus_knowledge.hnsw_config import OptimizationPreset
@@ -92,6 +102,26 @@ class SubmitInsightFeedbackRequest(BaseModel):
     user_id: str
     feedback_type: str
     comment: Optional[str] = None
+
+
+class CheckPartitionRequest(BaseModel):
+    table_name: str
+    months_ahead: int = 2
+
+
+class RunArchiveRequest(BaseModel):
+    data_class: str
+    records: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class SubmitArchivedQueryRequest(BaseModel):
+    tenant_id: str
+    workspace_id: str
+    actor_id: str
+    purpose: str
+    data_class: str
+    query_from: str
+    query_to: str
 
 
 class StartReindexRequest(BaseModel):
@@ -488,6 +518,95 @@ def create_app() -> FastAPI:
             preset_enum = OptimizationPreset.BALANCED
         report = benchmark_engine.run_benchmark(workload=[], records=[], preset=preset_enum)
         return report.to_dict()
+
+    # V1-703 History Retention & Partitioning Endpoints
+    retention_matrix = DataRetentionMatrix()
+    partition_manager = AutoPartitionManager()
+    archive_engine = HistoryArchiveEngine(storage_dir="./cold_archive_storage", retention_matrix=retention_matrix)
+    archived_query_engine = ArchivedHistoryQueryEngine(storage_dir="./cold_archive_storage")
+
+    @app.get("/v1/history/retention/matrix")
+    async def get_retention_matrix_endpoint() -> dict[str, Any]:
+        return {"policies": retention_matrix.list_policies()}
+
+    @app.post("/v1/history/partition/check-and-create")
+    async def check_and_create_partitions_endpoint(req: CheckPartitionRequest) -> dict[str, Any]:
+        created = partition_manager.check_and_create_partitions(
+            table_name=req.table_name,
+            months_ahead=req.months_ahead,
+        )
+        return {
+            "table_name": req.table_name,
+            "created_count": len(created),
+            "partitions": [
+                {
+                    "partition_name": p.partition_name,
+                    "start_bound": p.start_bound,
+                    "end_bound": p.end_bound,
+                    "index_ddl": p.index_ddl,
+                }
+                for p in created
+            ],
+        }
+
+    @app.post("/v1/history/archive/run")
+    async def run_archive_job_endpoint(req: RunArchiveRequest) -> dict[str, Any]:
+        try:
+            dc_enum = DataClass(req.data_class)
+        except ValueError:
+            dc_enum = DataClass.AUDIT_EVENT
+        manifest, receipt = archive_engine.execute_archive_and_purge(data_class=dc_enum, records=req.records)
+        return {
+            "archive_id": manifest.archive_id,
+            "data_class": manifest.data_class.value,
+            "archived_count": manifest.archived_count,
+            "checksum_sha256": manifest.checksum_sha256,
+            "status": manifest.status,
+            "receipt_id": receipt.receipt_id,
+        }
+
+    @app.post("/v1/history/archive/query")
+    async def submit_archived_query_endpoint(req: SubmitArchivedQueryRequest) -> dict[str, Any]:
+        try:
+            dc_enum = DataClass(req.data_class)
+        except ValueError:
+            dc_enum = DataClass.AUDIT_EVENT
+        try:
+            q_from = datetime.fromisoformat(req.query_from.replace("Z", "+00:00"))
+            q_to = datetime.fromisoformat(req.query_to.replace("Z", "+00:00"))
+        except Exception:
+            q_from = datetime.now(UTC) - timedelta(days=1)
+            q_to = datetime.now(UTC)
+
+        try:
+            query_req = ArchivedQueryRequest(
+                tenant_id=req.tenant_id,
+                workspace_id=req.workspace_id,
+                actor_id=req.actor_id,
+                purpose=req.purpose,
+                data_class=dc_enum,
+                query_from=q_from,
+                query_to=q_to,
+            )
+            query_id = archived_query_engine.submit_async_query(query_req)
+            return {"query_id": query_id, "status": "SUBMITTED"}
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=str(err))
+
+    @app.get("/v1/history/archive/query/{query_id}")
+    async def get_archived_query_result_endpoint(query_id: str) -> dict[str, Any]:
+        try:
+            res = archived_query_engine.get_query_result(query_id)
+            return {
+                "query_id": res.query_id,
+                "status": res.status,
+                "audit_access_event_id": res.audit_access_event_id,
+                "records": res.records,
+                "result_count": res.result_count,
+                "executed_at": res.executed_at,
+            }
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Query result not found")
 
     app.include_router(meetings_router)
 

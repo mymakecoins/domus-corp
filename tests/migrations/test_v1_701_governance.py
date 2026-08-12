@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 class MigrationGovernanceTest(unittest.TestCase):
     def test_repository_migrations_have_complete_governance_metadata(self) -> None:
         report = validate_migrations(ROOT / "migrations", ROOT / "migrations/manifest.json")
-        self.assertEqual(report.versions, ("000001", "000002", "000003", "000004", "000005", "000006", "000007", "000008", "000009", "000010", "000011", "000012", "000013", "000014", "000015", "000016", "000017", "000018", "000019", "000020", "000021", "000022", "000023", "000024", "000025"))
+        self.assertEqual(report.versions, ("000001", "000002", "000003", "000004", "000005", "000006", "000007", "000008", "000009", "000010", "000011", "000012", "000013", "000014", "000015", "000016", "000017", "000018", "000019", "000020", "000021", "000022", "000023", "000024", "000025", "000026"))
 
 
     def test_rejects_missing_rollback_pair_and_manifest_entry(self) -> None:

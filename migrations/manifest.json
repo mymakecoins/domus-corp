@@ -117,6 +117,9 @@
     },
     {
       "version":"000025","issue":"V1-609/V1-610","description":"Scheduler de automações e reuniões com transcrição","impact":"Cria tabelas para rotinas de automação, execuções, reuniões, transcrições e rascunhos de tarefas","risk":"medium","owner":"Backend / DBA","requiredReviewers":["DBA","Security"],"rollback":"migrations/000025_v1_609_v1_610_automations_and_meetings.down.sql"
+    },
+    {
+      "version":"000026","issue":"V1-703","description":"Retenção, particionamento e arquivamento de histórico","impact":"Adiciona matriz de retenção, helper de particionamento e recibos de arquivamento","risk":"high","owner":"DBA / Privacidade","requiredReviewers":["DBA","Security","Privacy"],"rollback":"migrations/000026_v1_703_history_retention_partitioning.down.sql"
     }
   ]
 }
