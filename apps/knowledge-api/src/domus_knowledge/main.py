@@ -33,6 +33,13 @@ from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, Qual
 from domus_knowledge.reindex_engine import VectorReindexEngine
 from domus_knowledge.retrieval import hybrid_search
 from domus_knowledge.vector_benchmark import VectorBenchmarkEngine
+from domus_knowledge.db_health import (
+    BackupHealthStatus,
+    DatabaseHealthMetrics,
+    DatabaseHealthMonitor,
+    GatewayBackpressureEngine,
+    QdrantStatus,
+)
 from app.routers.meetings import router as meetings_router
 
 
@@ -136,6 +143,22 @@ class BenchmarkRequest(BaseModel):
     preset: str = "BALANCED"
 
 
+class SimulateDbLoadRequest(BaseModel):
+    active_connections: int = 20
+    max_connections: int = 100
+    waiting_connections: int = 0
+    lock_waits: int = 0
+    deadlock_count: int = 0
+    slow_queries_count: int = 0
+    max_query_time_ms: float = 0.0
+    disk_usage_percent: float = 40.0
+    io_latency_ms: float = 5.0
+    qdrant_status: str = "HEALTHY"
+    qdrant_latency_ms: float = 10.0
+    backup_status: str = "OK"
+    last_backup_age_hours: float = 2.0
+
+
 orchestrator = ContextOrchestrator()
 control_plane_url = os.getenv("CONTROL_PLANE_URL", "http://localhost:3000")
 gateway_client = ModelGatewayClient(base_url=control_plane_url)
@@ -151,6 +174,8 @@ def create_app() -> FastAPI:
     insights_engine = OperationalInsightsEngine()
     reindex_engine = VectorReindexEngine()
     benchmark_engine = VectorBenchmarkEngine()
+    db_health_monitor = DatabaseHealthMonitor()
+    gateway_backpressure_engine = GatewayBackpressureEngine(monitor=db_health_monitor)
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -163,6 +188,51 @@ def create_app() -> FastAPI:
     @app.get("/healthz")
     def healthz() -> dict[str, str]:
         return {"status": "OK"}
+
+    @app.get("/v1/db/health")
+    async def get_db_health_endpoint() -> dict[str, Any]:
+        snapshot = db_health_monitor.get_snapshot()
+        backpressure = gateway_backpressure_engine.evaluate_admission()
+        return {
+            "status": "HEALTHY" if snapshot.is_healthy else "DEGRADED",
+            "metrics": snapshot.metrics.to_dict(),
+            "alerts": [a.to_dict() for a in snapshot.alerts],
+            "backpressure": backpressure.to_dict(),
+            "checked_at": snapshot.checked_at.isoformat(),
+        }
+
+    @app.post("/v1/db/health/simulate-load")
+    async def simulate_db_load_endpoint(req: SimulateDbLoadRequest) -> dict[str, Any]:
+        try:
+            q_status = QdrantStatus(req.qdrant_status)
+            b_status = BackupHealthStatus(req.backup_status)
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=f"Invalid status value: {err}")
+
+        metrics = DatabaseHealthMetrics(
+            active_connections=req.active_connections,
+            max_connections=req.max_connections,
+            waiting_connections=req.waiting_connections,
+            lock_waits=req.lock_waits,
+            deadlock_count=req.deadlock_count,
+            slow_queries_count=req.slow_queries_count,
+            max_query_time_ms=req.max_query_time_ms,
+            disk_usage_percent=req.disk_usage_percent,
+            io_latency_ms=req.io_latency_ms,
+            qdrant_status=q_status,
+            qdrant_latency_ms=req.qdrant_latency_ms,
+            backup_status=b_status,
+            last_backup_age_hours=req.last_backup_age_hours,
+        )
+        db_health_monitor.record_metrics(metrics)
+        snapshot = db_health_monitor.get_snapshot()
+        backpressure = gateway_backpressure_engine.evaluate_admission()
+        return {
+            "status": "HEALTHY" if snapshot.is_healthy else "DEGRADED",
+            "metrics": snapshot.metrics.to_dict(),
+            "alerts": [a.to_dict() for a in snapshot.alerts],
+            "backpressure": backpressure.to_dict(),
+        }
 
     @app.post("/intelligence/query")
     @app.post("/v1/intelligence/orchestrate")
