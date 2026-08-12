@@ -7,7 +7,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Activity, ChevronDown, ClockAlert, ExternalLink, GitCompareArrows, ShieldCheck, ShieldX, X } from 'lucide-react';
 import React from 'react';
 
-import { AI_SEMANTIC_STATES, assertButtonClassesAllowed, normalizeSelectOptions, type ActionReceiptPayload, type AiSemanticState, type AiTone, type CitationItem, type EvidenceSource, type FreshnessStatus, type SelectOption } from './tokens.js';
+import { AI_SEMANTIC_STATES, assertButtonClassesAllowed, normalizeSelectOptions, type ActionReceiptPayload, type ActionRequestPayload, type AiSemanticState, type AiTone, type CitationItem, type EvidenceSource, type FreshnessStatus, type SelectOption } from './tokens.js';
 import { cn } from './utils.js';
 
 const buttonVariants = cva('domus-button', {
@@ -240,7 +240,172 @@ export function SourceFreshnessBadge({ status, stale }: SourceFreshnessBadgeProp
   }
   return <Badge tone="success"><ShieldCheck aria-hidden="true" /><span>Fonte vigente</span></Badge>;
 }
-export function ActionReviewDialog({ trigger, title = 'Revisar ação', children, onConfirm }: { trigger: React.ReactNode; title?: string; children: React.ReactNode; onConfirm?: () => void }) { return <Dialog><DialogTrigger asChild>{trigger}</DialogTrigger><DialogContent><DialogTitle>{title}</DialogTitle><DialogDescription>Confirme intenção, destino, parâmetros e impacto antes de executar.</DialogDescription>{children}<Button onClick={onConfirm}>Confirmar ação</Button></DialogContent></Dialog>; }
+export interface ActionReviewDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
+  title?: string;
+  actionRequest: ActionRequestPayload;
+  onConfirm: (confirmToken?: string) => Promise<ActionReceiptPayload> | ActionReceiptPayload;
+  onClose?: () => void;
+  className?: string;
+}
+
+export function ActionReviewDialog({
+  open,
+  onOpenChange,
+  trigger,
+  title = 'Revisar ação',
+  actionRequest,
+  onConfirm,
+  onClose,
+  className,
+}: ActionReviewDialogProps) {
+  const [receipt, setReceipt] = React.useState<ActionReceiptPayload | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (open === false) {
+      setReceipt(null);
+      setError(null);
+      setIsLoading(false);
+    }
+  }, [open]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      onClose?.();
+      setReceipt(null);
+      setError(null);
+      setIsLoading(false);
+    }
+    onOpenChange?.(newOpen);
+  };
+
+  const handleConfirm = async (confirmToken?: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await onConfirm(confirmToken);
+      setReceipt(res);
+    } catch (err: any) {
+      setError(err?.message || 'Ocorreu um erro ao executar a ação.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getRiskTone = (level: ActionRequestPayload['riskLevel']): AiTone | 'neutral' => {
+    if (level === 'CRITICAL' || level === 'HIGH') return 'error';
+    if (level === 'MEDIUM') return 'warning';
+    return 'neutral';
+  };
+
+  const isBlocked = actionRequest.policyDecision === 'denied' || actionRequest.policyDecision === 'blocked';
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogContent className={cn('domus-action-review-dialog', className)}>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>
+          Confirme intenção, destino, parâmetros e impacto antes de executar.
+        </DialogDescription>
+
+        {receipt ? (
+          <div className="domus-action-review-receipt space-y-4 my-4">
+            <ActionReceiptView receipt={receipt} />
+            <div className="flex justify-end">
+              <Button
+                onClick={() => {
+                  handleOpenChange(false);
+                }}
+              >
+                Concluir e Fechar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="domus-action-review-body space-y-4 my-2">
+            <PolicyDecisionBanner decision={actionRequest.policyDecision}>
+              {actionRequest.policyReason}
+            </PolicyDecisionBanner>
+
+            <div className="domus-action-review-grid grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="font-medium text-muted block">Intenção:</span>
+                <span>{actionRequest.intent}</span>
+              </div>
+              <div>
+                <span className="font-medium text-muted block">Sistema Destino:</span>
+                <span>{actionRequest.targetSystem}</span>
+              </div>
+              <div>
+                <span className="font-medium text-muted block">Nível de Risco:</span>
+                <Badge tone={getRiskTone(actionRequest.riskLevel)}>
+                  {actionRequest.riskLevel}
+                </Badge>
+              </div>
+              {actionRequest.requiredApproval && (
+                <div>
+                  <span className="font-medium text-muted block">Aprovação Exigida:</span>
+                  <span>{actionRequest.requiredApproval}</span>
+                </div>
+              )}
+            </div>
+
+            {actionRequest.affectedScope && actionRequest.affectedScope.length > 0 && (
+              <div className="domus-action-review-scope text-sm">
+                <span className="font-medium text-muted block mb-1">Escopo Afetado:</span>
+                <ul className="list-disc list-inside space-y-1">
+                  {actionRequest.affectedScope.map((scope, index) => (
+                    <li key={index}>{scope}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {actionRequest.redactedParams && Object.keys(actionRequest.redactedParams).length > 0 && (
+              <div className="domus-action-review-params text-sm">
+                <span className="font-medium text-muted block mb-1">Parâmetros Redigidos:</span>
+                <pre className="font-mono text-xs bg-muted/10 p-2 rounded border overflow-x-auto">
+                  {JSON.stringify(actionRequest.redactedParams, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            {actionRequest.budgetUsage && (
+              <div className="domus-action-review-budget">
+                <BudgetMeter
+                  used={actionRequest.budgetUsage.used}
+                  limit={actionRequest.budgetUsage.limit}
+                />
+              </div>
+            )}
+
+            {error && (
+              <Alert role="alert" className="border-destructive text-destructive">
+                <AlertTitle>Erro ao executar ação</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {!isBlocked && (
+              <ActionConfirmationGate
+                riskLevel={actionRequest.riskLevel}
+                isDestructive={actionRequest.isDestructive}
+                isLoading={isLoading}
+                onConfirm={handleConfirm}
+              />
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export interface ActionConfirmationGateProps {
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';

@@ -35,6 +35,21 @@ export interface ActionReceiptPayload {
   nextAction?: { id: string; label: string; onClick?: () => void };
 }
 
+export interface ActionRequestPayload {
+  id: string;
+  intent: string;
+  targetSystem: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  redactedParams: Record<string, string>;
+  affectedScope: string[];
+  requiredApproval?: string;
+  policyDecision: 'allowed' | 'denied' | 'conditioned' | 'blocked';
+  policyReason?: string;
+  budgetUsage?: { used: number; limit: number };
+  isDestructive?: boolean;
+}
+
+
 export interface EvidenceSource {
   id: string;
   documentTitle: string;
