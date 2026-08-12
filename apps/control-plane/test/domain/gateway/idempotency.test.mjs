@@ -4,7 +4,7 @@ import { IdempotencyService } from "../../../dist/domain/gateway/idempotency.js"
 import { createActionReceipt } from "../../../dist/domain/gateway/action-request.js";
 
 describe("IdempotencyService", () => {
-  it("stores and retrieves receipts for idempotent execution", () => {
+  it("stores and retrieves receipts for idempotent execution", async () => {
     const service = new IdempotencyService();
     const receipt = createActionReceipt({
       actionId: "act-1",
@@ -16,8 +16,8 @@ describe("IdempotencyService", () => {
       result: { ok: true },
     });
 
-    assert.equal(service.getReceipt("key-1"), null);
-    service.saveReceipt("key-1", receipt);
-    assert.deepEqual(service.getReceipt("key-1"), receipt);
+    assert.equal(await service.getReceipt("key-1"), null);
+    await service.saveReceipt("key-1", receipt);
+    assert.deepEqual(await service.getReceipt("key-1"), receipt);
   });
 });
