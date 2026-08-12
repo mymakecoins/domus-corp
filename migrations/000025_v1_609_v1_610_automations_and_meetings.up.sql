@@ -1,4 +1,4 @@
--- Migration 009: Automations Scheduler (V1-609) and Meetings/Tasks (V1-610)
+BEGIN;
 
 CREATE TABLE IF NOT EXISTS automation_routines (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -23,6 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_automation_routines_poll ON automation_routines (
 
 CREATE TABLE IF NOT EXISTS automation_runs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
     routine_id UUID NOT NULL REFERENCES automation_routines(id) ON DELETE CASCADE,
     executed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     status VARCHAR(50) NOT NULL,
@@ -52,6 +53,7 @@ CREATE TABLE IF NOT EXISTS meetings (
 
 CREATE TABLE IF NOT EXISTS meeting_transcripts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
     meeting_id UUID NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
     language VARCHAR(10) DEFAULT 'pt',
     full_text TEXT NOT NULL,
@@ -61,6 +63,7 @@ CREATE TABLE IF NOT EXISTS meeting_transcripts (
 
 CREATE TABLE IF NOT EXISTS meeting_draft_tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
     meeting_id UUID NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
@@ -74,3 +77,6 @@ CREATE TABLE IF NOT EXISTS meeting_draft_tasks (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+INSERT INTO schema_migrations(version,description) VALUES(25,'V1-609 V1-610 Automations scheduler and meetings') ON CONFLICT(version) DO NOTHING;
+COMMIT;

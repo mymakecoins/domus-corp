@@ -14,12 +14,15 @@ from domus_knowledge.change_detection import ChangeImpactDetector, ChangeRecord
 from domus_knowledge.config import load_config
 from domus_knowledge.context_orchestrator import ContextOrchestrator
 from domus_knowledge.decision_support import ComparisonResult, DecisionSupportEngine, SynthesisResult
+from domus_knowledge.hnsw_config import OptimizationPreset
 from domus_knowledge.knowledge_gaps import KnowledgeGap, KnowledgeGapDetector
 from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
 from domus_knowledge.operational_insights import InsightFeedback, OperationalInsight, OperationalInsightsEngine
 from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse
 from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, QualityLoopSuggestion
+from domus_knowledge.reindex_engine import VectorReindexEngine
 from domus_knowledge.retrieval import hybrid_search
+from domus_knowledge.vector_benchmark import VectorBenchmarkEngine
 from app.routers.meetings import router as meetings_router
 
 
@@ -91,6 +94,18 @@ class SubmitInsightFeedbackRequest(BaseModel):
     comment: Optional[str] = None
 
 
+class StartReindexRequest(BaseModel):
+    target_index_version: str
+
+
+class CutoverRequest(BaseModel):
+    target_index_version: Optional[str] = None
+
+
+class BenchmarkRequest(BaseModel):
+    preset: str = "BALANCED"
+
+
 orchestrator = ContextOrchestrator()
 control_plane_url = os.getenv("CONTROL_PLANE_URL", "http://localhost:3000")
 gateway_client = ModelGatewayClient(base_url=control_plane_url)
@@ -104,6 +119,8 @@ def create_app() -> FastAPI:
     change_detector = ChangeImpactDetector()
     briefing_engine = BriefingEngine(change_repo=change_detector.repo)
     insights_engine = OperationalInsightsEngine()
+    reindex_engine = VectorReindexEngine()
+    benchmark_engine = VectorBenchmarkEngine()
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -433,6 +450,44 @@ def create_app() -> FastAPI:
             feedback_type=req.feedback_type,
             comment=req.comment,
         )
+
+    # V1-704 Vector Optimization & Reindex Endpoints
+    @app.get("/v1/vector/reindex/status")
+    async def get_reindex_status_endpoint() -> dict[str, Any]:
+        return reindex_engine.get_status()
+
+    @app.post("/v1/vector/reindex/start")
+    async def start_reindex_endpoint(req: StartReindexRequest) -> dict[str, Any]:
+        try:
+            reindex_engine.start_reindex(target_index_version=req.target_index_version)
+            return reindex_engine.get_status()
+        except Exception as err:
+            raise HTTPException(status_code=400, detail=str(err))
+
+    @app.post("/v1/vector/reindex/cutover")
+    async def cutover_endpoint(req: CutoverRequest) -> dict[str, Any]:
+        try:
+            reindex_engine.cutover(target_index_version=req.target_index_version)
+            return reindex_engine.get_status()
+        except Exception as err:
+            raise HTTPException(status_code=400, detail=str(err))
+
+    @app.post("/v1/vector/reindex/rollback")
+    async def rollback_endpoint() -> dict[str, Any]:
+        try:
+            reindex_engine.rollback()
+            return reindex_engine.get_status()
+        except Exception as err:
+            raise HTTPException(status_code=400, detail=str(err))
+
+    @app.post("/v1/vector/benchmark")
+    async def run_vector_benchmark_endpoint(req: BenchmarkRequest) -> dict[str, Any]:
+        try:
+            preset_enum = OptimizationPreset(req.preset)
+        except ValueError:
+            preset_enum = OptimizationPreset.BALANCED
+        report = benchmark_engine.run_benchmark(workload=[], records=[], preset=preset_enum)
+        return report.to_dict()
 
     app.include_router(meetings_router)
 

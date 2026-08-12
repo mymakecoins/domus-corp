@@ -111,6 +111,12 @@
     },
     {
       "version":"000023","issue":"V1-507/V1-508/V1-509","description":"Detecção de mudanças, briefings contextuais e insights operacionais explicáveis","impact":"Cria tabelas para registros de mudanças, briefings, preferências e insights operacionais explicáveis","risk":"medium","owner":"Backend Python / Intelligence / DBA","requiredReviewers":["DBA","Security","Knowledge Owner"],"rollback":"migrations/000023_v1_507_v1_508_v1_509_intelligence.down.sql"
+    },
+    {
+      "version":"000024","issue":"V1-704","description":"Otimização Qdrant, PostgreSQL e reindexação sem downtime","impact":"Adiciona índices de otimização de busca vetorial e versão de índice para reindexação paralela","risk":"high","owner":"IA/Backend Python / DBA","requiredReviewers":["DBA","Security"],"rollback":"migrations/000024_v1_704_vector_optimization.down.sql"
+    },
+    {
+      "version":"000025","issue":"V1-609/V1-610","description":"Scheduler de automações e reuniões com transcrição","impact":"Cria tabelas para rotinas de automação, execuções, reuniões, transcrições e rascunhos de tarefas","risk":"medium","owner":"Backend / DBA","requiredReviewers":["DBA","Security"],"rollback":"migrations/000025_v1_609_v1_610_automations_and_meetings.down.sql"
     }
   ]
 }
