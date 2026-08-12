@@ -1,4 +1,4 @@
-import { test, expect, vi } from 'vitest';
+import { test, expect } from 'vitest';
 import Fastify from 'fastify';
 import { AutomationSchedulerService } from '../src/modules/automation/automation-scheduler.service.js';
 import { registerAutomationRoutes } from '../src/modules/automation/automation.routes.js';
@@ -8,6 +8,13 @@ test('AutomationSchedulerService computes next run time correctly', () => {
   const service = new AutomationSchedulerService(null as any);
   const nextRun = service.computeNextRun('0 8 * * *', 'UTC', new Date('2026-08-12T00:00:00Z'));
   expect(nextRun.toISOString()).toBe('2026-08-12T08:00:00.000Z');
+});
+
+test('AutomationSchedulerService computes next run time with timezone correctly', () => {
+  const service = new AutomationSchedulerService(null as any);
+  const nextRun = service.computeNextRun('0 8 * * *', 'America/Sao_Paulo', new Date('2026-08-12T00:00:00Z'));
+  // 08:00 AM in America/Sao_Paulo (UTC-3) corresponds to 11:00:00.000Z UTC
+  expect(nextRun.toISOString()).toBe('2026-08-12T11:00:00.000Z');
 });
 
 test('AutomationSchedulerService computes interval cron expressions correctly', () => {
@@ -73,9 +80,11 @@ test('AutomationSchedulerService executes routine when active', async () => {
   expect(result.routineId).toBe('routine-1');
 });
 
-test('AutomationSchedulerService blocks execution if PolicyEngine denies', async () => {
+test('AutomationSchedulerService blocks execution and advances next_run_at if PolicyEngine denies', async () => {
+  const queries: { sql: string; params?: any[] }[] = [];
   const mockDb = {
-    query: async (sql: string) => {
+    query: async (sql: string, params?: any[]) => {
+      queries.push({ sql, params });
       if (sql.includes('SELECT') && sql.includes('automation_routines')) {
         return {
           rows: [{
@@ -87,7 +96,7 @@ test('AutomationSchedulerService blocks execution if PolicyEngine denies', async
             timezone: 'UTC',
             action: JSON.stringify({ type: 'delete_data' }),
             status: 'active',
-            next_run_at: new Date(),
+            next_run_at: new Date('2026-08-12T08:00:00Z'),
           }]
         };
       }
@@ -96,17 +105,25 @@ test('AutomationSchedulerService blocks execution if PolicyEngine denies', async
   };
 
   const mockPolicyEngine = {
-    evaluate: async () => ({ decision: 'DENY', denyReasons: ['ACTION_NOT_ALLOWED'] })
+    evaluate: async () => ({ decision: 'DENY' as const, denyReasons: ['ACTION_NOT_ALLOWED'] })
   };
 
   const service = new AutomationSchedulerService(mockDb as any, mockPolicyEngine as any);
   const result = await service.executeRoutine('routine-policy');
   expect(result.status).toBe('blocked_by_policy');
+  expect(result.nextRunAt).toBeDefined();
+
+  // Verify DB update was executed to advance next_run_at
+  const updateQuery = queries.find((q) => q.sql.includes('UPDATE automation_routines SET last_run_at ='));
+  expect(updateQuery).toBeDefined();
+  expect(updateQuery?.params?.[1]).toBeDefined(); // next_run_at parameter
 });
 
-test('AutomationSchedulerService blocks execution if BudgetLedgerService denies', async () => {
+test('AutomationSchedulerService blocks execution and advances next_run_at if BudgetLedgerService denies', async () => {
+  const queries: { sql: string; params?: any[] }[] = [];
   const mockDb = {
-    query: async (sql: string) => {
+    query: async (sql: string, params?: any[]) => {
+      queries.push({ sql, params });
       if (sql.includes('SELECT') && sql.includes('automation_routines')) {
         return {
           rows: [{
@@ -118,7 +135,7 @@ test('AutomationSchedulerService blocks execution if BudgetLedgerService denies'
             timezone: 'UTC',
             action: JSON.stringify({ type: 'llm_call' }),
             status: 'active',
-            next_run_at: new Date(),
+            next_run_at: new Date('2026-08-12T08:00:00Z'),
           }]
         };
       }
@@ -127,7 +144,7 @@ test('AutomationSchedulerService blocks execution if BudgetLedgerService denies'
   };
 
   const mockPolicyEngine = {
-    evaluate: async () => ({ decision: 'ALLOW', denyReasons: [] })
+    evaluate: async () => ({ decision: 'ALLOW' as const, denyReasons: [] })
   };
 
   const mockBudgetLedger = {
@@ -137,6 +154,11 @@ test('AutomationSchedulerService blocks execution if BudgetLedgerService denies'
   const service = new AutomationSchedulerService(mockDb as any, mockPolicyEngine as any, mockBudgetLedger as any);
   const result = await service.executeRoutine('routine-budget');
   expect(result.status).toBe('blocked_by_budget');
+  expect(result.nextRunAt).toBeDefined();
+
+  const updateQuery = queries.find((q) => q.sql.includes('UPDATE automation_routines SET last_run_at ='));
+  expect(updateQuery).toBeDefined();
+  expect(updateQuery?.params?.[1]).toBeDefined();
 });
 
 test('AutomationSchedulerService handles pause and resume', async () => {
@@ -172,9 +194,11 @@ test('AutomationSchedulerService handles pause and resume', async () => {
   expect(resumed.status).toBe('active');
 });
 
-test('AutomationSchedulerService pollRoutines finds and runs due routines', async () => {
+test('AutomationSchedulerService pollRoutines uses FOR UPDATE SKIP LOCKED and runs due routines', async () => {
+  const executedQueries: string[] = [];
   const mockDb = {
     query: async (sql: string) => {
+      executedQueries.push(sql);
       if (sql.includes('SELECT') && sql.includes('automation_routines')) {
         return {
           rows: [{
@@ -198,6 +222,10 @@ test('AutomationSchedulerService pollRoutines finds and runs due routines', asyn
   const results = await service.pollRoutines(new Date('2026-08-12T08:00:00Z'));
   expect(results.length).toBe(1);
   expect(results[0].status).toBe('success');
+
+  // Verify FOR UPDATE SKIP LOCKED query was executed
+  const lockQuery = executedQueries.find((sql) => sql.includes('FOR UPDATE SKIP LOCKED'));
+  expect(lockQuery).toBeDefined();
 });
 
 test('Fastify automation routes register and function correctly', async () => {

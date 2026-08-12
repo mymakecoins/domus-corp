@@ -27,6 +27,56 @@ function matchPart(spec: string, val: number, min: number, max: number): boolean
   return val === num;
 }
 
+function getZonedTimeParts(date: Date, timezone: string): { min: number; hour: number; dom: number; month: number; dow: number } {
+  if (!timezone || timezone.toUpperCase() === 'UTC') {
+    return {
+      min: date.getUTCMinutes(),
+      hour: date.getUTCHours(),
+      dom: date.getUTCDate(),
+      month: date.getUTCMonth() + 1,
+      dow: date.getUTCDay(),
+    };
+  }
+
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      weekday: 'short',
+      hourCycle: 'h23',
+    });
+
+    const partsMap: Record<string, string> = {};
+    for (const part of formatter.formatToParts(date)) {
+      partsMap[part.type] = part.value;
+    }
+
+    const daysMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    const dowStr = partsMap.weekday ?? 'Sun';
+    const hourVal = parseInt(partsMap.hour ?? '0', 10) % 24;
+
+    return {
+      min: parseInt(partsMap.minute ?? '0', 10),
+      hour: hourVal,
+      dom: parseInt(partsMap.day ?? '1', 10),
+      month: parseInt(partsMap.month ?? '1', 10),
+      dow: daysMap[dowStr] ?? 0,
+    };
+  } catch {
+    return {
+      min: date.getUTCMinutes(),
+      hour: date.getUTCHours(),
+      dom: date.getUTCDate(),
+      month: date.getUTCMonth() + 1,
+      dow: date.getUTCDay(),
+    };
+  }
+}
+
 export class AutomationSchedulerService {
   constructor(
     private db: IDbPool,
@@ -55,11 +105,7 @@ export class AutomationSchedulerService {
 
     const maxIterations = 525600 * 5;
     for (let i = 0; i < maxIterations; i++) {
-      const min = current.getUTCMinutes();
-      const hour = current.getUTCHours();
-      const dom = current.getUTCDate();
-      const month = current.getUTCMonth() + 1;
-      const dow = current.getUTCDay();
+      const { min, hour, dom, month, dow } = getZonedTimeParts(current, timezone);
 
       if (!matchPart(minSpec, min, 0, 59)) {
         current.setUTCMinutes(current.getUTCMinutes() + 1);
@@ -203,9 +249,10 @@ export class AutomationSchedulerService {
 
       if (policyRes.decision === 'DENY') {
         const reason = policyRes.denyReasons?.join(', ') || 'Policy check failed';
+        const nextRunAt = this.computeNextRun(routine.cronExpression, routine.timezone, now);
         await this.recordLog(routine, 'blocked_by_policy', reason);
-        await this.updateRoutineLastRun(routine.id, now);
-        return { status: 'blocked_by_policy', routineId: routine.id, reason };
+        await this.updateRoutineLastAndNextRun(routine.id, now, nextRunAt);
+        return { status: 'blocked_by_policy', routineId: routine.id, reason, nextRunAt };
       }
     }
 
@@ -217,9 +264,10 @@ export class AutomationSchedulerService {
 
       if (!hasBudget) {
         const reason = 'Insufficient budget';
+        const nextRunAt = this.computeNextRun(routine.cronExpression, routine.timezone, now);
         await this.recordLog(routine, 'blocked_by_budget', reason);
-        await this.updateRoutineLastRun(routine.id, now);
-        return { status: 'blocked_by_budget', routineId: routine.id, reason };
+        await this.updateRoutineLastAndNextRun(routine.id, now, nextRunAt);
+        return { status: 'blocked_by_budget', routineId: routine.id, reason, nextRunAt };
       }
     }
 
@@ -277,7 +325,7 @@ export class AutomationSchedulerService {
 
   async pollRoutines(referenceDate: Date = new Date()): Promise<AutomationExecutionResult[]> {
     const res = await this.db.query(
-      `SELECT * FROM automation_routines WHERE status = 'active' AND next_run_at <= $1`,
+      `SELECT * FROM automation_routines WHERE status = 'active' AND next_run_at <= $1 FOR UPDATE SKIP LOCKED`,
       [referenceDate]
     );
     const results: AutomationExecutionResult[] = [];
@@ -316,10 +364,10 @@ export class AutomationSchedulerService {
     );
   }
 
-  private async updateRoutineLastRun(routineId: string, lastRunAt: Date): Promise<void> {
+  private async updateRoutineLastAndNextRun(routineId: string, lastRunAt: Date, nextRunAt: Date): Promise<void> {
     await this.db.query(
-      `UPDATE automation_routines SET last_run_at = $1, updated_at = $2 WHERE id = $3`,
-      [lastRunAt, lastRunAt, routineId]
+      `UPDATE automation_routines SET last_run_at = $1, next_run_at = $2, updated_at = $1 WHERE id = $3`,
+      [lastRunAt, nextRunAt, routineId]
     );
   }
 }
