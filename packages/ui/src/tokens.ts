@@ -92,7 +92,12 @@ export const AI_SEMANTIC_STATES: Record<AiSemanticState, AiSemanticStateMetadata
 };
 
 const FORBIDDEN_BUTTON_STYLES = [
-  '#271bae', '#310ae3', 'bg-indigo', 'bg-violet', 'brand-depth', 'brand-secondary',
+  '#271bae',
+  '#310ae3',
+  'indigo',
+  'violet',
+  'brand-depth',
+  'brand-secondary',
 ] as const;
 
 export function assertButtonClassesAllowed(classes: string): void {

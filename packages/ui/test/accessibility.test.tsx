@@ -40,10 +40,15 @@ describe('acessibilidade da fundação e proveniência', () => {
     policyReason: 'Ação aprovada por policy.',
   };
 
-  it.each(['light', 'dark'] as const)('não tem violações axe críticas no tema %s', async (theme) => {
+  it.each([
+    ['light', 'default'],
+    ['dark', 'default'],
+    ['light', 'compact'],
+    ['dark', 'compact'],
+  ] as const)('não tem violações axe no catálogo no tema %s e densidade %s', async (theme, density) => {
     const freshnessStatuses: FreshnessStatus[] = ['vigente', 'obsoleta', 'conflitante', 'restrita'];
     const { container } = render(
-      <main data-theme={theme}>
+      <main data-theme={theme} data-density={density}>
         <h1>Catálogo e Proveniência</h1>
         <Button>Continuar</Button>
         <Select aria-label="Workspace" options={[{ value: 'b', label: 'Beta' }, { value: 'a', label: 'Alfa' }]} />
@@ -98,6 +103,24 @@ describe('acessibilidade da fundação e proveniência', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Gerando resposta');
   });
 
+  it('valida que Select impede Select.Item com value vazio', () => {
+    expect(() =>
+      render(
+        <Select
+          aria-label="Opções inválidas"
+          options={[{ value: '', label: 'Vazio' }]}
+        />
+      )
+    ).toThrow(/Select.Item exige value não vazio/i);
+  });
+
+  it('garante que StreamingIndicator possui atributos de aria-live polite e role status', () => {
+    render(<StreamingIndicator label="Processando grounding..." />);
+    const statusEl = screen.getByRole('status');
+    expect(statusEl).toHaveAttribute('aria-live', 'polite');
+    expect(statusEl).toHaveTextContent('Processando grounding...');
+  });
+
   it('não tem violações axe no EvidenceSheet aberto', async () => {
     const { container } = render(
       <EvidenceSheet
@@ -127,4 +150,5 @@ describe('acessibilidade da fundação e proveniência', () => {
     expect(result.violations).toEqual([]);
   });
 });
+
 
