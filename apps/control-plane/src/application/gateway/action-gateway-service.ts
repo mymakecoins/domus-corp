@@ -264,4 +264,66 @@ export class ActionGatewayService {
     await this.idempotency.saveReceipt(request.idempotencyKey, exhaustedReceipt);
     return exhaustedReceipt;
   }
+
+  async reconcileAction(idempotencyKey: string): Promise<ActionReceipt | null> {
+    const existingReceipt = await this.idempotency.getReceipt(idempotencyKey);
+    if (!existingReceipt) {
+      return null;
+    }
+
+    if (existingReceipt.status !== "INCONCLUSIVE") {
+      return existingReceipt;
+    }
+
+    if (this.defaultConnector.checkStatus) {
+      try {
+        const statusCheck = await this.defaultConnector.checkStatus(idempotencyKey);
+        if (statusCheck.executed) {
+          const confirmedReceipt = createActionReceipt({
+            actionId: existingReceipt.actionId,
+            idempotencyKey: existingReceipt.idempotencyKey,
+            correlationId: existingReceipt.correlationId,
+            operation: existingReceipt.operation,
+            tool: existingReceipt.tool,
+            actor: existingReceipt.actor,
+            status: "SUCCESS",
+            result: statusCheck.result,
+            tenantId: existingReceipt.tenantId,
+            workspaceId: existingReceipt.workspaceId,
+            userId: existingReceipt.userId,
+            attemptNumber: existingReceipt.attemptNumber,
+            maxRetries: existingReceipt.maxRetries,
+            createdAt: existingReceipt.createdAt,
+            executedAt: this.now(),
+          });
+          await this.idempotency.saveReceipt(idempotencyKey, confirmedReceipt);
+          return confirmedReceipt;
+        } else if (statusCheck.error) {
+          const failedReceipt = createActionReceipt({
+            actionId: existingReceipt.actionId,
+            idempotencyKey: existingReceipt.idempotencyKey,
+            correlationId: existingReceipt.correlationId,
+            operation: existingReceipt.operation,
+            tool: existingReceipt.tool,
+            actor: existingReceipt.actor,
+            status: "FAILED",
+            error: statusCheck.error,
+            tenantId: existingReceipt.tenantId,
+            workspaceId: existingReceipt.workspaceId,
+            userId: existingReceipt.userId,
+            attemptNumber: existingReceipt.attemptNumber,
+            maxRetries: existingReceipt.maxRetries,
+            createdAt: existingReceipt.createdAt,
+            executedAt: this.now(),
+          });
+          await this.idempotency.saveReceipt(idempotencyKey, failedReceipt);
+          return failedReceipt;
+        }
+      } catch {
+        // Status check failed or unavailable; retain INCONCLUSIVE receipt
+      }
+    }
+
+    return existingReceipt;
+  }
 }
