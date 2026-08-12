@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { IdempotencyService } from "../../../src/domain/gateway/idempotency.js";
-import { createActionReceipt } from "../../../src/domain/gateway/action-request.js";
+import { IdempotencyService } from "../../../dist/domain/gateway/idempotency.js";
+import { createActionReceipt } from "../../../dist/domain/gateway/action-request.js";
 
 describe("IdempotencyService", () => {
   it("stores and retrieves receipts for idempotent execution", () => {

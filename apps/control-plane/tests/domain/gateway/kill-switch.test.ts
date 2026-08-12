@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { KillSwitchGuard } from "../../../src/domain/gateway/kill-switch.js";
+import { KillSwitchGuard } from "../../../dist/domain/gateway/kill-switch.js";
 
 describe("KillSwitchGuard", () => {
   it("blocks actions when global or workspace kill switch is enabled", () => {
