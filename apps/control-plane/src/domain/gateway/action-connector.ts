@@ -11,11 +11,15 @@ export class HttpActionConnector implements ActionConnector {
     const response = await this.fetchImpl(input.url, {
       method: input.method ?? "POST",
       headers: { "Content-Type": "application/json", ...(input.headers ?? {}) },
-      body: input.body ? JSON.stringify(input.body) : undefined,
+      body: input.body !== undefined ? JSON.stringify(input.body) : undefined,
     });
 
     if (!response.ok) {
       throw new Error(`HTTP_CONNECTOR_ERROR:${response.status}`);
+    }
+
+    if (response.status === 204) {
+      return null;
     }
 
     return response.json();
