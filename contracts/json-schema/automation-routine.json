@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://domus.corp/schemas/automation-routine.json",
+  "title": "AutomationRoutine",
+  "type": "object",
+  "required": [
+    "routine_id",
+    "tenant_id",
+    "workspace_id",
+    "owner_id",
+    "name",
+    "cron_expression",
+    "timezone",
+    "target_action_type",
+    "status"
+  ],
+  "properties": {
+    "routine_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "workspace_id": { "type": "string", "format": "uuid" },
+    "owner_id": { "type": "string", "format": "uuid" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "cron_expression": { "type": "string" },
+    "timezone": { "type": "string", "default": "UTC" },
+    "target_action_type": { "type": "string", "enum": ["briefing", "insight_check", "connector_action"] },
+    "target_payload": { "type": "object" },
+    "max_budget": { "type": "number", "minimum": 0 },
+    "status": { "type": "string", "enum": ["active", "paused", "terminated"] }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://domus.corp/schemas/automation-run.json",
+  "title": "AutomationRun",
+  "type": "object",
+  "required": [
+    "run_id",
+    "routine_id",
+    "executed_at",
+    "status"
+  ],
+  "properties": {
+    "run_id": { "type": "string", "format": "uuid" },
+    "routine_id": { "type": "string", "format": "uuid" },
+    "executed_at": { "type": "string", "format": "date-time" },
+    "status": { "type": "string", "enum": ["success", "failed", "skipped_policy_denied", "skipped_budget_exceeded", "paused"] },
+    "policy_version_applied": { "type": "string" },
+    "budget_spent": { "type": "number" },
+    "error_message": { "type": "string" },
+    "receipt_ref": { "type": "string" }
+  }
+}

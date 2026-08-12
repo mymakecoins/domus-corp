@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://domus.corp/schemas/meeting-draft-task.json",
+  "title": "MeetingDraftTask",
+  "type": "object",
+  "required": [
+    "task_id",
+    "meeting_id",
+    "title",
+    "confidence_score",
+    "provenance_quote",
+    "status"
+  ],
+  "properties": {
+    "task_id": { "type": "string", "format": "uuid" },
+    "meeting_id": { "type": "string", "format": "uuid" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "suggested_assignee": { "type": "string" },
+    "due_date": { "type": "string", "format": "date" },
+    "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "provenance_quote": { "type": "string" },
+    "provenance_timestamp_ms": { "type": "integer" },
+    "status": { "type": "string", "enum": ["proposed", "approved", "rejected", "converted"] },
+    "external_task_id": { "type": "string" }
+  }
+}

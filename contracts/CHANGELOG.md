@@ -2,6 +2,10 @@
 
 O catálogo segue Semantic Versioning. Mudança incompatível exige nova major; mudança aditiva opcional usa minor; correção documental ou restrição que não altera instâncias aceitas usa patch.
 
+## [2.18.0] — 2026-08-12
+
+- Adição de esquemas JSON para automações governadas (`AutomationRoutine`, `AutomationRun` — V1-609) e processamento de reuniões (`MeetingIngestion`, `MeetingDraftTask` — V1-610).
+
 ## [2.17.0] — 2026-08-10
 
 - Promoção dos esquemas JSON de Contexto de Acesso ao Conhecimento, Chunks V1, Embeddings V1 e Resultados de Recuperação para o catálogo central `contracts/`.
