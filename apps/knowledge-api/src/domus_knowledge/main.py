@@ -64,9 +64,29 @@ from domus_knowledge.telemetry_observability import (
     TelemetryEngine,
 )
 from domus_knowledge.vector_benchmark import VectorBenchmarkEngine
+from domus_knowledge.pilot_rollout import (
+    DecisionStatus,
+    GateG8Report,
+    KillSwitchAction,
+    KillSwitchLogEntry,
+    PilotGroupConfig,
+    PilotPlanConfig,
+    PilotRolloutManager,
+    TaskTelemetryPayload,
+    TelemetrySummary,
+)
+
+
+class TriggerKillSwitchApiRequest(BaseModel):
+    action: str
+    operator: str
+    reason: str
+    group_id: str | None = None
+    connector: str | None = None
 
 
 class OrchestrateRequest(BaseModel):
+
     query: str = Field(..., description="Pergunta ou intenção do usuário.")
     user_roles: list[str] = Field(default_factory=lambda: ["user"], description="Papéis/escopos do usuário.")
     evidences: list[dict[str, Any]] = Field(default_factory=list, description="Lista de trechos recuperados.")
@@ -892,8 +912,61 @@ def create_app() -> FastAPI:
         )
         return res
 
+    global_pilot_manager: PilotRolloutManager | None = None
+
+    @app.post("/api/v1/pilot/plans", status_code=status.HTTP_201_CREATED)
+    async def create_pilot_plan_endpoint(plan: PilotPlanConfig) -> dict[str, Any]:
+        nonlocal global_pilot_manager
+        global_pilot_manager = PilotRolloutManager(plan)
+        return plan.model_dump(mode="json")
+
+    @app.get("/api/v1/pilot/plans/{plan_id}")
+    async def get_pilot_plan_endpoint(plan_id: str) -> dict[str, Any]:
+        if not global_pilot_manager or global_pilot_manager.get_plan().plan_id != plan_id:
+            raise HTTPException(status_code=404, detail=f"Plano de piloto '{plan_id}' nao encontrado.")
+        return global_pilot_manager.get_plan().model_dump(mode="json")
+
+    @app.post("/api/v1/pilot/telemetry/record", status_code=status.HTTP_201_CREATED)
+    async def record_pilot_telemetry_endpoint(payload: TaskTelemetryPayload) -> dict[str, Any]:
+        if not global_pilot_manager:
+            raise HTTPException(status_code=400, detail="Plano de piloto nao inicializado.")
+        global_pilot_manager.record_telemetry(payload)
+        return {"recorded": True, "task_id": payload.task_id}
+
+    @app.get("/api/v1/pilot/telemetry/summary")
+    async def get_pilot_telemetry_summary_endpoint(group_id: str | None = None) -> dict[str, Any]:
+        if not global_pilot_manager:
+            raise HTTPException(status_code=400, detail="Plano de piloto nao inicializado.")
+        summary = global_pilot_manager.get_telemetry_summary(group_id=group_id)
+        return summary.model_dump(mode="json")
+
+    @app.post("/api/v1/pilot/kill-switch/trigger")
+    async def trigger_kill_switch_endpoint(req: TriggerKillSwitchApiRequest) -> dict[str, Any]:
+        if not global_pilot_manager:
+            raise HTTPException(status_code=400, detail="Plano de piloto nao inicializado.")
+        try:
+            act = KillSwitchAction(req.action)
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=f"Acao de kill-switch invalida: {err}") from err
+
+        entry = global_pilot_manager.trigger_kill_switch(
+            action=act,
+            operator=req.operator,
+            reason=req.reason,
+            group_id=req.group_id,
+            connector=req.connector,
+        )
+        return entry.model_dump(mode="json")
+
+    @app.get("/api/v1/pilot/gate-g8/evaluate")
+    async def evaluate_gate_g8_endpoint() -> dict[str, Any]:
+        if not global_pilot_manager:
+            raise HTTPException(status_code=400, detail="Plano de piloto nao inicializado.")
+        report = global_pilot_manager.evaluate_gate_g8()
+        return report.model_dump(mode="json")
 
     app.include_router(meetings_router)
+
 
     return app
 
