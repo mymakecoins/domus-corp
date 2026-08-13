@@ -2,8 +2,11 @@
 
 import os
 import uuid
-from typing import Any, AsyncGenerator, Optional
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
+from app.routers.meetings import router as meetings_router
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -12,27 +15,7 @@ from domus_knowledge.access_control import build_authorized_filter, derive_acces
 from domus_knowledge.briefings import BriefingEngine, BriefingPreferences, BriefingRecord
 from domus_knowledge.change_detection import ChangeImpactDetector, ChangeRecord
 from domus_knowledge.config import load_config
-from datetime import UTC, datetime, timedelta
-from domus_knowledge.history_retention import (
-    ArchivedHistoryQueryEngine,
-    ArchivedQueryRequest,
-    AutoPartitionManager,
-    DataClass,
-    DataRetentionMatrix,
-    HistoryArchiveEngine,
-    RetentionPolicy,
-)
 from domus_knowledge.context_orchestrator import ContextOrchestrator
-from domus_knowledge.decision_support import ComparisonResult, DecisionSupportEngine, SynthesisResult
-from domus_knowledge.hnsw_config import OptimizationPreset
-from domus_knowledge.knowledge_gaps import KnowledgeGap, KnowledgeGapDetector
-from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
-from domus_knowledge.operational_insights import InsightFeedback, OperationalInsight, OperationalInsightsEngine
-from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse
-from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, QualityLoopSuggestion
-from domus_knowledge.reindex_engine import VectorReindexEngine
-from domus_knowledge.retrieval import hybrid_search
-from domus_knowledge.vector_benchmark import VectorBenchmarkEngine
 from domus_knowledge.db_health import (
     BackupHealthStatus,
     DatabaseHealthMetrics,
@@ -40,7 +23,39 @@ from domus_knowledge.db_health import (
     GatewayBackpressureEngine,
     QdrantStatus,
 )
-from app.routers.meetings import router as meetings_router
+from domus_knowledge.decision_support import (
+    ComparisonResult,
+    DecisionSupportEngine,
+    SynthesisResult,
+)
+from domus_knowledge.history_retention import (
+    ArchivedHistoryQueryEngine,
+    ArchivedQueryRequest,
+    AutoPartitionManager,
+    DataClass,
+    DataRetentionMatrix,
+    HistoryArchiveEngine,
+)
+from domus_knowledge.hnsw_config import OptimizationPreset
+from domus_knowledge.knowledge_gaps import KnowledgeGap, KnowledgeGapDetector
+from domus_knowledge.load_concurrency_resilience import (
+    AtomicBudgetLedger,
+    ChaosDependency,
+    ChaosEngineeringEngine,
+    ChaosFaultType,
+    LoadTestEngine,
+)
+from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
+from domus_knowledge.operational_insights import (
+    InsightFeedback,
+    OperationalInsight,
+    OperationalInsightsEngine,
+)
+from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse
+from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, QualityLoopSuggestion
+from domus_knowledge.reindex_engine import VectorReindexEngine
+from domus_knowledge.retrieval import hybrid_search
+from domus_knowledge.vector_benchmark import VectorBenchmarkEngine
 
 
 class OrchestrateRequest(BaseModel):
@@ -48,11 +63,11 @@ class OrchestrateRequest(BaseModel):
     user_roles: list[str] = Field(default_factory=lambda: ["user"], description="Papéis/escopos do usuário.")
     evidences: list[dict[str, Any]] = Field(default_factory=list, description="Lista de trechos recuperados.")
     max_tokens: int = Field(1024, description="Limite máximo de tokens de saída.")
-    idempotency_key: Optional[str] = Field(None, description="Chave de idempotência.")
+    idempotency_key: str | None = Field(None, description="Chave de idempotência.")
 
 
 class CompareRequest(OrchestrateRequest):
-    alternatives: Optional[list[str]] = Field(None, description="Lista opcional de alternativas para comparação.")
+    alternatives: list[str] | None = Field(None, description="Lista opcional de alternativas para comparação.")
 
 
 class ResolveSuggestionRequest(BaseModel):
@@ -62,9 +77,9 @@ class ResolveSuggestionRequest(BaseModel):
 
 
 class UpdateKnowledgeGapRequest(BaseModel):
-    status: Optional[str] = None
-    assigned_owner: Optional[str] = None
-    candidate_sources: Optional[list[str]] = None
+    status: str | None = None
+    assigned_owner: str | None = None
+    candidate_sources: list[str] | None = None
 
 
 class DetectChangeRequest(BaseModel):
@@ -74,8 +89,8 @@ class DetectChangeRequest(BaseModel):
     source_type: str
     before_content: str
     after_content: str
-    affected_domains: Optional[list[str]] = None
-    owners: Optional[list[str]] = None
+    affected_domains: list[str] | None = None
+    owners: list[str] | None = None
 
 
 class GenerateBriefingRequest(BaseModel):
@@ -108,7 +123,7 @@ class ReviewInsightRequest(BaseModel):
 class SubmitInsightFeedbackRequest(BaseModel):
     user_id: str
     feedback_type: str
-    comment: Optional[str] = None
+    comment: str | None = None
 
 
 class CheckPartitionRequest(BaseModel):
@@ -136,7 +151,7 @@ class StartReindexRequest(BaseModel):
 
 
 class CutoverRequest(BaseModel):
-    target_index_version: Optional[str] = None
+    target_index_version: str | None = None
 
 
 class BenchmarkRequest(BaseModel):
@@ -159,9 +174,35 @@ class SimulateDbLoadRequest(BaseModel):
     last_backup_age_hours: float = 2.0
 
 
+class RunLoadTestRequest(BaseModel):
+    num_chat: int = 10
+    num_retrieval: int = 10
+    num_ingestion: int = 5
+    max_concurrent: int = 50
+    simulated_delay_ms: float = 10.0
+
+
+class AtomicBudgetReserveRequest(BaseModel):
+    tenant_id: str
+    amount_cents: int
+    idempotency_key: str | None = None
+    initial_balance_cents: int = 1000
+    balance_ceiling_cents: int = 1000
+
+
+class ChaosExperimentApiRequest(BaseModel):
+    dependency: str
+    fault_type: str
+
+
+class ChaosRecoverApiRequest(BaseModel):
+    dependency: str
+
+
 orchestrator = ContextOrchestrator()
 control_plane_url = os.getenv("CONTROL_PLANE_URL", "http://localhost:3000")
 gateway_client = ModelGatewayClient(base_url=control_plane_url)
+global_chaos_engine = ChaosEngineeringEngine()
 
 
 def create_app() -> FastAPI:
@@ -176,6 +217,7 @@ def create_app() -> FastAPI:
     benchmark_engine = VectorBenchmarkEngine()
     db_health_monitor = DatabaseHealthMonitor()
     gateway_backpressure_engine = GatewayBackpressureEngine(monitor=db_health_monitor)
+
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -407,8 +449,8 @@ def create_app() -> FastAPI:
     @app.get("/v1/quality-loop/feedback", response_model=list[FeedbackRecord])
     async def list_feedback_endpoint(
         tenant_id: str,
-        workspace_id: Optional[str] = None,
-        status: Optional[str] = None,
+        workspace_id: str | None = None,
+        status: str | None = None,
     ) -> list[FeedbackRecord]:
         return await quality_loop_engine.list_feedbacks(
             tenant_id=tenant_id,
@@ -419,7 +461,7 @@ def create_app() -> FastAPI:
     @app.get("/v1/quality-loop/suggestions", response_model=list[QualityLoopSuggestion])
     async def list_suggestions_endpoint(
         tenant_id: str,
-        status: Optional[str] = None,
+        status: str | None = None,
     ) -> list[QualityLoopSuggestion]:
         return await quality_loop_engine.list_suggestions(
             tenant_id=tenant_id,
@@ -457,7 +499,7 @@ def create_app() -> FastAPI:
     @app.get("/v1/knowledge-gaps", response_model=list[KnowledgeGap])
     async def list_knowledge_gaps_endpoint(
         tenant_id: str,
-        status: Optional[str] = None,
+        status: str | None = None,
     ) -> list[KnowledgeGap]:
         return await knowledge_gap_detector.list_gaps(
             tenant_id=tenant_id,
@@ -494,7 +536,7 @@ def create_app() -> FastAPI:
         )
 
     @app.get("/intelligence/changes", response_model=list[ChangeRecord])
-    async def list_changes_endpoint(tenant_id: str, workspace_id: Optional[str] = None) -> list[ChangeRecord]:
+    async def list_changes_endpoint(tenant_id: str, workspace_id: str | None = None) -> list[ChangeRecord]:
         return change_detector.repo.list_records(tenant_id, workspace_id)
 
     # V1-508 Briefing Endpoints
@@ -509,7 +551,7 @@ def create_app() -> FastAPI:
         )
 
     @app.get("/intelligence/briefings", response_model=list[BriefingRecord])
-    async def list_briefings_endpoint(tenant_id: str, workspace_id: Optional[str] = None) -> list[BriefingRecord]:
+    async def list_briefings_endpoint(tenant_id: str, workspace_id: str | None = None) -> list[BriefingRecord]:
         return briefing_engine.briefing_repo.list_briefings(tenant_id, workspace_id)
 
     @app.post("/intelligence/briefings/preferences", response_model=BriefingPreferences)
@@ -532,7 +574,7 @@ def create_app() -> FastAPI:
         )
 
     @app.get("/intelligence/insights", response_model=list[OperationalInsight])
-    async def list_insights_endpoint(tenant_id: str, workspace_id: Optional[str] = None) -> list[OperationalInsight]:
+    async def list_insights_endpoint(tenant_id: str, workspace_id: str | None = None) -> list[OperationalInsight]:
         return insights_engine.repo.list_insights(tenant_id, workspace_id)
 
     @app.post("/intelligence/insights/{insight_id}/review", response_model=OperationalInsight)
@@ -718,9 +760,60 @@ def create_app() -> FastAPI:
         )
         return comp.model_dump()
 
+    @app.post("/api/v1/qa/load-test/run")
+    async def run_load_test_endpoint(req: RunLoadTestRequest) -> dict[str, Any]:
+        engine = LoadTestEngine(max_concurrent_requests=req.max_concurrent)
+        report = engine.run_concurrent_load_test(
+            num_chat=req.num_chat,
+            num_retrieval=req.num_retrieval,
+            num_ingestion=req.num_ingestion,
+            simulated_delay_ms=req.simulated_delay_ms,
+        )
+        return report.to_dict()
+
+    @app.post("/api/v1/qa/budget/atomic-reserve")
+    async def atomic_budget_reserve_endpoint(req: AtomicBudgetReserveRequest) -> dict[str, Any]:
+        ledger = AtomicBudgetLedger(
+            initial_balance_cents=req.initial_balance_cents,
+            balance_ceiling_cents=req.balance_ceiling_cents,
+        )
+        res = ledger.reserve_budget(
+            tenant_id=req.tenant_id,
+            amount_cents=req.amount_cents,
+            idempotency_key=req.idempotency_key,
+        )
+        return res.to_dict()
+
+    @app.post("/api/v1/qa/chaos/experiment")
+    async def chaos_experiment_endpoint(req: ChaosExperimentApiRequest) -> dict[str, Any]:
+        try:
+            dep = ChaosDependency(req.dependency)
+            fault = ChaosFaultType(req.fault_type)
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=f"Invalid chaos enum value: {err}") from err
+
+        exp = global_chaos_engine.inject_fault(dependency=dep, fault_type=fault)
+        return exp.to_dict()
+
+    @app.get("/api/v1/qa/chaos/status")
+    async def chaos_status_endpoint() -> dict[str, Any]:
+        return {"unhealthy_dependencies": global_chaos_engine.get_unhealthy_dependencies()}
+
+    @app.post("/api/v1/qa/chaos/recover")
+    async def chaos_recover_endpoint(req: ChaosRecoverApiRequest) -> dict[str, Any]:
+        try:
+            dep = ChaosDependency(req.dependency)
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=f"Invalid chaos enum value: {err}") from err
+
+        rec = global_chaos_engine.recover_dependency(dep)
+        return rec.to_dict()
+
+
     app.include_router(meetings_router)
 
     return app
+
 
 
 app = create_app()

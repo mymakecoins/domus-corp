@@ -4,15 +4,16 @@ Provides automated encrypted backups, SHA-256 checksum integrity checks, isolate
 staging environment restore routine, RTO/RPO SLA verification, and failure alerting.
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-import json
+import base64
 import hashlib
 import hmac
+import json
 import secrets
-import base64
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 
 class BackupCoverageError(Exception):
     """Raised when backup coverage cannot be declared due to failure or corruption."""
@@ -36,22 +37,22 @@ class BackupManifest:
     timestamp: str
     label: str
     status: str
-    artifacts: Dict[str, Dict[str, Any]]
+    artifacts: dict[str, dict[str, Any]]
     checksum_sha256: str
     manifest_path: str = ""
 
 @dataclass
 class IntegrityCheckResult:
     is_valid: bool
-    corrupted_files: List[str] = field(default_factory=list)
+    corrupted_files: list[str] = field(default_factory=list)
     report: str = ""
 
 @dataclass
 class RestoreResult:
     success: bool
-    restored_postgres: Dict[str, Any]
-    restored_minio: Dict[str, Any]
-    restored_qdrant: Dict[str, Any]
+    restored_postgres: dict[str, Any]
+    restored_minio: dict[str, Any]
+    restored_qdrant: dict[str, Any]
     rto_seconds: float
     rpo_seconds: float
     rto_sla_met: bool
@@ -60,11 +61,11 @@ class RestoreResult:
 
 class AlertManager:
     def __init__(self) -> None:
-        self.alerts_sent: List[Dict[str, Any]] = []
+        self.alerts_sent: list[dict[str, Any]] = []
 
     def send_alert(self, owner: str, severity: str, title: str, message: str) -> None:
         alert = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "owner": owner,
             "severity": severity,
             "title": title,
@@ -139,7 +140,7 @@ class CryptoHelper:
         return bytes(plaintext)
 
 class BackupManager:
-    def __init__(self, config: BackupConfig, alert_manager: Optional[AlertManager] = None) -> None:
+    def __init__(self, config: BackupConfig, alert_manager: AlertManager | None = None) -> None:
         self.config = config
         self.alert_manager = alert_manager or AlertManager()
         self.storage_dir = Path(config.storage_path)
@@ -147,12 +148,12 @@ class BackupManager:
 
     def create_backup(
         self,
-        postgres_data: Dict[str, Any],
-        minio_data: Dict[str, Any],
-        qdrant_data: Dict[str, Any],
+        postgres_data: dict[str, Any],
+        minio_data: dict[str, Any],
+        qdrant_data: dict[str, Any],
         label: str = "automated_backup"
     ) -> BackupManifest:
-        timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        timestamp_str = datetime.now(UTC).strftime("%Y%m%d_%H%M%S_%f")
         backup_id = f"backup_{timestamp_str}_{secrets.token_hex(4)}"
 
         targets = {
@@ -161,7 +162,7 @@ class BackupManager:
             "qdrant": qdrant_data,
         }
 
-        artifacts: Dict[str, Dict[str, Any]] = {}
+        artifacts: dict[str, dict[str, Any]] = {}
         combined_hash = hashlib.sha256()
 
         for name, raw_data in targets.items():
@@ -182,7 +183,7 @@ class BackupManager:
 
         manifest = BackupManifest(
             backup_id=backup_id,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             label=label,
             status="COMPLETED",
             artifacts=artifacts,
@@ -205,7 +206,7 @@ class BackupManager:
         return manifest
 
     def verify_integrity(self, manifest: BackupManifest) -> IntegrityCheckResult:
-        corrupted: List[str] = []
+        corrupted: list[str] = []
 
         for name, artifact_info in manifest.artifacts.items():
             path = Path(artifact_info["path"])
@@ -262,7 +263,7 @@ class RestoreManager:
         self.config = config
 
     def execute_restore(self, manifest: BackupManifest, target_environment: str = "staging") -> RestoreResult:
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
 
         # 1. Integrity check
         backup_mgr = BackupManager(self.config)
@@ -282,7 +283,7 @@ class RestoreManager:
         qdrant_bytes = Path(manifest.artifacts["qdrant"]["path"]).read_bytes()
         qdrant_data = json.loads(CryptoHelper.decrypt_data(qdrant_bytes, self.config.encryption_key).decode('utf-8'))
 
-        end_time = datetime.now(timezone.utc)
+        end_time = datetime.now(UTC)
         rto_seconds = (end_time - start_time).total_seconds()
         
         # Calculate RPO based on backup manifest timestamp vs current time

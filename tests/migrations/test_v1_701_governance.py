@@ -7,7 +7,6 @@ from pathlib import Path
 
 from scripts.migration_governance import MigrationViolation, validate_migrations
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 

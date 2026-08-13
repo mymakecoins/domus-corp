@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import unittest
 from pathlib import Path
+
 ROOT=Path(__file__).resolve().parents[2];UP=(ROOT/"migrations/000007_v1_304_egress.up.sql").read_text(encoding="utf-8").lower();DOWN=(ROOT/"migrations/000007_v1_304_egress.down.sql").read_text(encoding="utf-8").lower()
 class EgressMigrationTest(unittest.TestCase):
  def test_versions_rules_exceptions_and_redacted_audit(self):

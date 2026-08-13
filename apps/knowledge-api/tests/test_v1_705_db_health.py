@@ -1,16 +1,14 @@
 """Tests for V1-705: Database health monitoring, backpressure shedding, and DBA runbook integration."""
 
-from datetime import UTC, datetime, timedelta
-import pytest
 from fastapi.testclient import TestClient
 
 from domus_knowledge.db_health import (
     AlertSeverity,
+    BackupHealthStatus,
     DatabaseHealthMetrics,
     DatabaseHealthMonitor,
     GatewayBackpressureEngine,
     QdrantStatus,
-    BackupHealthStatus,
 )
 from domus_knowledge.main import create_app
 

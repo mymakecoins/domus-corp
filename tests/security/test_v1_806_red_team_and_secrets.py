@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import re
 import unittest
+from datetime import UTC, datetime
 from pathlib import Path
 
-from datetime import datetime, timezone
-import hashlib
-from domus_knowledge.content_safety import PATTERNS, SafetyInput, scan_content
-from domus_knowledge.prompt_sanitizer import PromptSanitizer, sanitize_untrusted_text
+from domus_knowledge.content_safety import SafetyInput, scan_content
+from domus_knowledge.prompt_sanitizer import PromptSanitizer
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -50,7 +50,7 @@ class RedTeamAndSecretScanTest(unittest.TestCase):
                 scanner_profile="default",
                 scanner_version="1.0.0",
             )
-            assessment = scan_content(safety_input, content_bytes, datetime.now(timezone.utc))
+            assessment = scan_content(safety_input, content_bytes, datetime.now(UTC))
             self.assertIn(
                 assessment.decision,
                 ("QUARANTINE", "BLOCK", "REVIEW_REQUIRED"),
@@ -113,6 +113,49 @@ class RedTeamAndSecretScanTest(unittest.TestCase):
         self.assertIn("EGRESS_CLASSIFICATION_DENIED", content)
         self.assertIn("EGRESS_SECRET_DETECTED", content)
 
+    def test_tenant_escape_isolation_enforcement(self):
+        """4. Cross-tenant access attempts must throw AccessError (fail-closed)."""
+        from domus_knowledge.access_control import KnowledgeAccessContext, AccessError, derive_access_context, QdrantDouble, build_authorized_filter
+
+        # Attempt to access workspace B with context declared for workspace A
+        invalid_policy = {
+            "tenant_id": "tenant-alpha",
+            "workspace_id": "ws-alpha",
+            "user_id": "user-1",
+            "policy_version": "1.0",
+            "classification": "INTERNAL",
+            "allowed_sources": ["src-1"],
+            "allowed_assets": ["asset-1"],
+            "allowed_classifications": ["INTERNAL"],
+            "expires_at": datetime(2099, 1, 1, tzinfo=UTC),
+        }
+        with self.assertRaises(AccessError):
+            derive_access_context(
+                invalid_policy,
+                declared_workspace_id="ws-beta", # Mismatch declared workspace
+                request_id="req-1",
+                trace_id="trace-1",
+            )
+
+    def test_container_and_artifact_secret_scanner(self):
+        """5. Scans docker compose / container files and configuration artifacts for hardcoded secrets."""
+        forbidden_container_findings: list[str] = []
+        container_files = [
+            ROOT / "compose.yaml",
+            ROOT / ".env.example",
+        ]
+        for cfile in container_files:
+            if cfile.exists():
+                content = cfile.read_text(encoding="utf-8", errors="ignore")
+                for secret_type, pattern in SECRET_PATTERNS.items():
+                    if pattern.search(content):
+                        matches = pattern.findall(content)
+                        for m in matches:
+                            if "test" not in str(m).lower() and "example" not in str(m).lower() and "placeholder" not in str(m).lower():
+                                forbidden_container_findings.append(f"{cfile.name}: Leaked {secret_type}")
+        self.assertEqual(forbidden_container_findings, [])
+
 
 if __name__ == "__main__":
     unittest.main()
+

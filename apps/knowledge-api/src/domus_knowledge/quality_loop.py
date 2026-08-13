@@ -1,8 +1,9 @@
 """Quality Loop Engine for V1-505 feedback and revision workflow."""
 
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
-from datetime import datetime, timezone
+
 from pydantic import BaseModel, Field
 
 
@@ -14,11 +15,11 @@ class FeedbackRecord(BaseModel):
     target_id: str
     target_type: str  # response, evidence, claim, process, policy
     feedback_type: str  # error, missing_source, outdated, low_utility, policy_issue
-    rating: Optional[int] = None
-    comment: Optional[str] = None
-    evidence_version: Optional[str] = None
+    rating: int | None = None
+    comment: str | None = None
+    evidence_version: str | None = None
     status: str = "pending"  # pending, under_review, resolved, dismissed
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class QualityLoopSuggestion(BaseModel):
@@ -31,10 +32,10 @@ class QualityLoopSuggestion(BaseModel):
     frequency_count: int = 1
     impact_score: float = 1.0
     status: str = "open"  # open, in_review, resolved, dismissed
-    before_state: Optional[dict[str, Any]] = None
-    after_state: Optional[dict[str, Any]] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    before_state: dict[str, Any] | None = None
+    after_state: dict[str, Any] | None = None
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class QualityLoopEngine:
@@ -53,7 +54,7 @@ class QualityLoopEngine:
             sug = matching[0]
             sug.frequency_count += 1
             sug.impact_score += 1.0
-            sug.updated_at = datetime.now(timezone.utc).isoformat()
+            sug.updated_at = datetime.now(UTC).isoformat()
         else:
             sug = QualityLoopSuggestion(
                 tenant_id=feedback.tenant_id,
@@ -66,7 +67,7 @@ class QualityLoopEngine:
             )
             self._suggestions.append(sug)
 
-    async def list_feedbacks(self, tenant_id: str, workspace_id: Optional[str] = None, status: Optional[str] = None) -> list[FeedbackRecord]:
+    async def list_feedbacks(self, tenant_id: str, workspace_id: str | None = None, status: str | None = None) -> list[FeedbackRecord]:
         results = [f for f in self._feedbacks if f.tenant_id == tenant_id]
         if workspace_id:
             results = [f for f in results if f.workspace_id == workspace_id]
@@ -74,7 +75,7 @@ class QualityLoopEngine:
             results = [f for f in results if f.status == status]
         return results
 
-    async def list_suggestions(self, tenant_id: str, status: Optional[str] = None) -> list[QualityLoopSuggestion]:
+    async def list_suggestions(self, tenant_id: str, status: str | None = None) -> list[QualityLoopSuggestion]:
         results = [s for s in self._suggestions if s.tenant_id == tenant_id]
         if status:
             results = [s for s in results if s.status == status]
@@ -93,6 +94,6 @@ class QualityLoopEngine:
                 sug.before_state = before_state
                 sug.after_state = after_state
                 sug.recommended_owner = owner
-                sug.updated_at = datetime.now(timezone.utc).isoformat()
+                sug.updated_at = datetime.now(UTC).isoformat()
                 return sug
         raise ValueError(f"Suggestion {suggestion_id} not found")

@@ -1,7 +1,13 @@
-import pytest
 from unittest.mock import AsyncMock
-from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAssistantResponse, ProcessStep
+
+import pytest
+
+from domus_knowledge.process_assistant import (
+    ProcessAssistantEngine,
+    ProcessAssistantResponse,
+)
 from domus_knowledge.semantic_state import SemanticState
+
 
 @pytest.mark.anyio
 async def test_process_query_success():

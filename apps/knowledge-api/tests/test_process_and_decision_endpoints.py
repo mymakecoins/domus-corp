@@ -1,7 +1,10 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
+
 from domus_knowledge.main import create_app
+
 
 @pytest.fixture
 def client():

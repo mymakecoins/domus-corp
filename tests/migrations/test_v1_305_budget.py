@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import unittest
 from pathlib import Path
+
 ROOT=Path(__file__).resolve().parents[2];UP=(ROOT/"migrations/000008_v1_305_budget.up.sql").read_text(encoding="utf-8").lower();DOWN=(ROOT/"migrations/000008_v1_305_budget.down.sql").read_text(encoding="utf-8").lower()
 class BudgetMigrationTest(unittest.TestCase):
  def test_financial_state_and_idempotency(self):

@@ -1,8 +1,8 @@
-from fastapi.testclient import TestClient
-
 from app.services.meetings.consent import ConsentManager
 from app.services.meetings.task_extractor import MeetingTaskExtractor
 from app.services.meetings.transcription import TranscriptionService, TranscriptSegment
+from fastapi.testclient import TestClient
+
 from domus_knowledge.main import app
 
 

@@ -1,8 +1,6 @@
-import pytest
 from domus_knowledge.semantic_state import (
     SemanticState,
     SemanticStateEvaluator,
-    SemanticEvaluationResult,
 )
 
 

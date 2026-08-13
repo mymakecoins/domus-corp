@@ -1,8 +1,10 @@
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
+
 from pydantic import BaseModel, Field
+
 from domus_knowledge.change_detection import ChangeRepository
+
 
 class BriefingPreferences(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -11,7 +13,7 @@ class BriefingPreferences(BaseModel):
     user_id: str
     is_paused: bool = False
     periodicity: str = "weekly"
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 class BriefingRecord(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -25,7 +27,7 @@ class BriefingRecord(BaseModel):
     quality_alerts: list[dict] = Field(default_factory=list)
     staleness_warnings: list[dict] = Field(default_factory=list)
     is_paused: bool = False
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 class BriefingRepository:
     def __init__(self):
@@ -41,17 +43,17 @@ class BriefingRepository:
         self._prefs[key] = pref
         return pref
 
-    def get_preferences(self, tenant_id: str, workspace_id: str, user_id: str) -> Optional[BriefingPreferences]:
+    def get_preferences(self, tenant_id: str, workspace_id: str, user_id: str) -> BriefingPreferences | None:
         return self._prefs.get((tenant_id, workspace_id, user_id))
 
-    def list_briefings(self, tenant_id: str, workspace_id: Optional[str] = None) -> list[BriefingRecord]:
+    def list_briefings(self, tenant_id: str, workspace_id: str | None = None) -> list[BriefingRecord]:
         return [
             b for b in self._records
             if b.tenant_id == tenant_id and (workspace_id is None or b.workspace_id == workspace_id)
         ]
 
 class BriefingEngine:
-    def __init__(self, briefing_repo: Optional[BriefingRepository] = None, change_repo: Optional[ChangeRepository] = None):
+    def __init__(self, briefing_repo: BriefingRepository | None = None, change_repo: ChangeRepository | None = None):
         self.briefing_repo = briefing_repo or BriefingRepository()
         self.change_repo = change_repo or ChangeRepository()
 

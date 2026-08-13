@@ -1,7 +1,14 @@
-import pytest
 from unittest.mock import AsyncMock
-from domus_knowledge.decision_support import DecisionSupportEngine, SynthesisResult, ComparisonResult
+
+import pytest
+
+from domus_knowledge.decision_support import (
+    ComparisonResult,
+    DecisionSupportEngine,
+    SynthesisResult,
+)
 from domus_knowledge.semantic_state import SemanticState
+
 
 @pytest.mark.anyio
 async def test_synthesis_generation():

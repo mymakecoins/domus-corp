@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def test_migration_009_exists_and_valid():
     sql_path = Path("migrations/000025_v1_609_v1_610_automations_and_meetings.up.sql")
     assert sql_path.exists(), "Migration 000025_v1_609_v1_610_automations_and_meetings.up.sql must exist"

@@ -1,7 +1,9 @@
 """Module for decision support, syntheses and comparisons (V1-504)."""
 
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
+
 from domus_knowledge.context_orchestrator import ContextOrchestrator
 from domus_knowledge.model_gateway_client import ModelGatewayClient
 from domus_knowledge.semantic_state import SemanticState
@@ -51,7 +53,7 @@ COMPARISON_SYSTEM_INSTRUCTION = (
 class DecisionSupportEngine:
     """Engine for generating governed syntheses, comparisons and decision support."""
 
-    def __init__(self, gateway_client: ModelGatewayClient, orchestrator: Optional[ContextOrchestrator] = None):
+    def __init__(self, gateway_client: ModelGatewayClient, orchestrator: ContextOrchestrator | None = None):
         self.gateway_client = gateway_client
         self.orchestrator = orchestrator or ContextOrchestrator()
 
@@ -90,7 +92,7 @@ class DecisionSupportEngine:
         query: str,
         user_roles: list[str],
         evidences: list[dict[str, Any]],
-        alternatives: Optional[list[str]] = None,
+        alternatives: list[str] | None = None,
         max_tokens: int = 1024,
     ) -> ComparisonResult:
         orchestrator = ContextOrchestrator(system_instruction=COMPARISON_SYSTEM_INSTRUCTION)

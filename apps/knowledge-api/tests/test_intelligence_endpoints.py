@@ -1,5 +1,7 @@
 from unittest.mock import AsyncMock, patch
+
 from fastapi.testclient import TestClient
+
 from domus_knowledge.main import app
 from domus_knowledge.model_gateway_client import ModelGatewayError
 

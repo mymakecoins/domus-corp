@@ -1,6 +1,7 @@
 import uuid
-from datetime import datetime, timezone
-from typing import Literal, Optional
+from datetime import UTC, datetime
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 SeverityLevel = Literal["low", "medium", "high", "critical"]
@@ -17,10 +18,10 @@ class OperationalInsight(BaseModel):
     confidence: float = 1.0
     time_window: str = "7d"
     evidences: list[dict] = Field(default_factory=list)
-    recommended_owner: Optional[str] = None
-    recommended_action: Optional[str] = None
+    recommended_owner: str | None = None
+    recommended_action: str | None = None
     status: InsightStatus = "draft"
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 class InsightThreshold(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -30,15 +31,15 @@ class InsightThreshold(BaseModel):
     threshold_value: float
     is_active: bool = True
     updated_by: str = "system"
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 class InsightFeedback(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     insight_id: str
     user_id: str
     feedback_type: str  # false_positive, true_positive, inaccurate_severity
-    comment: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    comment: str | None = None
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 class InsightRepository:
     def __init__(self):
@@ -50,10 +51,10 @@ class InsightRepository:
         self._insights[insight.id] = insight
         return insight
 
-    def get_insight(self, insight_id: str) -> Optional[OperationalInsight]:
+    def get_insight(self, insight_id: str) -> OperationalInsight | None:
         return self._insights.get(insight_id)
 
-    def list_insights(self, tenant_id: str, workspace_id: Optional[str] = None) -> list[OperationalInsight]:
+    def list_insights(self, tenant_id: str, workspace_id: str | None = None) -> list[OperationalInsight]:
         return [
             i for i in self._insights.values()
             if i.tenant_id == tenant_id and (workspace_id is None or i.workspace_id == workspace_id)
@@ -63,7 +64,7 @@ class InsightRepository:
         self._thresholds[(threshold.tenant_id, threshold.rule_id)] = threshold
         return threshold
 
-    def get_threshold(self, tenant_id: str, rule_id: str) -> Optional[InsightThreshold]:
+    def get_threshold(self, tenant_id: str, rule_id: str) -> InsightThreshold | None:
         return self._thresholds.get((tenant_id, rule_id))
 
     def save_feedback(self, feedback: InsightFeedback) -> InsightFeedback:
@@ -71,7 +72,7 @@ class InsightRepository:
         return feedback
 
 class OperationalInsightsEngine:
-    def __init__(self, repository: Optional[InsightRepository] = None):
+    def __init__(self, repository: InsightRepository | None = None):
         self.repo = repository or InsightRepository()
 
     def evaluate_signals(self, tenant_id: str, workspace_id: str, signals: list[dict]) -> list[OperationalInsight]:
@@ -107,14 +108,14 @@ class OperationalInsightsEngine:
                 insights.append(insight)
         return insights
 
-    def review_insight(self, insight_id: str, status: InsightStatus, reviewer: str) -> Optional[OperationalInsight]:
+    def review_insight(self, insight_id: str, status: InsightStatus, reviewer: str) -> OperationalInsight | None:
         insight = self.repo.get_insight(insight_id)
         if not insight:
             return None
         insight.status = status
         return self.repo.save_insight(insight)
 
-    def submit_feedback(self, insight_id: str, user_id: str, feedback_type: str, comment: Optional[str] = None) -> InsightFeedback:
+    def submit_feedback(self, insight_id: str, user_id: str, feedback_type: str, comment: str | None = None) -> InsightFeedback:
         fb = InsightFeedback(insight_id=insight_id, user_id=user_id, feedback_type=feedback_type, comment=comment)
         self.repo.save_feedback(fb)
         

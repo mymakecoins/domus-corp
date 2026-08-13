@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import unittest
 from pathlib import Path
+
 ROOT=Path(__file__).resolve().parents[2]
 UP=(ROOT/"migrations/000006_v1_303_catalog.up.sql").read_text(encoding="utf-8").lower()
 DOWN=(ROOT/"migrations/000006_v1_303_catalog.down.sql").read_text(encoding="utf-8").lower()

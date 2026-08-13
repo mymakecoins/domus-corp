@@ -1,0 +1,56 @@
+{
+  "gate": "Gate G7",
+  "release_candidate": "1.0.0-rc1",
+  "timestamp": "2026-08-13T01:16:28.629052+00:00",
+  "status": "APPROVED",
+  "contracts_version": "2.17.0",
+  "design_system_version": "1.0.0-beta",
+  "tokens_version": "BetaUp-2026.1",
+  "traceability": {
+    "valid": true,
+    "total_rfs": 48,
+    "expected_rfs": 48,
+    "unmapped_rfs": []
+  },
+  "p0_evidence_audit": {
+    "valid": true,
+    "total_p0_issues": 44,
+    "missing_evidences": []
+  },
+  "quality_evals": {
+    "approved": true,
+    "blockers": []
+  },
+  "metrics": {
+    "overall_groundedness": 0.95,
+    "citation_validity": 0.98,
+    "axe_violations": 0,
+    "color_guard_passed": true,
+    "dr_restore_tested": true,
+    "action_gateway_idempotent": true,
+    "unmitigated_findings": 0,
+    "snapshots_approved": true,
+    "select_items_valid": true
+  },
+  "rollback_plan": {
+    "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
+    "data_compatibility": "Rollback auditado sem perda de dados normativos ou RLS."
+  },
+  "approvals": [
+    {
+      "role": "QA Lead",
+      "status": "APPROVED",
+      "signed": true
+    },
+    {
+      "role": "Product Owner",
+      "status": "APPROVED",
+      "signed": true
+    },
+    {
+      "role": "Security Lead",
+      "status": "APPROVED",
+      "signed": true
+    }
+  ]
+}

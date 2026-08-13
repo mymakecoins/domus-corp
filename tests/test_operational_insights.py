@@ -1,5 +1,5 @@
-import pytest
-from domus_knowledge.operational_insights import OperationalInsightsEngine, InsightRepository
+from domus_knowledge.operational_insights import InsightRepository, OperationalInsightsEngine
+
 
 def test_high_severity_insight_goes_to_draft():
     repo = InsightRepository()

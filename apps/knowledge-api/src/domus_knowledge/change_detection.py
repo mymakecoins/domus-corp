@@ -1,6 +1,7 @@
 import uuid
-from datetime import datetime, timezone
-from typing import Literal, Optional
+from datetime import UTC, datetime
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 ChangeType = Literal["structural", "normative", "informative", "irrelevant"]
@@ -16,10 +17,10 @@ class ChangeRecord(BaseModel):
     impact_score: float = 0.0
     impacted_domains: list[str] = Field(default_factory=list)
     impacted_owners: list[str] = Field(default_factory=list)
-    before_digest: Optional[str] = None
-    after_digest: Optional[str] = None
+    before_digest: str | None = None
+    after_digest: str | None = None
     status: ChangeStatus = "pending"
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 class ChangeRepository:
     def __init__(self):
@@ -29,14 +30,14 @@ class ChangeRepository:
         self._records.append(record)
         return record
 
-    def list_records(self, tenant_id: str, workspace_id: Optional[str] = None) -> list[ChangeRecord]:
+    def list_records(self, tenant_id: str, workspace_id: str | None = None) -> list[ChangeRecord]:
         return [
             r for r in self._records
             if r.tenant_id == tenant_id and (workspace_id is None or r.workspace_id == workspace_id)
         ]
 
 class ChangeImpactDetector:
-    def __init__(self, repository: Optional[ChangeRepository] = None):
+    def __init__(self, repository: ChangeRepository | None = None):
         self.repo = repository or ChangeRepository()
 
     def detect_change(
@@ -47,8 +48,8 @@ class ChangeImpactDetector:
         source_type: str,
         before_content: str,
         after_content: str,
-        affected_domains: Optional[list[str]] = None,
-        owners: Optional[list[str]] = None
+        affected_domains: list[str] | None = None,
+        owners: list[str] | None = None
     ) -> ChangeRecord:
         normative_keywords = ["política", "regra", "obrigatório", "proibido", "limite", "norma", "deve"]
         is_normative = any(kw in (before_content + after_content).lower() for kw in normative_keywords)

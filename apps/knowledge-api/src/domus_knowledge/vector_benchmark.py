@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from .access_control import AuthorizedKnowledgeFilter
-from .hnsw_config import HNSWConfig, OptimizationPreset, create_optimized_hnsw_config
+from .hnsw_config import OptimizationPreset, create_optimized_hnsw_config
 from .retrieval import hybrid_search
 
 

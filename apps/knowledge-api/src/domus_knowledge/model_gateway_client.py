@@ -1,6 +1,8 @@
 """Module for fail-closed Model Gateway TypeScript HTTP client."""
 
-from typing import Any, AsyncGenerator, Optional
+from collections.abc import AsyncGenerator
+from typing import Any
+
 import httpx
 
 
@@ -13,7 +15,7 @@ class ModelGatewayError(Exception):
 class ModelGatewayClient:
     """Fail-closed HTTP client for Control-Plane TS Model Gateway."""
 
-    def __init__(self, base_url: str = "http://localhost:3000", http_client: Optional[httpx.AsyncClient] = None):
+    def __init__(self, base_url: str = "http://localhost:3000", http_client: httpx.AsyncClient | None = None):
         self.base_url = base_url.rstrip("/")
         self._http_client = http_client
 

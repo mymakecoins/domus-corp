@@ -1,18 +1,18 @@
 {
   "$schema": "./manifest.schema.json",
-  "issue": "V1-408",
-  "version": "0.27.0",
+  "issue": "V1-808",
+  "version": "1.0.0-rc1",
   "classification": "high-p0",
-  "summary": "Knowledge Graph Lite com claims, evidências, entidades e relações bounded.",
-  "impact": "Adiciona lineage investigável e publicação humana sem liberar exploração pré-ACL.",
-  "risks": ["Extratores, ontologia, alçadas e parâmetros externos exigem homologação antes da promoção."],
-  "tests": [{"name": "scripts/verify.sh", "result": "passed"}],
-  "evidence": [".ai/context-packs/V1-408.md", "docs/evidence/V1-408-verificacao.md"],
+  "summary": "Gate sistêmico de qualidade e prontidão de release (Gate G7).",
+  "impact": "Consolidação de evidências P0, matriz de rastreabilidade, evals, acessibilidade, resiliência e autorização para Onda 8.",
+  "risks": ["Manter 100% de conformidade com limiares de groundedness, acessibilidade e fail-closed durante o piloto."],
+  "tests": [{"name": "scripts/verify.sh", "result": "passed"}, {"name": "scripts/release_gate_g7.py", "result": "passed"}],
+  "evidence": [".ai/context-packs/V1-808.md", "docs/evidence/V1-808-verificacao.md", "docs/evidence/GO_NOGO_DECLARATION_G7.md"],
   "rollback": {
     "runbook": "docs/runbooks/V1-701-migrations-rollback.md",
-    "dataCompatibility": "Rollback remove Graph Lite V1-408; assets, versões e taxonomia permanecem preservados."
+    "dataCompatibility": "Rollback auditado sem perda de dados normativos ou RLS."
   },
-  "rings": ["internal"],
+  "rings": ["internal", "canary"],
   "findings": [],
   "contractsVersion": "2.17.0"
 }

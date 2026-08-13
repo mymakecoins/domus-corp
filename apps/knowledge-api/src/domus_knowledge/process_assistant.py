@@ -1,10 +1,11 @@
 """Module for corporate process and policy assistant (V1-503)."""
 
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
+
 from domus_knowledge.context_orchestrator import ContextOrchestrator
 from domus_knowledge.model_gateway_client import ModelGatewayClient
-from domus_knowledge.semantic_state import SemanticState
 
 
 class ProcessStep(BaseModel):
@@ -14,7 +15,7 @@ class ProcessStep(BaseModel):
     roles: list[str] = Field(default_factory=list, description="Papéis responsáveis.")
     inputs: list[str] = Field(default_factory=list, description="Entradas necessárias.")
     exceptions: list[str] = Field(default_factory=list, description="Exceções conhecidas.")
-    safe_next_action: Optional[dict[str, Any]] = Field(None, description="Proposta de ação via Action Gateway.")
+    safe_next_action: dict[str, Any] | None = Field(None, description="Proposta de ação via Action Gateway.")
 
 
 class ProcessAssistantResponse(BaseModel):
@@ -41,7 +42,7 @@ PROCESS_SYSTEM_INSTRUCTION = (
 class ProcessAssistantEngine:
     """Engine for executing process/policy queries with governance guardrails."""
 
-    def __init__(self, gateway_client: ModelGatewayClient, orchestrator: Optional[ContextOrchestrator] = None):
+    def __init__(self, gateway_client: ModelGatewayClient, orchestrator: ContextOrchestrator | None = None):
         self.gateway_client = gateway_client
         self.orchestrator = orchestrator or ContextOrchestrator(system_instruction=PROCESS_SYSTEM_INSTRUCTION)
 

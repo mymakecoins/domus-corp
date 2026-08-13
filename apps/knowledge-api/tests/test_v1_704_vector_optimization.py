@@ -3,7 +3,6 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-import pytest
 from fastapi.testclient import TestClient
 
 from domus_knowledge.access_control import (
@@ -11,10 +10,14 @@ from domus_knowledge.access_control import (
     build_authorized_filter,
     derive_access_context,
 )
-from domus_knowledge.hnsw_config import HNSWConfig, OptimizationPreset, create_optimized_hnsw_config
+from domus_knowledge.hnsw_config import OptimizationPreset, create_optimized_hnsw_config
 from domus_knowledge.main import create_app
 from domus_knowledge.reindex_engine import QualityValidationResult, VectorReindexEngine
-from domus_knowledge.vector_benchmark import BenchmarkWorkloadItem, VectorBenchmarkEngine, VectorBenchmarkReport
+from domus_knowledge.vector_benchmark import (
+    BenchmarkWorkloadItem,
+    VectorBenchmarkEngine,
+    VectorBenchmarkReport,
+)
 
 
 def make_filter() -> AuthorizedKnowledgeFilter:

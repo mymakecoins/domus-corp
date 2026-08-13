@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import unittest
 from pathlib import Path
+
 ROOT=Path(__file__).resolve().parents[2]
 UP=ROOT/"migrations/000011_v1_401_source_registry.up.sql"
 DOWN=ROOT/"migrations/000011_v1_401_source_registry.down.sql"

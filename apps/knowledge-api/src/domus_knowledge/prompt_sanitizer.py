@@ -4,7 +4,6 @@ import re
 from typing import Any
 
 
-
 def sanitize_untrusted_text(text: str) -> str:
     """Escapes tag injection patterns inside untrusted evidence text."""
     if not text:

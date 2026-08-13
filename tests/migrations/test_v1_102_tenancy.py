@@ -3,7 +3,6 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 UP = ROOT / "migrations/000003_v1_102_tenancy.up.sql"
 DOWN = ROOT / "migrations/000003_v1_102_tenancy.down.sql"

@@ -1,6 +1,6 @@
-import pytest
 from domus_knowledge.briefings import BriefingEngine, BriefingRepository
-from domus_knowledge.change_detection import ChangeRepository, ChangeImpactDetector
+from domus_knowledge.change_detection import ChangeImpactDetector, ChangeRepository
+
 
 def test_generate_briefing_honors_paused_state():
     b_repo = BriefingRepository()

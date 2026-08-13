@@ -14,8 +14,9 @@ def test_migration_000020_sql_has_no_invalid_grant_on_knowledge_chunk():
 
 
 def test_chunk_dataclass_includes_source_id_and_validity():
-    from domus_knowledge.vector_index import Chunk
     import inspect
+
+    from domus_knowledge.vector_index import Chunk
 
     sig = inspect.signature(Chunk)
     assert "source_id" in sig.parameters

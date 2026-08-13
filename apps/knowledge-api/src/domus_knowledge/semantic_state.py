@@ -1,7 +1,8 @@
 """Module for semantic states, metadata catalog, and response evaluation."""
 
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -103,7 +104,7 @@ class SemanticEvaluationResult(BaseModel):
     metadata: SemanticStateMetadata
     conflicting_sources: list[dict[str, str]] = Field(default_factory=list)
     outdated_sources: list[dict[str, str]] = Field(default_factory=list)
-    reasoning_notes: Optional[str] = None
+    reasoning_notes: str | None = None
 
 
 class SemanticStateEvaluator:

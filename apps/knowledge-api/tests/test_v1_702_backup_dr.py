@@ -3,22 +3,18 @@ Unit and integration tests for V1-702: Backup, Restore and Disaster Recovery (Po
 Follows TDD rules: validates encryption, checksum integrity, isolated retention, RTO/RPO limits, and failure alerting.
 """
 
-import pytest
-import os
-import tempfile
-import json
 from pathlib import Path
 
+import pytest
+
 from domus_knowledge.backup_dr import (
+    AlertManager,
     BackupConfig,
+    BackupCoverageError,
     BackupManager,
     RestoreManager,
-    AlertManager,
-    BackupManifest,
-    BackupCoverageError,
-    IntegrityCheckResult,
-    RestoreResult,
 )
+
 
 @pytest.fixture
 def temp_backup_dir(tmp_path):
@@ -162,7 +158,7 @@ def test_cli_backup_and_restore_workflow(backup_config, temp_backup_dir, monkeyp
     """
     Test the CLI workflow functions (run_cli_backup, run_cli_verify, run_cli_restore).
     """
-    from domus_knowledge.backup_dr import run_cli_backup, run_cli_verify, run_cli_restore
+    from domus_knowledge.backup_dr import run_cli_backup, run_cli_restore, run_cli_verify
 
     # 1. Run CLI backup
     manifest = run_cli_backup(

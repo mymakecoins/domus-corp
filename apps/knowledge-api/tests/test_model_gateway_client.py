@@ -1,5 +1,6 @@
-import pytest
 import httpx
+import pytest
+
 from domus_knowledge.model_gateway_client import ModelGatewayClient, ModelGatewayError
 
 

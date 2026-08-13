@@ -1,7 +1,7 @@
 from domus_knowledge.prompt_sanitizer import (
-    sanitize_untrusted_text,
-    format_evidence_chunk,
     build_sanitized_messages,
+    format_evidence_chunk,
+    sanitize_untrusted_text,
 )
 
 

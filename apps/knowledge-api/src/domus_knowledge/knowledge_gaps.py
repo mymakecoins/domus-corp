@@ -1,9 +1,11 @@
 """Knowledge Gap Detector for V1-506."""
 
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
-from datetime import datetime, timezone
+
 from pydantic import BaseModel, Field
+
 from domus_knowledge.prompt_sanitizer import PromptSanitizer
 
 
@@ -17,13 +19,13 @@ class KnowledgeGap(BaseModel):
     impact_score: float = 1.0
     candidate_sources: list[str] = Field(default_factory=list)
     status: str = "open"  # open, in_review, resolved, ignored
-    assigned_owner: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    assigned_owner: str | None = None
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class KnowledgeGapDetector:
-    def __init__(self, sanitizer: Optional[PromptSanitizer] = None):
+    def __init__(self, sanitizer: PromptSanitizer | None = None):
         self.sanitizer = sanitizer or PromptSanitizer()
         self._gaps: list[KnowledgeGap] = []
 
@@ -54,7 +56,7 @@ class KnowledgeGapDetector:
                     gap.frequency += len(entries)
                     gap.impact_score += float(len(entries))
                     gap.sample_queries = list(set(gap.sample_queries + queries))
-                    gap.updated_at = datetime.now(timezone.utc).isoformat()
+                    gap.updated_at = datetime.now(UTC).isoformat()
                     detected.append(gap)
                 else:
                     gap = KnowledgeGap(
@@ -70,7 +72,7 @@ class KnowledgeGapDetector:
 
         return detected
 
-    async def list_gaps(self, tenant_id: str, status: Optional[str] = None) -> list[KnowledgeGap]:
+    async def list_gaps(self, tenant_id: str, status: str | None = None) -> list[KnowledgeGap]:
         results = [g for g in self._gaps if g.tenant_id == tenant_id]
         if status:
             results = [g for g in results if g.status == status]
@@ -79,9 +81,9 @@ class KnowledgeGapDetector:
     async def update_gap(
         self,
         gap_id: str,
-        status: Optional[str] = None,
-        assigned_owner: Optional[str] = None,
-        candidate_sources: Optional[list[str]] = None
+        status: str | None = None,
+        assigned_owner: str | None = None,
+        candidate_sources: list[str] | None = None
     ) -> KnowledgeGap:
         for gap in self._gaps:
             if gap.id == gap_id:
@@ -91,6 +93,6 @@ class KnowledgeGapDetector:
                     gap.assigned_owner = assigned_owner
                 if candidate_sources is not None:
                     gap.candidate_sources = candidate_sources
-                gap.updated_at = datetime.now(timezone.utc).isoformat()
+                gap.updated_at = datetime.now(UTC).isoformat()
                 return gap
         raise ValueError(f"Knowledge Gap {gap_id} not found")

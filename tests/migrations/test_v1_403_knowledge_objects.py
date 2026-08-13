@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import unittest
 from pathlib import Path
+
 ROOT=Path(__file__).resolve().parents[2];UP=(ROOT/"migrations/000013_v1_403_knowledge_objects.up.sql").read_text(encoding="utf-8").lower();DOWN=(ROOT/"migrations/000013_v1_403_knowledge_objects.down.sql").read_text(encoding="utf-8").lower()
 class KnowledgeObjectMigrationTest(unittest.TestCase):
     def test_runtime_isolated_and_rls_forced(self)->None:

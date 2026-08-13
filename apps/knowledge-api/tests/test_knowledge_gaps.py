@@ -1,5 +1,7 @@
 import pytest
-from domus_knowledge.knowledge_gaps import KnowledgeGapDetector, KnowledgeGap
+
+from domus_knowledge.knowledge_gaps import KnowledgeGapDetector
+
 
 @pytest.mark.anyio
 async def test_detect_gaps_and_sanitize_queries():

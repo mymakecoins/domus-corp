@@ -18,8 +18,8 @@ if str(KNOWLEDGE_SRC) not in sys.path:
 
 from domus_knowledge.backup_dr import (
     run_cli_backup,
-    run_cli_verify,
     run_cli_restore,
+    run_cli_verify,
 )
 
 

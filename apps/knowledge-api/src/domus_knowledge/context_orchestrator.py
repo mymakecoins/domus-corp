@@ -1,13 +1,13 @@
 """Module for context orchestration and authorized context assembly."""
 
 from typing import Any
+
 from pydantic import BaseModel, Field
+
 from domus_knowledge.prompt_sanitizer import build_sanitized_messages
 from domus_knowledge.semantic_state import (
-    SemanticState,
-    SemanticStateCatalog,
-    SemanticStateEvaluator,
     SemanticEvaluationResult,
+    SemanticStateEvaluator,
 )
 
 DEFAULT_SYSTEM_INSTRUCTION = (

@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import unittest
 from pathlib import Path
+
 ROOT=Path(__file__).resolve().parents[2];UP=(ROOT/"migrations/000012_v1_402_connectors.up.sql").read_text(encoding="utf-8").lower();DOWN=(ROOT/"migrations/000012_v1_402_connectors.down.sql").read_text(encoding="utf-8").lower()
 class ConnectorMigrationTest(unittest.TestCase):
     def test_cursor_is_fenced_bounded_and_secret_free(self)->None:

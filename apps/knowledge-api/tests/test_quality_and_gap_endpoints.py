@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+
 from domus_knowledge.main import app
 
 client = TestClient(app)

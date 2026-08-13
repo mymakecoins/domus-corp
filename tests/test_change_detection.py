@@ -1,5 +1,5 @@
-import pytest
-from domus_knowledge.change_detection import ChangeImpactDetector, ChangeRepository, ChangeRecord
+from domus_knowledge.change_detection import ChangeImpactDetector, ChangeRepository
+
 
 def test_detect_normative_change():
     repo = ChangeRepository()

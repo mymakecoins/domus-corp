@@ -7,7 +7,6 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-
 NAME = re.compile(r"^(\d{6})_[a-z0-9_]+\.(up|down)\.sql$")
 CREATE_TABLE = re.compile(
     r"create\s+table\s+(?:if\s+not\s+exists\s+)?([a-z0-9_.]+)\s*\((.*?)\);",

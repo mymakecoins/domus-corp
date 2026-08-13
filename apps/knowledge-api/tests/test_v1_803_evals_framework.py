@@ -4,7 +4,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from domus_knowledge.evals_framework import (
-    EvalBenchmarkRunner,
     EvaluationDataset,
     EvaluationItem,
     EvaluatorEngine,

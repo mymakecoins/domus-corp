@@ -1,5 +1,7 @@
 import pytest
-from domus_knowledge.quality_loop import QualityLoopEngine, FeedbackRecord, QualityLoopSuggestion
+
+from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine
+
 
 @pytest.mark.anyio
 async def test_submit_feedback_and_suggestion_aggregation():
