@@ -52,9 +52,9 @@ DEFAULT_RF_MATRIX: dict[str, dict[str, Any]] = {
     "RF-038": {"title": "Action idempotency & receipts", "issues": ["V1-605", "V1-805"], "tests": ["apps/control-plane/test/application/gateway/action-gateway-resilience.test.ts"]},
     "RF-039": {"title": "Scheduled automations", "issues": ["V1-606"], "tests": ["apps/control-plane/test/application/gateway/action-gateway-service.test.ts"]},
     "RF-040": {"title": "Meeting transcription & memory", "issues": ["V1-512"], "tests": ["apps/knowledge-api/app/services/meetings/transcription.py"]},
-    "RF-041": {"title": "High availability & recovery", "issues": ["V1-702", "V1-705"], "tests": ["apps/knowledge-api/tests/test_v1_702_backup_dr.py"]},
+    "RF-041": {"title": "High availability & recovery", "issues": ["V1-702", "V1-705", "V1-902"], "tests": ["apps/knowledge-api/tests/test_v1_702_backup_dr.py", "apps/knowledge-api/tests/test_v1_902_gateway_dr.py", "apps/control-plane/test/gateway-ha-dr.test.mjs"]},
     "RF-042": {"title": "Data rights, redaction & classification", "issues": ["V1-406"], "tests": ["tests/migrations/test_v1_406_content_safety.py"]},
-    "RF-043": {"title": "Observability & incident response", "issues": ["V1-705"], "tests": ["apps/knowledge-api/tests/test_v1_705_db_health.py"]},
+    "RF-043": {"title": "Observability & incident response", "issues": ["V1-705", "V1-901"], "tests": ["apps/knowledge-api/tests/test_v1_705_db_health.py", "apps/knowledge-api/tests/test_v1_901_observability_slo_incidents.py"]},
     "RF-044": {"title": "Intelligence & groundedness evals", "issues": ["V1-803"], "tests": ["apps/knowledge-api/tests/test_v1_803_evals_framework.py"]},
     "RF-045": {"title": "Adversarial testing & red-team", "issues": ["V1-806"], "tests": ["tests/security/test_v1_806_red_team_and_secrets.py"]},
     "RF-046": {"title": "Packaging, rollout & updates", "issues": ["V1-901", "V1-903"], "tests": ["scripts/check_release.py"]},
@@ -72,6 +72,7 @@ P0_ISSUES = [
     "V1-601", "V1-604", "V1-605",
     "V1-701", "V1-702", "V1-703", "V1-704", "V1-705",
     "V1-801", "V1-802", "V1-803", "V1-804", "V1-805", "V1-806", "V1-807", "V1-808",
+    "V1-901", "V1-902",
 ]
 
 
