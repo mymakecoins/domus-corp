@@ -55,6 +55,14 @@ from domus_knowledge.process_assistant import ProcessAssistantEngine, ProcessAss
 from domus_knowledge.quality_loop import FeedbackRecord, QualityLoopEngine, QualityLoopSuggestion
 from domus_knowledge.reindex_engine import VectorReindexEngine
 from domus_knowledge.retrieval import hybrid_search
+from domus_knowledge.telemetry_observability import (
+    AlertSeverity,
+    ContainmentActionType,
+    IncidentResponseManager,
+    SLOMonitoringEngine,
+    SLOTargetDomain,
+    TelemetryEngine,
+)
 from domus_knowledge.vector_benchmark import VectorBenchmarkEngine
 
 
@@ -199,6 +207,20 @@ class ChaosRecoverApiRequest(BaseModel):
     dependency: str
 
 
+class OpenIncidentApiRequest(BaseModel):
+    title: str
+    description: str
+    severity: str = "P0"
+    affected_domains: list[str]
+    requested_containment: list[str]
+    opened_by: str = "operator"
+
+
+class IncidentDrillApiRequest(BaseModel):
+    target_domain: str = "retrieval"
+    simulated_fault: str = "SIMULATED_SLO_BREACH"
+
+
 orchestrator = ContextOrchestrator()
 control_plane_url = os.getenv("CONTROL_PLANE_URL", "http://localhost:3000")
 gateway_client = ModelGatewayClient(base_url=control_plane_url)
@@ -217,6 +239,9 @@ def create_app() -> FastAPI:
     benchmark_engine = VectorBenchmarkEngine()
     db_health_monitor = DatabaseHealthMonitor()
     gateway_backpressure_engine = GatewayBackpressureEngine(monitor=db_health_monitor)
+    global_telemetry_engine = TelemetryEngine()
+    global_slo_engine = SLOMonitoringEngine()
+    global_incident_manager = IncidentResponseManager()
 
 
     @app.get("/health")
@@ -808,6 +833,64 @@ def create_app() -> FastAPI:
 
         rec = global_chaos_engine.recover_dependency(dep)
         return rec.to_dict()
+
+    @app.get("/api/v1/observability/telemetry/snapshot")
+    async def get_telemetry_snapshot_endpoint() -> dict[str, Any]:
+        return global_telemetry_engine.get_snapshot()
+
+    @app.get("/api/v1/observability/slos")
+    async def get_slos_endpoint() -> list[dict[str, Any]]:
+        dashboards = global_slo_engine.get_dashboards()
+        return [d.model_dump() for d in dashboards]
+
+    @app.get("/api/v1/observability/alerts")
+    async def get_alerts_endpoint() -> list[dict[str, Any]]:
+        alerts = global_slo_engine.evaluate_slos()
+        return [a.model_dump() for a in alerts]
+
+    @app.post("/api/v1/observability/incidents", status_code=status.HTTP_201_CREATED)
+    async def open_incident_endpoint(req: OpenIncidentApiRequest) -> dict[str, Any]:
+        try:
+            sev = AlertSeverity(req.severity)
+        except ValueError:
+            sev = AlertSeverity.P0
+
+        containment_types = []
+        for c in req.requested_containment:
+            try:
+                containment_types.append(ContainmentActionType(c))
+            except ValueError:
+                pass
+
+        inc = global_incident_manager.open_incident(
+            title=req.title,
+            description=req.description,
+            severity=sev,
+            affected_domains=req.affected_domains,
+            requested_containment=containment_types,
+            opened_by=req.opened_by,
+        )
+        return inc.model_dump()
+
+    @app.get("/api/v1/observability/incidents/{incident_id}")
+    async def get_incident_endpoint(incident_id: str) -> dict[str, Any]:
+        inc = global_incident_manager.get_incident(incident_id)
+        if not inc:
+            raise HTTPException(status_code=404, detail=f"Incidente '{incident_id}' nao encontrado.")
+        return inc.model_dump()
+
+    @app.post("/api/v1/observability/incidents/drill")
+    async def run_incident_drill_endpoint(req: IncidentDrillApiRequest) -> dict[str, Any]:
+        try:
+            dom = SLOTargetDomain(req.target_domain)
+        except ValueError:
+            dom = SLOTargetDomain.RETRIEVAL
+
+        res = global_incident_manager.run_incident_drill(
+            target_domain=dom,
+            simulated_fault=req.simulated_fault,
+        )
+        return res
 
 
     app.include_router(meetings_router)
